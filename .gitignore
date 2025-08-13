@@ -98,6 +98,3 @@ ENV/
 
 # Rope project settings
 .ropeproject
-
-# Static folder
-static/

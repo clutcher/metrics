@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Task Forecast Dashboard{% endblock %}
+
+{% block content %}
+<div class="box">
+    <h2 class="title is-3">Forecast Parameters</h2>
+    <form method="post" 
+          hx-post="{% url 'ui_web:task_forecast' %}" 
+          hx-target="#forecast-results" 
+          hx-swap="innerHTML">
+        {% csrf_token %}
+        <div class="columns">
+            <div class="column">
+                <div class="field">
+                    <label class="label" for="task_id">Task ID:</label>
+                    <div class="control">
+                        <input class="input" type="text" id="task_id" name="task_id" value="{{ forecast_params.task_id|default:'' }}" required>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="field">
+                    <label class="label" for="start_date">Start Date:</label>
+                    <div class="control">
+                        <input class="input" type="date" id="start_date" name="start_date" value="{{ forecast_params.start_date|default_if_none:'' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="field">
+                    <label class="label" for="member_group">Velocity for Member Group:</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id="member_group" name="member_group">
+                                <option value="">All Member Groups</option>
+                                {% for group in global_available_member_groups %}
+                                <option value="{{ group.id }}" {% if forecast_params.member_group == group.id %}selected{% endif %}>{{ group.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary" type="submit">Generate Forecast</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="forecast-results">
+    {% include "partials/task_forecast_content.html" %}
+</div>
+{% endblock %}

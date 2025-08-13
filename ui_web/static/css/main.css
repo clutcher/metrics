@@ -1,0 +1,48 @@
+:root {
+    --bulma-primary: #5d67b5;
+}
+
+html, body {
+    height: 100%;
+}
+
+.loading-indicator-sticky {
+    position: sticky;
+    top: 1rem;
+    z-index: 30;
+}
+
+details summary {
+    list-style: none;
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary::marker {
+    display: none;
+}
+
+.task-toggle {
+    cursor: pointer;
+}
+
+.task-toggle .icon,
+.task-toggle .icon *,
+.task-toggle [class*="iconoir"] {
+    pointer-events: none;
+}
+
+[class*="iconoir"] {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.menu-list a.is-active,
+.panel-heading,
+.is-primary {
+    background-color: var(--bulma-primary);
+}

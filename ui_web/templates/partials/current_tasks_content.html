@@ -1,0 +1,20 @@
+{% if error %}
+    <article class="message is-danger">
+        <div class="message-header">
+            <p>Error</p>
+        </div>
+        <div class="message-body">
+            {{ error }}
+        </div>
+    </article>
+{% else %}
+    {% if show_available_members %}
+        {% include "partials/available_members_table.html" %}
+    {% endif %}
+    
+    {% if has_groups %}
+        {% include "partials/group_renderer.html" with items=tasks level=0 %}
+    {% else %}
+        {% include "partials/task_table.html" with tasks=tasks show_header=true %}
+    {% endif %}
+{% endif %}

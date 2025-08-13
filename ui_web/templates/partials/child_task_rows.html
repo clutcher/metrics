@@ -1,0 +1,92 @@
+{% if error %}
+<tr>
+    <td colspan="9">
+        <em>{{ error }}</em>
+    </td>
+</tr>
+{% else %}
+    {% for child_task in child_tasks %}
+    <tr>
+        <td>
+            {% if child_task.assignment.assignee %}
+                {% if child_task.assignment.assignee.avatar_url %}
+                    <img src="{{ child_task.assignment.assignee.avatar_url }}" 
+                         alt="{{ child_task.assignment.assignee.display_name }}" 
+                         width="24" height="24" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                    <span>
+                        {{ child_task.assignment.assignee.display_name|first|upper|default:"?" }}
+                    </span>
+                {% else %}
+                    <span>
+                        {{ child_task.assignment.assignee.display_name|first|upper|default:"?" }}
+                    </span>
+                {% endif %}
+                {{ child_task.assignment.assignee.display_name }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            <code>{{ child_task.id }}</code>
+        </td>
+        <td>
+            ↳ {% if child_task.system_metadata.url %}
+                <a href="{{ child_task.system_metadata.url }}" target="_blank">
+                    {{ child_task.title }}
+                </a>
+            {% else %}
+                {{ child_task.title }}
+            {% endif %}
+        </td>
+        <td>
+            {% if child_task.forecast and child_task.forecast.health_status %}
+                {% if child_task.forecast.health_status.name == "GREEN" %}
+                    🟢
+                {% elif child_task.forecast.health_status.name == "YELLOW" %}
+                    🟡
+                {% elif child_task.forecast.health_status.name == "ORANGE" %}
+                    🟠
+                {% elif child_task.forecast.health_status.name == "RED" %}
+                    🔴
+                {% elif child_task.forecast.health_status.name == "GRAY" %}
+                    ⚪
+                {% else %}
+                    {{ child_task.forecast.health_status.name }}
+                {% endif %}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            {% if child_task.time_tracking.total_spent_time_days %}
+                {{ child_task.time_tracking.total_spent_time_days|floatformat:1 }}d
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            {% if child_task.time_tracking.current_assignee_spent_time_days %}
+                {{ child_task.time_tracking.current_assignee_spent_time_days|floatformat:1 }}d
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            {% if child_task.forecast and child_task.forecast.estimation_time_days %}
+                {{ child_task.forecast.estimation_time_days|floatformat:1 }}d
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>{{ child_task.story_points|default:"-" }}</td>
+        <td>{{ child_task.child_tasks_count|default:"-" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="9">
+            <em>No child tasks found</em>
+        </td>
+    </tr>
+    {% endfor %}
+{% endif %}

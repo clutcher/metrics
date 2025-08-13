@@ -1,0 +1,33 @@
+{% for item in items %}
+    {% if item.type == "member_group" %}
+        <section class="section">
+            <details class="member-group" open>
+                <summary>
+                    <h1 class="title">
+                        <span class="mr-2">
+                            <i class="iconoir-nav-arrow-down"></i>
+                        </span>
+                        {{ item.name }} ({{ item.count }})
+                    </h1>
+                </summary>
+                <div class="content">
+                    {% include "partials/group_renderer.html" with items=item.items level=level|add:1 %}
+                </div>
+            </details>
+        </section>
+    {% elif item.type == "stage" %}
+        <article class="panel mt-4">
+            <details open>
+                <summary class="panel-heading">
+                    <span class="mr-2">
+                        <i class="iconoir-nav-arrow-down"></i>
+                    </span>
+                    {{ item.name }} ({{ item.count }})
+                </summary>
+                <div class="panel-block is-block">
+                    {% include "partials/task_table.html" with tasks=item.items show_header=true %}
+                </div>
+            </details>
+        </article>
+    {% endif %}
+{% endfor %}

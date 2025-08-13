@@ -1,0 +1,191 @@
+{% if error %}
+<article class="message is-danger">
+    <div class="message-header">
+        <p>⚠️ Error Loading Forecast Data</p>
+    </div>
+    <div class="message-body">
+        <p><strong>{{ error }}</strong></p>
+        <p>Please check your configuration or try refreshing the page.</p>
+    </div>
+</article>
+{% else %}
+    {% if success and task_forecast %}
+        <div class="box">
+            <h2 class="title is-3">Task Summary</h2>
+            <div class="content">
+                <h3 class="title is-4">{{ task_forecast.task_title }}</h3>
+                <div class="columns">
+                    <div class="column">
+                        <p><strong>Total Estimation:</strong> {{ task_forecast.total_estimation_days|floatformat:1 }} {{ time_unit|default:"days" }}</p>
+                        <p><strong>Forecasted Start:</strong> {{ task_forecast.forecasted_start_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div class="column">
+                        <p><strong>Forecasted End:</strong> {{ task_forecast.forecasted_end_date|date:"M d, Y" }}</p>
+                        {% if task_forecast.average_team_velocity %}
+                        <p><strong>Average Velocity:</strong> {{ task_forecast.average_team_velocity|floatformat:2 }} story points/day</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="box">
+            <h2 class="title is-3">Timeline Chart</h2>
+            <canvas id="taskForecastChart-{{ request.resolver_match.kwargs.task_id|default:'default' }}" width="400" height="200"></canvas>
+        </div>
+
+        <div class="box">
+            <h2 class="title is-3">Task Breakdown</h2>
+            <div class="table-container">
+                <table class="table is-striped is-hoverable is-fullwidth" id="taskHierarchy">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Estimation ({{ time_unit|default:"days" }})</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task_forecast_item in task_forecast.task_forecasts %}
+                            <tr data-level="{{ task_forecast_item.level }}" 
+                                data-task-id="{{ task_forecast_item.task_id }}"
+                                class="task-row{% if task_forecast_item.level > 0 %} child-task level-{{ task_forecast_item.level }} is-hidden{% endif %}"
+                                id="task-{{ forloop.counter0 }}">
+                                <td style="padding-left: {{ task_forecast_item.level|add:1 }}rem;">
+                                    {% if task_forecast_item.has_children %}
+                                        <button class="task-toggle" data-target="children-after-{{ forloop.counter0 }}" data-parent-level="{{ task_forecast_item.level }}">
+                                            <i class="iconoir-nav-arrow-right expand-icon"></i>
+                                        </button>
+                                    {% endif %}
+                                    <strong>{{ task_forecast_item.task_id }}</strong><br>
+                                    <small>{{ task_forecast_item.task_title }}</small>
+                                </td>
+                                <td>
+                                    {% if task_forecast_item.estimation_days > 0 %}
+                                        {{ task_forecast_item.estimation_days|floatformat:1 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% elif success %}
+        <article class="message">
+            <div class="message-header">
+                <p>No Data Available</p>
+            </div>
+            <div class="message-body">
+                <p>Task {{ forecast_params.task_id }} was not found or contains no estimatable tasks.</p>
+            </div>
+        </article>
+    {% endif %}
+{% endif %}
+
+<script>
+{% if success and task_forecast and chart_data %}
+function initializeTaskForecastChart() {
+    if (typeof Chart === 'undefined') {
+        console.log('Chart.js not loaded yet, waiting...');
+        setTimeout(initializeTaskForecastChart, 100);
+        return;
+    }
+
+    const canvasId = 'taskForecastChart-{{ request.resolver_match.kwargs.task_id|default:"default" }}';
+    
+    if (window.taskForecastChartInstance) {
+        window.taskForecastChartInstance.destroy();
+        window.taskForecastChartInstance = null;
+    }
+
+    const canvas = document.getElementById(canvasId);
+    
+    if (!canvas) {
+        console.error('Canvas element not found: ' + canvasId);
+        return;
+    }
+
+    const chartData = JSON.parse('{{ chart_data|escapejs }}');
+    
+    const ctx = canvas.getContext('2d');
+    window.taskForecastChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Task Timeline Forecast'
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function() {
+                            return "";
+                        }
+                    },
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MMM dd'
+                        }
+                    },
+                    min: chartData.min_date,
+                    max: chartData.max_date,
+                    title: {
+                        display: true,
+                        text: 'Timeline'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: chartData.labels.length + 1,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value, index, values) {
+                            const taskIndex = chartData.labels.length - value;
+                            if (chartData.labels[taskIndex]) {
+                                return chartData.labels[taskIndex].split(':')[0];
+                            }
+                            return '';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tasks'
+                    }
+                }
+            }
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTaskForecastChart);
+} else {
+    initializeTaskForecastChart();
+}
+{% endif %}
+</script>
+
+<script>
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTaskForecastToggles);
+} else {
+    initializeTaskForecastToggles();
+}
+</script>

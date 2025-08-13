@@ -1,0 +1,111 @@
+<div class="table-container">
+    <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+            <tr>
+                <th scope="col">Assignee</th>
+                <th scope="col">Key</th>
+                <th scope="col">Title</th>
+                <th scope="col">Health</th>
+                <th scope="col">Spent</th>
+                <th scope="col">Assignee Spent</th>
+                <th scope="col">Desired</th>
+                <th scope="col">Complexity</th>
+                <th scope="col">Child Tasks</th>
+            </tr>
+        </thead>
+        {% for task in tasks %}
+        <tbody>
+            <tr>
+                <td>
+                    {% if task.assignment.assignee %}
+                        {% if task.assignment.assignee.avatar_url %}
+                            <img src="{{ task.assignment.assignee.avatar_url }}" 
+                                 alt="{{ task.assignment.assignee.display_name }}" 
+                                 width="24" height="24" 
+                                 onerror="this.style.display='none';">
+                        {% endif %}
+                        {{ task.assignment.assignee.display_name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <code>{{ task.id }}</code>
+                </td>
+                <td>
+                    {% if task.system_metadata.url %}
+                        <a href="{{ task.system_metadata.url }}" target="_blank">
+                            {{ task.title }}
+                        </a>
+                    {% else %}
+                        {{ task.title }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.forecast and task.forecast.health_status %}
+                        {% if task.forecast.health_status.name == "GREEN" %}
+                            🟢
+                        {% elif task.forecast.health_status.name == "YELLOW" %}
+                            🟡
+                        {% elif task.forecast.health_status.name == "ORANGE" %}
+                            🟠
+                        {% elif task.forecast.health_status.name == "RED" %}
+                            🔴
+                        {% elif task.forecast.health_status.name == "GRAY" %}
+                            ⚪
+                        {% else %}
+                            {{ task.forecast.health_status.name }}
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.time_tracking.total_spent_time_days %}
+                        {{ task.time_tracking.total_spent_time_days|floatformat:1 }}d
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.time_tracking.current_assignee_spent_time_days %}
+                        {{ task.time_tracking.current_assignee_spent_time_days|floatformat:1 }}d
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.forecast and task.forecast.estimation_time_days %}
+                        {{ task.forecast.estimation_time_days|floatformat:1 }}d
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ task.story_points|default:"-" }}</td>
+                <td>
+                    {% if task.child_tasks_count and task.child_tasks_count > 0 %}
+                        <button class="button is-small" 
+                                hx-get="{% url 'ui_web:partials_task_children' task.id %}" 
+                                hx-target="#children-{{ task.id }}" 
+                                hx-swap="innerHTML">
+                            <span class="mr-2">
+                                <i class="iconoir-nav-arrow-right" id="expand-icon-{{ task.id }}"></i>
+                            </span>
+                            {{ task.child_tasks_count }}
+                        </button>
+                    {% else %}
+                        {{ task.child_tasks_count|default:"-" }}
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="children-{{ task.id }}"></tbody>
+        {% empty %}
+        <tbody>
+            <tr>
+                <td colspan="9">No tasks found.</td>
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+</div>

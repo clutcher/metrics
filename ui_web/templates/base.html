@@ -1,0 +1,159 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark" class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/iconoir@7.9.0/css/iconoir.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
+    <script src="https://unpkg.com/chart.js@4.5.0/dist/chart.umd.js"></script>
+    <script src="https://unpkg.com/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <title>{% block title %}Metrics Dashboard{% endblock %}</title>
+</head>
+<body class="is-flex is-flex-direction-column is-fullheight">
+    <header>
+        <nav class="navbar is-fixed-top">
+            <div class="navbar-brand">
+                <div class="navbar-item">
+                    <h1 class="title">{% block page_title %}Metrics Dashboard{% endblock %}</h1>
+                    {% block header_extra %}{% endblock %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="columns is-gapless is-flex-grow-1">
+        <!-- Left sidebar menu -->
+        <div class="column is-2-desktop is-3-tablet">
+            <aside class="menu p-4" role="navigation" aria-label="main navigation">
+                <ul class="menu-list">
+                        <li>
+                            <a href="{% url 'ui_web:homepage' %}"
+                               {% if request.resolver_match.url_name == 'homepage' %}class="is-active"{% endif %}>Home</a>
+                        </li>
+                        <li>
+                            {% if global_available_member_groups %}
+                                <a class="menu-toggle {% if request.resolver_match.url_name == 'current_tasks' %}is-active{% endif %}" 
+                                   data-target="current-tasks-submenu" 
+                                   aria-expanded="false" 
+                                   aria-controls="current-tasks-submenu">Current Tasks</a>
+                                <ul id="current-tasks-submenu" class="menu-submenu is-hidden" role="menu">
+                                    <li>
+                                        <a href="{% url 'ui_web:current_tasks' %}"
+                                           {% if request.resolver_match.url_name == 'current_tasks' and not request.GET.member_group_id %}class="is-active"{% endif %}
+                                           hx-get="{% url 'ui_web:partials_tasks' %}"
+                                           hx-target="#main-content"
+                                           hx-indicator="#loading-indicator"
+                                           hx-push-url="{% url 'ui_web:current_tasks' %}">All Groups</a>
+                                    </li>
+                                    {% for group in global_available_member_groups %}
+                                        <li>
+                                            <a href="{% url 'ui_web:current_tasks' %}?member_group_id={{ group.id }}"
+                                               {% if request.resolver_match.url_name == 'current_tasks' and request.GET.member_group_id == group.id %}class="is-active"{% endif %}
+                                               hx-get="{% url 'ui_web:partials_tasks' %}?member_group_id={{ group.id }}"
+                                               hx-target="#main-content"
+                                               hx-indicator="#loading-indicator"
+                                               hx-push-url="{% url 'ui_web:current_tasks' %}?member_group_id={{ group.id }}">{{ group.name }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <a href="{% url 'ui_web:current_tasks' %}"
+                                   {% if request.resolver_match.url_name == 'current_tasks' %}class="is-active"{% endif %}>Current Tasks</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if global_available_member_groups %}
+                                <a class="menu-toggle {% if request.resolver_match.url_name == 'team_velocity' %}is-active{% endif %}" 
+                                   data-target="team-velocity-submenu"
+                                   aria-expanded="false"
+                                   aria-controls="team-velocity-submenu">Team Velocity</a>
+                                <ul id="team-velocity-submenu" class="menu-submenu is-hidden" role="menu">
+                                    <li>
+                                        <a href="{% url 'ui_web:team_velocity' %}"
+                                           {% if request.resolver_match.url_name == 'team_velocity' and not request.GET.member_group_id %}class="is-active"{% endif %}
+                                           hx-get="{% url 'ui_web:team_velocity' %}"
+                                           hx-target="#main-content"
+                                           hx-indicator="#loading-indicator"
+                                           hx-push-url="{% url 'ui_web:team_velocity' %}">All Groups</a>
+                                    </li>
+                                    {% for group in global_available_member_groups %}
+                                        <li>
+                                            <a href="{% url 'ui_web:team_velocity' %}?member_group_id={{ group.id }}"
+                                               {% if request.resolver_match.url_name == 'team_velocity' and request.GET.member_group_id == group.id %}class="is-active"{% endif %}
+                                               hx-get="{% url 'ui_web:team_velocity' %}?member_group_id={{ group.id }}"
+                                               hx-target="#main-content"
+                                               hx-indicator="#loading-indicator"
+                                               hx-push-url="{% url 'ui_web:team_velocity' %}?member_group_id={{ group.id }}">{{ group.name }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <a href="{% url 'ui_web:team_velocity' %}"
+                                   {% if request.resolver_match.url_name == 'team_velocity' %}class="is-active"{% endif %}>Team Velocity</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if global_available_member_groups %}
+                                <a class="menu-toggle {% if request.resolver_match.url_name == 'dev_velocity' %}is-active{% endif %}" 
+                                   data-target="dev-velocity-submenu"
+                                   aria-expanded="false"
+                                   aria-controls="dev-velocity-submenu">Dev Velocity</a>
+                                <ul id="dev-velocity-submenu" class="menu-submenu is-hidden" role="menu">
+                                    <li>
+                                        <a href="{% url 'ui_web:dev_velocity' %}"
+                                           {% if request.resolver_match.url_name == 'dev_velocity' and not request.GET.member_group_id %}class="is-active"{% endif %}
+                                           hx-get="{% url 'ui_web:dev_velocity' %}"
+                                           hx-target="#main-content"
+                                           hx-indicator="#loading-indicator"
+                                           hx-push-url="{% url 'ui_web:dev_velocity' %}">All Groups</a>
+                                    </li>
+                                    {% for group in global_available_member_groups %}
+                                        <li>
+                                            <a href="{% url 'ui_web:dev_velocity' %}?member_group_id={{ group.id }}"
+                                               {% if request.resolver_match.url_name == 'dev_velocity' and request.GET.member_group_id == group.id %}class="is-active"{% endif %}
+                                               hx-get="{% url 'ui_web:dev_velocity' %}?member_group_id={{ group.id }}"
+                                               hx-target="#main-content"
+                                               hx-indicator="#loading-indicator"
+                                               hx-push-url="{% url 'ui_web:dev_velocity' %}?member_group_id={{ group.id }}">{{ group.name }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <a href="{% url 'ui_web:dev_velocity' %}"
+                                   {% if request.resolver_match.url_name == 'dev_velocity' %}class="is-active"{% endif %}>Dev Velocity</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            <a href="{% url 'ui_web:task_forecast' %}"
+                               {% if request.resolver_match.url_name == 'task_forecast' %}class="is-active"{% endif %}>Task Forecast</a>
+                        </li>
+                    </ul>
+                    {% block sidebar_extra %}{% endblock %}
+            </aside>
+        </div>
+        
+        <main class="column is-flex is-flex-direction-column">
+            <progress class="progress is-medium is-primary is-hidden loading-indicator-sticky" id="loading-indicator"></progress>
+            <section class="section is-flex-grow-1">
+                <div class="container">
+                    <div id="main-content">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </section>
+            
+            <footer class="footer mt-auto">
+                <div class="has-text-centered">
+                    <p>&copy; 2017 - {% now "Y" %} Metrics Dashboard</p>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
