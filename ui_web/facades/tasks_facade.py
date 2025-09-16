@@ -70,12 +70,12 @@ class TasksFacade:
 
     async def _search_current_tasks(self) -> List[Task]:
         search_criteria = self._create_current_tasks_search_criteria()
-        enrichment = EnrichmentOptions(include_time_tracking=True)
+        enrichment = EnrichmentOptions(include_time_tracking=True, worklog_transition_statuses=self.workflow_config.in_progress_status_codes)
         return await self.task_search_api.search(search_criteria, enrichment)
 
     async def _search_recently_finished_tasks(self) -> List[Task]:
         search_criteria = self._create_recently_finished_tasks_search_criteria()
-        enrichment = EnrichmentOptions(include_time_tracking=True)
+        enrichment = EnrichmentOptions(include_time_tracking=True, worklog_transition_statuses=self.workflow_config.in_progress_status_codes)
         return await self.task_search_api.search(search_criteria, enrichment)
 
     def _create_current_tasks_search_criteria(self):
