@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
 
 from azure.devops.connection import Connection
-from django.core.cache import caches
 from msrest.authentication import BasicAuthentication
 from sd_metrics_lib.sources.azure.query import AzureSearchQueryBuilder
 from sd_metrics_lib.sources.azure.tasks import AzureTaskProvider
@@ -20,7 +19,8 @@ from ..app.spi.task_repository import TaskRepository
 
 class AzureTaskRepository(TaskRepository):
 
-    def __init__(self, config: TasksConfig, worktime_extractor_type: Optional[WorkTimeExtractorType] = None):
+    def __init__(self, config: TasksConfig, worktime_extractor_type: Optional[WorkTimeExtractorType] = None,
+                 cache=None):
         azure_config = config.azure
         if not all([azure_config.azure_organization_url, azure_config.azure_pat]):
             raise ValueError("Missing Azure authentication configuration")
@@ -35,7 +35,7 @@ class AzureTaskRepository(TaskRepository):
         self.config = config
         self.worktime_extractor_type = worktime_extractor_type or WorkTimeExtractorType.SIMPLE
         self._executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix="azure-fetch")
-        self._cache = caches['task_search_results']
+        self._cache = cache
         self._story_point_extractor = FunctionStoryPointExtractor(extract_azure_story_points(config))
 
     async def find_all(self, search_criteria: Optional[TaskSearchCriteria] = None,

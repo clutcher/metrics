@@ -1,4 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
+
+from django.core.cache import caches
 
 from .app.api.api_for_assignee_search import ApiForAssigneeSearch
 from .app.api.api_for_task_hierarchy import ApiForTaskHierarchy
@@ -19,6 +21,8 @@ class TasksContainer:
     def __init__(self):
         self._config = load_tasks_config()
         self._repository_with_simple_worktime_extractor = None
+        self._repositories: Dict[WorkTimeExtractorType, TaskRepository] = {}
+        self._cache = None
         self._service = None
         self._hierarchy_service = None
         self._assignee_search_service = None
@@ -49,17 +53,29 @@ class TasksContainer:
         if worktime_extractor_type is None or worktime_extractor_type == WorkTimeExtractorType.SIMPLE:
             return self._get_repository_with_simple_worktime_extractor()
 
+        if worktime_extractor_type in self._repositories:
+            return self._repositories[worktime_extractor_type]
+
+        cache = self._get_cache()
         if self._has_jira_config():
-            return JiraTaskRepository(self._config, worktime_extractor_type)
+            repository = JiraTaskRepository(self._config, worktime_extractor_type, cache)
         elif self._has_azure_config():
-            return AzureTaskRepository(self._config, worktime_extractor_type)
+            repository = AzureTaskRepository(self._config, worktime_extractor_type, cache)
         else:
             raise ValueError("Task data source not configured.")
+
+        self._repositories[worktime_extractor_type] = repository
+        return repository
+
+    def _get_cache(self):
+        if self._cache is None:
+            self._cache = caches['task_search_results']
+        return self._cache
 
     def _get_task_search_service(self) -> TaskSearchService:
         if self._service is None:
             self._service = TaskSearchService(
-                repository=self._get_repository_with_simple_worktime_extractor(), 
+                repository=self._get_repository_with_simple_worktime_extractor(),
                 task_config=self._config,
                 assignee_search_service=self._get_assignee_search_service(),
                 repository_factory=self.get_task_repository,
@@ -89,12 +105,15 @@ class TasksContainer:
 
     def _get_repository_with_simple_worktime_extractor(self) -> TaskRepository:
         if self._repository_with_simple_worktime_extractor is None:
+            cache = self._get_cache()
             if self._has_jira_config():
                 self._repository_with_simple_worktime_extractor = JiraTaskRepository(self._config,
-                                                                                     WorkTimeExtractorType.SIMPLE)
+                                                                                     WorkTimeExtractorType.SIMPLE,
+                                                                                     cache)
             elif self._has_azure_config():
                 self._repository_with_simple_worktime_extractor = AzureTaskRepository(self._config,
-                                                                                      WorkTimeExtractorType.SIMPLE)
+                                                                                      WorkTimeExtractorType.SIMPLE,
+                                                                                      cache)
             else:
                 raise ValueError("Task data source not configured.")
         return self._repository_with_simple_worktime_extractor

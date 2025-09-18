@@ -1,8 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
 
 from atlassian import Jira
-from django.core.cache import caches
 from sd_metrics_lib.sources.jira.query import JiraSearchQueryBuilder
 from sd_metrics_lib.sources.jira.tasks import JiraTaskProvider
 from sd_metrics_lib.sources.jira.worklog import JiraStatusChangeWorklogExtractor
@@ -19,7 +17,7 @@ from ..app.spi.task_repository import TaskRepository
 
 class JiraTaskRepository(TaskRepository):
 
-    def __init__(self, config: TasksConfig, worktime_extractor_type: Optional[WorkTimeExtractorType] = None):
+    def __init__(self, config: TasksConfig, worktime_extractor_type: Optional[WorkTimeExtractorType] = None, cache=None):
         jira_config = config.jira
         if not all([jira_config.jira_server_url, jira_config.jira_email, jira_config.jira_api_token]):
             raise ValueError("Missing Jira authentication configuration")
@@ -36,7 +34,7 @@ class JiraTaskRepository(TaskRepository):
         self.jira_server_url = jira_config.jira_server_url
         self.config = config
         self.worktime_extractor_type = worktime_extractor_type or WorkTimeExtractorType.SIMPLE
-        self._cache = caches['task_search_results']
+        self._cache = cache
 
         self._story_point_extractor = FunctionStoryPointExtractor(extract_jira_story_points(config))
 
