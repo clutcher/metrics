@@ -10,7 +10,7 @@ PRODUCTION_APPS = (
 INSTALLED_APPS += PRODUCTION_APPS
 
 CACHES['task_search_results'] = {
-    "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-    "LOCATION": "/var/tmp/django_cache/task_search_results",
+    'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+    'LOCATION': '/tmp/metrics_task_search_cache_prod',
     'TIMEOUT': 900
 }

@@ -55,8 +55,8 @@ METRICS_DEFAULT_VELOCITY_TIME_UNIT = env.str('METRICS_DEFAULT_VELOCITY_TIME_UNIT
 METRICS_DEV_VELOCITY_STAGE = env.str('METRICS_DEV_VELOCITY_STAGE', default='Development')
 
 CACHES['task_search_results'] = {
-    'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    'LOCATION': 'task-search-cache',
+    'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+    'LOCATION': '/tmp/metrics_task_search_cache',
     'TIMEOUT': 300
 }
 
