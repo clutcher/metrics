@@ -57,6 +57,7 @@ METRICS_DEV_VELOCITY_STAGE = env.str('METRICS_DEV_VELOCITY_STAGE', default='Deve
 CACHES['task_search_results'] = {
     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
     'LOCATION': '/tmp/metrics_task_search_cache',
+    "OPTIONS": {"MAX_ENTRIES": 100000},
     'TIMEOUT': 300
 }
 
