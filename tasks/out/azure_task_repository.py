@@ -49,13 +49,21 @@ class AzureTaskRepository(TaskRepository):
         if search_criteria is None:
             return AzureSearchQueryBuilder(projects=self.project_keys).build_query()
 
+        sorted_assignees_history = None
+        if search_criteria.assignees_history_filter:
+            sorted_assignees_history = sorted(search_criteria.assignees_history_filter)
+
+        sorted_assignees = None
+        if search_criteria.assignee_filter:
+            sorted_assignees = sorted(search_criteria.assignee_filter)
+
         builder = AzureSearchQueryBuilder(
             projects=self.project_keys,
             task_types=search_criteria.type_filter,
             statuses=search_criteria.status_filter,
             teams=search_criteria.team_filter,
-            assignees=search_criteria.assignee_filter,
-            assignees_history=search_criteria.assignees_history_filter,
+            assignees=sorted_assignees,
+            assignees_history=sorted_assignees_history,
             task_ids=search_criteria.id_filter,
             last_modified_dates=search_criteria.last_modified_date_range,
             resolution_dates=search_criteria.resolution_date_range
