@@ -10,7 +10,7 @@ class FederatedDataFetcher:
         self.attribute_resolvers = []
         self.foreach_populators = []
         self.post_processors = []
-    
+
     @classmethod
     def for_(cls, base_fetcher: Callable[[], Any]) -> 'FederatedDataFetcher':
         return cls(base_fetcher)
@@ -29,33 +29,34 @@ class FederatedDataFetcher:
     
     async def fetch(self) -> Any:
         base_data = await self.base_fetcher()
-        
+
         is_list = isinstance(base_data, list)
         items = base_data if is_list else [base_data]
-        
+
         if items:
             await asyncio.gather(
                 self._apply_foreach_populators(items),
                 self._apply_attribute_resolvers(items)
             )
-        
+
         result = base_data
-        for post_processor in self.post_processors:
-            result = await self._apply_post_processor(result, post_processor)
-        
+        if self.post_processors:
+            for post_processor in self.post_processors:
+                result = await self._apply_post_processor(result, post_processor)
+
         return result
     
     async def _apply_foreach_populators(self, items: List[Any]) -> None:
         if not self.foreach_populators:
             return
-        
+
         for populator in self.foreach_populators:
             async def process_item(item):
                 if asyncio.iscoroutinefunction(populator):
                     return await populator(item)
                 else:
                     return populator(item)
-            
+
             populator_tasks = [process_item(item) for item in items]
             await asyncio.gather(*populator_tasks)
     

@@ -49,24 +49,23 @@ class TasksFacade:
             current_tasks_future, recently_finished_tasks_future
         )
 
-        return current_tasks + recently_finished_tasks
+        all_tasks = current_tasks + recently_finished_tasks
+
+        # Apply batch forecast population to all tasks at once
+        await ForecastPopulationUtils.populate_ideal_forecasts_batch(all_tasks, self.forecast_api)
+
+        return all_tasks
 
     def _build_task_fetcher(self, task_fetcher_func, member_group_id: Optional[str]):
         return (
             FederatedDataFetcher
             .for_(task_fetcher_func)
-            .with_foreach_populator(
-                self._populate_forecast_for_task
-            )
             .with_result_post_processor(
                 lambda all_tasks: self.member_group_task_filter.filter(all_tasks, member_group_id)
             )
             .with_result_post_processor(TaskSortUtils.sort_tasks_by_spent_time)
             .fetch()
         )
-
-    async def _populate_forecast_for_task(self, task: Task) -> None:
-        await ForecastPopulationUtils.populate_ideal_forecast_for_task(task, self.forecast_api)
 
     async def _search_current_tasks(self) -> List[Task]:
         search_criteria = self._create_current_tasks_search_criteria()
