@@ -201,7 +201,6 @@ Filter data by task types, teams, or epics:
 ```bash
 METRICS_GLOBAL_TASK_TYPES_FILTER=["Story", "Bug", "Task"]
 METRICS_GLOBAL_TEAM_FILTER=["Team A", "Team B"]
-METRICS_EPIC_FILTER_ID=179788
 ```
 
 #### Default Values
@@ -260,7 +259,6 @@ METRICS_MEMBER_GROUP_WHEN_MISSING="Unassigned"
 
 **Memory issues**
 - Increase server memory allocation
-- Consider filtering data with `METRICS_EPIC_FILTER_ID`
 - Review `METRICS_GLOBAL_TASK_TYPES_FILTER` to exclude unnecessary task types
 
 ### Configuration Validation

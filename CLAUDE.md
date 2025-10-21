@@ -251,7 +251,6 @@ Configuration is loaded via environment variables using the `environs` library.
 - `METRICS_PROJECT_KEYS`: List of project keys to include
 - `METRICS_GLOBAL_TASK_TYPES_FILTER`: List of task types to include
 - `METRICS_GLOBAL_TEAM_FILTER`: List of teams to include
-- `METRICS_EPIC_FILTER_ID`: Specific epic ID to filter by
 
 #### Calculation Parameters
 - `METRICS_WORKING_DAYS_PER_MONTH`: Working days per month (default: 22)
@@ -270,9 +269,6 @@ Configuration is loaded via environment variables using the `environs` library.
 - `METRICS_DEFAULT_HEALTH_STATUS_WHEN_MISSING`: Default health status (default: 'GREEN')
 - `METRICS_MEMBER_GROUP_WHEN_MISSING`: Default member group when unassigned
 - `METRICS_DEFAULT_VELOCITY_TIME_UNIT`: Default time unit for velocity (default: 'DAY')
-
-#### Development Configuration
-- `METRICS_DEV_VELOCITY_STAGE`: Stage used for development velocity (default: 'Development')
 
 ### Configuration Files
 

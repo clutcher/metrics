@@ -31,7 +31,6 @@ METRICS_PROJECT_KEYS = env.list('METRICS_PROJECT_KEYS', default=None)
 
 METRICS_GLOBAL_TASK_TYPES_FILTER = env.list('METRICS_GLOBAL_TASK_TYPES_FILTER', default=None)
 METRICS_GLOBAL_TEAM_FILTER = env.list('METRICS_GLOBAL_TEAM_FILTER', default=None)
-METRICS_EPIC_FILTER_ID = env.str('METRICS_EPIC_FILTER_ID', default='179788')
 
 # Calculations
 METRICS_STORY_POINT_CUSTOM_FIELD_ID = env.str('METRICS_STORY_POINT_CUSTOM_FIELD_ID', default=None)
@@ -50,9 +49,6 @@ METRICS_MEMBER_GROUP_WHEN_MISSING = env.str('METRICS_MEMBER_GROUP_WHEN_MISSING',
 
 # Velocity time unit configuration
 METRICS_DEFAULT_VELOCITY_TIME_UNIT = env.str('METRICS_DEFAULT_VELOCITY_TIME_UNIT', default='DAY')
-
-# Dev velocity stage configuration
-METRICS_DEV_VELOCITY_STAGE = env.str('METRICS_DEV_VELOCITY_STAGE', default='Development')
 
 CACHES['task_search_results'] = {
     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
