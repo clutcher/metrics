@@ -12,7 +12,7 @@ class BasicAuthMiddleware:
         self.get_response = get_response
 
     def _load_users(self) -> Optional[Dict[str, str]]:
-        users = getattr(settings, 'METRICS_BASIC_AUTH_USERS', None)
+        users = settings.METRICS_BASIC_AUTH_USERS
         if users in (None, ''):
             return None
         if isinstance(users, dict):
