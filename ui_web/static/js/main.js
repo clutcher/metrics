@@ -120,7 +120,39 @@ document.addEventListener('DOMContentLoaded', function() {
             indicator.classList.add('is-hidden');
         }
     }
-    
+
+    function showErrorNotification(url, statusCode, statusText) {
+        const container = document.getElementById('notification-container');
+        if (!container) {
+            return;
+        }
+
+        const message = statusCode
+            ? `${statusCode} ${statusText}: ${url}`
+            : `Network Error: ${url}`;
+
+        const hint = statusCode === 503
+            ? '<p>Request could be blocked by WAF due to long execution time. Retry.</p>'
+            : '';
+
+        const notificationHtml = `
+            <div class="notification is-danger is-light">
+                <button class="delete"></button>
+                <p><strong>${message}</strong></p>
+                ${hint}
+            </div>
+        `;
+
+        container.innerHTML = notificationHtml;
+
+        const deleteButton = container.querySelector('.delete');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function() {
+                container.innerHTML = '';
+            });
+        }
+    }
+
     document.querySelectorAll('.menu-toggle').forEach(toggle => {
         toggle.addEventListener('click', handleMenuToggle);
     });
@@ -145,7 +177,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.addEventListener('htmx:beforeRequest', showLoadingIndicator);
     document.body.addEventListener('htmx:afterRequest', hideLoadingIndicator);
-    
+
+    document.body.addEventListener('htmx:responseError', function(event) {
+        const url = event.detail.pathInfo.requestPath;
+        const statusCode = event.detail.xhr.status;
+        const statusText = event.detail.xhr.statusText;
+        showErrorNotification(url, statusCode, statusText);
+    });
+
+    document.body.addEventListener('htmx:sendError', function(event) {
+        const url = event.detail.pathInfo.requestPath;
+        showErrorNotification(url, null, null);
+    });
+
     window.addEventListener('popstate', function() {
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
