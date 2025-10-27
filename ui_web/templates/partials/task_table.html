@@ -1,3 +1,4 @@
+{% load avatar_filters %}
 <div class="table-container">
     <table class="table is-striped is-hoverable is-fullwidth">
         <thead>
@@ -19,10 +20,19 @@
                 <td>
                     {% if task.assignment.assignee %}
                         {% if task.assignment.assignee.avatar_url %}
-                            <img src="{{ task.assignment.assignee.avatar_url }}" 
-                                 alt="{{ task.assignment.assignee.display_name }}" 
-                                 width="24" height="24" 
-                                 onerror="this.style.display='none';">
+                            <img src="{{ task.assignment.assignee.avatar_url }}"
+                                 alt="{{ task.assignment.assignee.display_name }}"
+                                 width="24" height="24"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                            <span class="tag avatar-initials has-text-white"
+                                  style="background-color: {{ task.assignment.assignee.display_name|avatar_color }}; display: none;">
+                                {{ task.assignment.assignee.display_name|initials }}
+                            </span>
+                        {% else %}
+                            <span class="tag avatar-initials has-text-white"
+                                  style="background-color: {{ task.assignment.assignee.display_name|avatar_color }};">
+                                {{ task.assignment.assignee.display_name|initials }}
+                            </span>
                         {% endif %}
                         {{ task.assignment.assignee.display_name }}
                     {% else %}

@@ -1,3 +1,4 @@
+{% load avatar_filters %}
 {% if error %}
 <tr>
     <td colspan="9">
@@ -10,16 +11,18 @@
         <td>
             {% if child_task.assignment.assignee %}
                 {% if child_task.assignment.assignee.avatar_url %}
-                    <img src="{{ child_task.assignment.assignee.avatar_url }}" 
-                         alt="{{ child_task.assignment.assignee.display_name }}" 
-                         width="24" height="24" 
+                    <img src="{{ child_task.assignment.assignee.avatar_url }}"
+                         alt="{{ child_task.assignment.assignee.display_name }}"
+                         width="24" height="24"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                    <span>
-                        {{ child_task.assignment.assignee.display_name|first|upper|default:"?" }}
+                    <span class="tag avatar-initials has-text-white"
+                          style="background-color: {{ child_task.assignment.assignee.display_name|avatar_color }}; display: none;">
+                        {{ child_task.assignment.assignee.display_name|initials }}
                     </span>
                 {% else %}
-                    <span>
-                        {{ child_task.assignment.assignee.display_name|first|upper|default:"?" }}
+                    <span class="tag avatar-initials has-text-white"
+                          style="background-color: {{ child_task.assignment.assignee.display_name|avatar_color }};">
+                        {{ child_task.assignment.assignee.display_name|initials }}
                     </span>
                 {% endif %}
                 {{ child_task.assignment.assignee.display_name }}
