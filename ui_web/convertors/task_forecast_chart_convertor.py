@@ -5,7 +5,7 @@ from django.conf import settings
 
 from ..data.chart_data import ChartData, ChartDatasetData
 from ..data.task_data import TaskData
-from ..utils.chart_color_utils import ChartColorUtils
+from ..utils.color_utils import ColorUtils
 from ..utils.task_forecast_chart_utils import TaskForecastChartUtils
 
 
@@ -107,7 +107,7 @@ class TaskForecastChartConvertor:
             
         task_label = f"{task_data.id}: {task_data.title} ({estimation_hours:.1f}{time_unit_abbrev})"
         task_y_position = total_tasks - task_index
-        task_color = ChartColorUtils.generate_color_from_string(task_data.id)
+        task_color = ColorUtils.generate_color(task_data.id)
 
         return {
             'label': task_label,

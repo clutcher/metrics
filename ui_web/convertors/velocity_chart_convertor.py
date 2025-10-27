@@ -2,7 +2,7 @@ from typing import List, Optional, Callable
 
 from ..data.chart_data import ChartData, ChartDatasetData
 from ..data.velocity_report_data import VelocityReportData
-from ..utils.chart_color_utils import ChartColorUtils
+from ..utils.color_utils import ColorUtils
 
 
 class VelocityChartConvertor:
@@ -46,7 +46,7 @@ class VelocityChartConvertor:
         dataset = ChartDatasetData(
             label="team",
             data=data_values,
-            color=ChartColorUtils.RED_PASTEL
+            color=ColorUtils.RED_PASTEL
         )
         
         return ChartData(labels=labels, datasets=[dataset])
@@ -73,7 +73,7 @@ class VelocityChartConvertor:
         
         for developer, periods in developer_data.items():
             metrics = [periods.get(label, 0) for label in sorted_labels]
-            color = ChartColorUtils.generate_color_from_string(developer)
+            color = ColorUtils.generate_color(developer)
             
             datasets.append(ChartDatasetData(
                 label=developer,
