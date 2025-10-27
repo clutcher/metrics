@@ -1,50 +1,27 @@
 
-FROM python:slim AS builder
+FROM python:slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=metrics.settings.production \
     PIP_NO_CACHE_DIR=1
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       build-essential \
-       libffi-dev \
-       curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /opt/app
-
-COPY requirements.txt /opt/app/requirements.txt
-RUN python -m pip install --upgrade pip setuptools wheel \
-    && pip install --prefix=/install -r /opt/app/requirements.txt
-
-
-FROM python:slim AS runtime
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=metrics.settings.production
-
-ARG APP_USER=appuser
+ARG APP_USER=metricsuser
 ARG APP_UID=10001
 RUN useradd -u ${APP_UID} -m ${APP_USER}
 
-WORKDIR /app
+WORKDIR /metrics
 
-ENV PATH="/install/bin:${PATH}" \
-    PYTHONPATH="/install/lib/python3.13/site-packages"
-COPY --from=builder /install /install
+COPY requirements.txt /metrics/requirements.txt
+RUN pip install --no-cache-dir -r /metrics/requirements.txt
 
-COPY --chown=${APP_UID}:${APP_UID} . /app
+COPY --chown=${APP_UID}:${APP_UID} . /metrics
 
-RUN mkdir -p /app/staticfiles && chown ${APP_UID}:${APP_UID} /app/staticfiles
+RUN mkdir -p /metrics/staticfiles && chown ${APP_UID}:${APP_UID} /metrics/staticfiles
 
 USER ${APP_USER}
 
-ARG BUILD_COLLECTSTATIC=true
-RUN if [ "$BUILD_COLLECTSTATIC" = "true" ]; then \
-      python manage.py collectstatic --noinput || true; \
-    fi
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
