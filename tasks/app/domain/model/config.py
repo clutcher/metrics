@@ -36,7 +36,8 @@ class TaskFilterConfig:
 class MemberGroupConfig:
     members: Dict[str, Dict[str, Any]]
     default_member_group_when_missing: Optional[str]
-    
+    custom_filters: Optional[Dict[str, str]] = None
+
     def get_available_member_groups(self) -> Dict[str, str]:
         member_groups = {}
         for member_data in self.members.values():
@@ -46,7 +47,7 @@ class MemberGroupConfig:
 
         if self.default_member_group_when_missing:
             member_groups[self.default_member_group_when_missing] = self.default_member_group_when_missing
-        
+
         return member_groups
 
 @dataclass(slots=True)

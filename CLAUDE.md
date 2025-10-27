@@ -262,6 +262,11 @@ Configuration is loaded via environment variables using the `environs` library.
 - `METRICS_MEMBERS`: JSON configuration of team members with levels and groups
 - `METRICS_SENIORITY_LEVELS`: JSON dict of seniority multipliers (default: {"senior": 1.0, "middle": 2.0, "junior": 4.0})
 - `METRICS_STAGES`: JSON configuration of workflow stages
+- `METRICS_MEMBER_GROUP_CUSTOM_FILTERS`: JSON dict mapping member group IDs to custom JQL/query filters for task filtering (default: {})
+  - Replaces default assignee-based filtering with custom query at the repository level
+  - **JIRA example**: `{"TeamA": "parent in (PROJ-123, PROJ-456)"}`
+  - **Azure example**: `{"TeamB": "[System.Parent] IN (174641, 176747)"}`
+  - Works with both JIRA (JQL) and Azure DevOps (WIQL) query syntax
 
 #### Default Values
 - `METRICS_DEFAULT_STORY_POINTS_VALUE_WHEN_MISSING`: Default story points when missing

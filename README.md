@@ -203,6 +203,16 @@ METRICS_GLOBAL_TASK_TYPES_FILTER=["Story", "Bug", "Task"]
 METRICS_GLOBAL_TEAM_FILTER=["Team A", "Team B"]
 ```
 
+#### Custom Member Group Filters
+Override default assignee-based filtering with custom queries per member group:
+```bash
+# JIRA example - filter by parent epic
+METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamA": "parent in (PROJ-123, PROJ-456, PROJ-789)"}'
+
+# Azure DevOps example - filter by parent work items
+METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamB": "[System.Parent] IN (174641, 176747, 179803)"}'
+```
+
 #### Default Values
 Configure fallback values when data is missing:
 ```bash

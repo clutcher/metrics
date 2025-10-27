@@ -39,7 +39,8 @@ def load_tasks_config() -> TasksConfig:
     
     member_group = MemberGroupConfig(
         members=settings.METRICS_MEMBERS,
-        default_member_group_when_missing=settings.METRICS_MEMBER_GROUP_WHEN_MISSING
+        default_member_group_when_missing=settings.METRICS_MEMBER_GROUP_WHEN_MISSING,
+        custom_filters=settings.METRICS_MEMBER_GROUP_CUSTOM_FILTERS
     )
 
     estimation = EstimationConfig(

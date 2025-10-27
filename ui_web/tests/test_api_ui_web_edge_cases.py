@@ -59,6 +59,7 @@ class TestApiUIWebEdgeCases(unittest.IsolatedAsyncioTestCase):
             "bob.smith": {"member_groups": ["backend-team"]}
         }
         member_group_config.default_member_group_when_missing = None
+        member_group_config.custom_filters = {}
         
         self.member_group_filter = MemberGroupTaskFilter(member_group_config)
         

@@ -67,6 +67,10 @@ class JiraTaskRepository(TaskRepository):
         if search_criteria.assignee_filter:
             sorted_assignees = sorted(search_criteria.assignee_filter)
 
+        raw_queries = None
+        if search_criteria.raw_jql_filter:
+            raw_queries = [search_criteria.raw_jql_filter]
+
         builder = JiraSearchQueryBuilder(
             projects=self.project_keys,
             task_types=search_criteria.type_filter,
@@ -76,7 +80,8 @@ class JiraTaskRepository(TaskRepository):
             assignees_history=sorted_assignees_history,
             task_ids=search_criteria.id_filter,
             last_modified_dates=search_criteria.last_modified_date_range,
-            resolution_dates=search_criteria.resolution_date_range
+            resolution_dates=search_criteria.resolution_date_range,
+            raw_queries=raw_queries
         )
 
         return builder.build_query()

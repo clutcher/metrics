@@ -13,6 +13,9 @@ class MemberGroupTaskFilter:
         if not member_group_id:
             return tasks
 
+        if self._has_custom_filter(member_group_id):
+            return tasks
+
         tasks_assigned_to_member_group = []
         for task in tasks:
             assignee_id = self._get_assignee_id(task)
@@ -23,6 +26,11 @@ class MemberGroupTaskFilter:
                 tasks_assigned_to_member_group.append(task)
 
         return tasks_assigned_to_member_group
+
+    def _has_custom_filter(self, member_group_id: str) -> bool:
+        if not self.member_group_config or not self.member_group_config.custom_filters:
+            return False
+        return member_group_id in self.member_group_config.custom_filters
 
     def _is_assignee_of_unassigned_member_group(self, assignee_id: Optional[str]) -> bool:
         if not assignee_id:

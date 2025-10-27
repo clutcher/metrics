@@ -55,6 +55,7 @@ class TestApiUIWebWorkflow(unittest.IsolatedAsyncioTestCase):
             "charlie.brown": {"member_groups": ["devops-team"]}
         }
         member_group_config.default_member_group_when_missing = None
+        member_group_config.custom_filters = {}
         
         self.member_group_filter = MemberGroupTaskFilter(member_group_config)
         

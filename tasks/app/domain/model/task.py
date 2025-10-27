@@ -89,6 +89,7 @@ class TaskSearchCriteria:
     id_filter: Optional[List[str]] = None
     last_modified_date_range: Optional[Tuple[Optional[datetime], Optional[datetime]]] = None
     resolution_date_range: Optional[Tuple[Optional[datetime], Optional[datetime]]] = None
+    raw_jql_filter: Optional[str] = None
 
 
 @dataclass(slots=True)
