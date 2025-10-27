@@ -10,7 +10,7 @@ from tasks.app.domain.model.task import Assignee, TaskStatus
 
 class TaskConversionUtils:
 
-    UNASSIGNED_MEMBER_GROUP_ID = 'unassigned'
+    UNASSIGNED_MEMBER_GROUP_ID = 'Unassigned'
 
     @staticmethod
     def normalize_status(status: str, config: TasksConfig) -> Optional[TaskStatus]:
