@@ -83,7 +83,8 @@ class AzureTaskRepository(TaskRepository):
         additional_fields.extend([
             "System.ChangedDate",
             "System.TeamProject",
-            "System.AreaPath"
+            "System.AreaPath",
+            "Microsoft.VSTS.Common.Priority"
         ])
 
         base_provider = AzureTaskProvider(

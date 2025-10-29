@@ -48,6 +48,7 @@ class TaskData:
     time_tracking: TimeTrackingData
     system_metadata: SystemMetadataData
     story_points: Optional[float] = None
+    priority: Optional[int] = None
     child_tasks: Optional[List['TaskData']] = None
     child_tasks_count: int = 0
     stage: Optional[str] = None

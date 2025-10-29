@@ -16,6 +16,7 @@ class TaskDataBuilder:
         self._id = task_id
         self._title = title
         self._story_points: Optional[float] = None
+        self._priority: Optional[int] = None
         self._assignee_data: Optional[AssigneeData] = None
         self._member_group_data: Optional[MemberGroupData] = None
         self._total_spent_time_days: Optional[float] = None
@@ -50,7 +51,11 @@ class TaskDataBuilder:
     def with_story_points(self, points: float) -> 'TaskDataBuilder':
         self._story_points = points
         return self
-    
+
+    def with_priority(self, priority: int) -> 'TaskDataBuilder':
+        self._priority = priority
+        return self
+
     def assigned_to(self, assignee_id: str) -> 'TaskDataBuilder':
         self._assignee_data = AssigneeData(
             id=assignee_id,
@@ -181,6 +186,7 @@ class TaskDataBuilder:
             time_tracking=time_tracking,
             system_metadata=system_metadata,
             story_points=self._story_points,
+            priority=self._priority,
             child_tasks=self._child_tasks if self._child_tasks else None,
             child_tasks_count=self._child_tasks_count,
             stage=self._stage,

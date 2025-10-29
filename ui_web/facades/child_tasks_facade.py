@@ -5,7 +5,6 @@ from ..convertors.task_convertor import TaskConvertor
 from ..data.task_data import TaskData
 from ..utils.federated_data_fetcher import FederatedDataFetcher
 from ..utils.forecast_population_utils import ForecastPopulationUtils
-from ..utils.task_sort_utils import TaskSortUtils
 
 
 class ChildTasksFacade:
@@ -30,7 +29,6 @@ class ChildTasksFacade:
             FederatedDataFetcher
             .for_(lambda: self._search_child_tasks(parent_task_id))
             .with_foreach_populator(lambda task: ForecastPopulationUtils.populate_ideal_forecast_for_task(task, self.forecast_api))
-            .with_result_post_processor(TaskSortUtils.sort_tasks_by_spent_time)
         )
 
     async def _search_child_tasks(self, parent_task_id: str) -> List[Task]:

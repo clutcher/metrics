@@ -30,6 +30,8 @@ class AzureTaskConverter:
         azure_status = azure_task.fields.get("System.State", "")
         story_points = self.story_point_extractor.get_story_points(azure_task)
         child_tasks_count = self._extract_child_tasks_count(azure_task)
+        priority_data = azure_task.fields.get("Microsoft.VSTS.Common.Priority")
+        priority = int(priority_data) if priority_data else None
 
         return Task(
             id=str(azure_task.id),
@@ -39,6 +41,7 @@ class AzureTaskConverter:
             status=TaskConversionUtils.normalize_status(azure_status, self.config),
             stage=TaskConversionUtils.get_stage_name_for_status(azure_status, self.config),
             story_points=story_points,
+            priority=priority,
             child_tasks_count=child_tasks_count,
             system_metadata=SystemMetadata(original_status="", project_key="", url=""),
             assignment=Assignment(assignee=None, member_group=None),

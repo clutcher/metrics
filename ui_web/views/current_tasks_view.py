@@ -8,6 +8,7 @@ from ..container import ui_web_container
 from ..data.hierarchical_item_data import HierarchicalItemData
 from ..data.task_data import TaskData
 from ..utils.task_grouping_utils import TaskGroupingUtils
+from ..utils.task_sort_utils import TaskSortUtils
 
 
 class CurrentTasksView(TemplateView):
@@ -70,5 +71,6 @@ class CurrentTasksChildrenView(TemplateView):
         task_id = kwargs.get("task_id")
 
         child_tasks = asyncio.run(self.child_tasks_facade.get_child_tasks(task_id))
-        context['child_tasks'] = child_tasks
+        sorted_child_tasks = TaskSortUtils.sort_tasks(child_tasks)
+        context['child_tasks'] = sorted_child_tasks
         return context

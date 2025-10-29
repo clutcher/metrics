@@ -68,7 +68,6 @@ class TasksFacade:
             .with_result_post_processor(
                 lambda all_tasks: self.member_group_task_filter.filter(all_tasks, member_group_id)
             )
-            .with_result_post_processor(TaskSortUtils.sort_tasks_by_spent_time)
             .fetch()
         )
 

@@ -28,6 +28,7 @@ class TaskConvertor:
             time_tracking=self._convert_time_tracking_to_data(task.time_tracking),
             system_metadata=self._convert_system_metadata_to_data(task.system_metadata),
             story_points=task.story_points,
+            priority=task.priority,
             child_tasks_count=task.child_tasks_count or 0,
             stage=task.stage,
             forecast=self._convert_forecast_to_data(task.forecast) if task.forecast else None,

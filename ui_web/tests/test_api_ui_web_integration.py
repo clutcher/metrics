@@ -158,15 +158,15 @@ class TestApiUIWebIntegration(unittest.IsolatedAsyncioTestCase):
         # Then - Tasks should be sorted by business priority (time investment)
         self.assertEqual(3, len(result))
         
-        # Should be sorted by time spent descending for retrospective focus
-        self.assertEqual("HIGH-INVESTMENT", result[0].id)    # 5 days first
-        self.assertEqual("MEDIUM-INVESTMENT", result[1].id)  # 3 days second
-        self.assertEqual("LOW-INVESTMENT", result[2].id)     # 1 day last
-        
+        # Should be sorted by assignee name first, then time spent descending
+        self.assertEqual("LOW-INVESTMENT", result[0].id)     # alice.johnson first alphabetically
+        self.assertEqual("HIGH-INVESTMENT", result[1].id)    # bob.smith second
+        self.assertEqual("MEDIUM-INVESTMENT", result[2].id)  # charlie.brown third
+
         # Verify sorting integration maintains business data integrity
-        self.assertEqual(5.0, result[0].time_tracking.total_spent_time_days)
-        self.assertEqual(3.0, result[1].time_tracking.total_spent_time_days)
-        self.assertEqual(1.0, result[2].time_tracking.total_spent_time_days)
+        self.assertEqual(1.0, result[0].time_tracking.total_spent_time_days)
+        self.assertEqual(5.0, result[1].time_tracking.total_spent_time_days)
+        self.assertEqual(3.0, result[2].time_tracking.total_spent_time_days)
     
     async def test_shouldIntegrateTaskGroupingWithMemberTeamWorkflowForOrganizationalView(self):
         # Given - Multi-team tasks requiring organizational grouping

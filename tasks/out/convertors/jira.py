@@ -30,6 +30,8 @@ class JiraTaskConverter:
         jira_status = task_fields.get('status', {}).get('name', '')
         story_points = self.story_point_extractor.get_story_points(jira_task)
         child_tasks_count = self._extract_child_tasks_count(jira_task)
+        priority_data = task_fields.get('priority')
+        priority = int(priority_data.get('id')) if priority_data and priority_data.get('id') else None
 
         return Task(
             id=jira_task['key'],
@@ -39,6 +41,7 @@ class JiraTaskConverter:
             status=TaskConversionUtils.normalize_status(jira_status, self.config),
             stage=TaskConversionUtils.get_stage_name_for_status(jira_status, self.config),
             story_points=story_points,
+            priority=priority,
             child_tasks_count=child_tasks_count,
             system_metadata=SystemMetadata(original_status="", project_key="", url=""),
             assignment=Assignment(assignee=None, member_group=None),

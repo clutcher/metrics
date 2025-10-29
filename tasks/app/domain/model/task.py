@@ -72,6 +72,7 @@ class Task:
     status: Optional[TaskStatus] = None
     stage: Optional[str] = None
     story_points: Optional[float] = None
+    priority: Optional[int] = None
     child_tasks_count: Optional[int] = None
     child_tasks: Optional[List['Task']] = None
     

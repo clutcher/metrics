@@ -188,9 +188,9 @@ class TestApiUIWebEdgeCases(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(125.0, extreme_task.time_tracking.total_spent_time_days)
         self.assertAlmostEqual(0.0125, minimal_task.time_tracking.total_spent_time_days, places=4)
         
-        # Should still sort correctly despite extreme values
-        self.assertEqual("EXTREME-TIME", result[0].id)  # Highest time first
-        self.assertEqual("MINIMAL-TIME", result[1].id)  # Lowest time last
+        # Should still sort correctly despite extreme values (now sorted by assignee name first)
+        self.assertEqual("MINIMAL-TIME", result[0].id)  # alice.johnson comes first alphabetically
+        self.assertEqual("EXTREME-TIME", result[1].id)  # bob.smith comes second
     
     async def test_shouldHandleInvalidMemberGroupFilterForNonExistentTeams(self):
         # Given - Request for non-existent member group

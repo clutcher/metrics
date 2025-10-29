@@ -4,6 +4,7 @@ from typing import List, Dict, Union, Optional
 from tasks.app.domain.model.config import WorkflowConfig
 from ..data.hierarchical_item_data import HierarchicalItemData
 from ..data.task_data import TaskData
+from .task_sort_utils import TaskSortUtils
 
 
 class TaskGroupingUtils:
@@ -20,7 +21,7 @@ class TaskGroupingUtils:
         has_meaningful_stages = TaskGroupingUtils._has_meaningful_stages(ui_tasks)
 
         if not has_meaningful_member_groups and not has_meaningful_stages:
-            return TaskGroupingUtils._sort_ui_tasks_by_health(ui_tasks)
+            return TaskSortUtils.sort_tasks(ui_tasks)
 
         if has_meaningful_member_groups and has_meaningful_stages:
             return TaskGroupingUtils._create_member_group_and_stage_groups(ui_tasks, workflow_config)
@@ -31,7 +32,7 @@ class TaskGroupingUtils:
         if has_meaningful_member_groups:
             return TaskGroupingUtils._create_member_group_groups_only(ui_tasks)
 
-        return TaskGroupingUtils._sort_ui_tasks_by_health(ui_tasks)
+        return TaskSortUtils.sort_tasks(ui_tasks)
 
     @staticmethod
     def _has_meaningful_member_groups(ui_tasks: List[TaskData]) -> bool:
@@ -93,7 +94,7 @@ class TaskGroupingUtils:
                 continue
 
             member_group_tasks = member_groups[member_group_name]
-            sorted_tasks = TaskGroupingUtils._sort_ui_tasks_by_health(member_group_tasks)
+            sorted_tasks = TaskSortUtils.sort_tasks(member_group_tasks)
 
             grouped_result.append(HierarchicalItemData(
                 name=member_group_name,
@@ -130,7 +131,7 @@ class TaskGroupingUtils:
 
         for stage_name in sorted_stage_names:
             stage_tasks = valid_stages[stage_name]
-            sorted_tasks = TaskGroupingUtils._sort_ui_tasks_by_health(stage_tasks)
+            sorted_tasks = TaskSortUtils.sort_tasks(stage_tasks)
 
             stage_groups.append(HierarchicalItemData(
                 name=stage_name,
@@ -142,12 +143,6 @@ class TaskGroupingUtils:
         return stage_groups
 
     @staticmethod
-    def _sort_ui_tasks_by_health(ui_tasks: List[TaskData]) -> List[TaskData]:
-        sorted_tasks = ui_tasks.copy()
-        sorted_tasks.sort(key=TaskGroupingUtils._extract_health_status_value, reverse=True)
-        return sorted_tasks
-
-    @staticmethod
     def _extract_member_group_name(ui_task: TaskData) -> Optional[str]:
         if ui_task.assignment and ui_task.assignment.member_group:
             return ui_task.assignment.member_group.name
@@ -156,12 +151,6 @@ class TaskGroupingUtils:
     @staticmethod
     def _extract_stage_name(ui_task: TaskData) -> Optional[str]:
         return ui_task.stage
-
-    @staticmethod
-    def _extract_health_status_value(ui_task: TaskData) -> int:
-        if ui_task.forecast and ui_task.forecast.health_status:
-            return ui_task.forecast.health_status.value
-        return 0
 
     @staticmethod
     def _calculate_stage_sort_key(stage_name: str, stage_order: List[str]) -> tuple[int, str]:

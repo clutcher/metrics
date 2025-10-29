@@ -333,10 +333,11 @@ class TestApiUIWebWorkflow(unittest.IsolatedAsyncioTestCase):
         # Then - All tasks should be processed consistently
         self.assertEqual(10, len(result))
         
-        # Verify sequential processing maintained order and consistency
+        # Verify sequential processing maintained data consistency (tasks now sorted by assignee)
+        # With new sorting: all developer.0 tasks first, then developer.1, then developer.2
+        expected_assignees = ['developer.0'] * 4 + ['developer.1'] * 3 + ['developer.2'] * 3
         for i, task in enumerate(result):
-            expected_assignee = f"developer.{i % 3}"
-            self.assertEqual(expected_assignee, task.assignment.assignee.id)
+            self.assertEqual(expected_assignees[i], task.assignment.assignee.id)
             self.assertIsNotNone(task.time_tracking)
             self.assertIsNotNone(task.system_metadata)
     

@@ -11,8 +11,33 @@ if TYPE_CHECKING:
 class TaskSortUtils:
 
     @staticmethod
-    def sort_tasks_by_spent_time(tasks: List[Union[TaskData, 'Task']]) -> List[Union[TaskData, 'Task']]:
-        return sorted(tasks, key=lambda task: -TaskSortUtils._extract_task_spent_time_seconds(task))
+    def sort_tasks(tasks: List[Union[TaskData, 'Task']]) -> List[Union[TaskData, 'Task']]:
+        return sorted(
+            tasks,
+            key=lambda task: (
+                -TaskSortUtils._extract_health_status_value(task),
+                -TaskSortUtils._extract_task_spent_time_seconds(task),
+            )
+        )
+
+    @staticmethod
+    def _extract_health_status_value(task: Union[TaskData, 'Task']) -> int:
+        if not task.forecast or not task.forecast.health_status:
+            return 0
+        value = task.forecast.health_status.value
+        return value if isinstance(value, int) else 0
+
+    @staticmethod
+    def _extract_assignee_name(task: Union[TaskData, 'Task']) -> str:
+        if not task.assignment or not task.assignment.assignee:
+            return ""
+        return task.assignment.assignee.display_name
+
+    @staticmethod
+    def _extract_priority_value(task: Union[TaskData, 'Task']) -> int:
+        if not task.priority:
+            return 999
+        return task.priority
 
     @staticmethod
     def _extract_task_spent_time_seconds(task: Union[TaskData, 'Task']) -> float:
