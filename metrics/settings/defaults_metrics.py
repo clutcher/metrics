@@ -71,6 +71,10 @@ METRICS_STAGES = env.json('METRICS_STAGES', default={
     'Pending': ['Blocked', 'On Hold', 'Pending', 'Waiting'],
 })
 
+METRICS_STAGE_SORT_OVERRIDES = env.json('METRICS_STAGE_SORT_OVERRIDES', default={})
+
+METRICS_DEFAULT_SORT_CRITERIA = env.str('METRICS_DEFAULT_SORT_CRITERIA', default='-health,-spent_time')
+
 METRICS_MEMBERS = env.json('METRICS_MEMBERS', default={})
 
 METRICS_MEMBER_GROUP_CUSTOM_FILTERS = env.json('METRICS_MEMBER_GROUP_CUSTOM_FILTERS', default={})

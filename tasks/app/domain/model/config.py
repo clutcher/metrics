@@ -60,6 +60,11 @@ class EstimationConfig:
     default_health_status_when_missing: str
 
 @dataclass(slots=True)
+class SortingConfig:
+    stage_sort_overrides: Dict[str, str]
+    default_sort_criteria: str
+
+@dataclass(slots=True)
 class TasksConfig:
     jira: JiraConfig
     azure: AzureConfig
@@ -68,7 +73,8 @@ class TasksConfig:
     task_filter: TaskFilterConfig
     member_group: MemberGroupConfig
     estimation: EstimationConfig
-    
+    sorting: SortingConfig
+
     def get_available_member_group_ids(self) -> List[str]:
         return sorted(self.member_group.get_available_member_groups().keys())
     

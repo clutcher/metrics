@@ -1,58 +1,51 @@
-from typing import List, Union, TYPE_CHECKING
+from typing import List, Union, Optional, Tuple, Any
 
-from sd_metrics_lib.utils.time import TimeUnit, TimePolicy, Duration
-
+from tasks.app.domain.model.config import SortingConfig
+from tasks.app.domain.model.task import Task
+from .task_data_extractor import TaskDataExtractor
 from ..data.task_data import TaskData
 
-if TYPE_CHECKING:
-    from tasks.app.domain.model.task import Task
+SORT_EXTRACTORS = {
+    'priority': ('numeric', TaskDataExtractor.extract_priority),
+    'health': ('numeric', TaskDataExtractor.extract_health_status_value),
+    'spent_time': ('numeric', TaskDataExtractor.extract_spent_time_seconds),
+    'assignee': ('string', TaskDataExtractor.extract_assignee_name),
+}
 
 
 class TaskSortUtils:
 
     @staticmethod
-    def sort_tasks(tasks: List[Union[TaskData, 'Task']]) -> List[Union[TaskData, 'Task']]:
-        return sorted(
-            tasks,
-            key=lambda task: (
-                -TaskSortUtils._extract_health_status_value(task),
-                -TaskSortUtils._extract_task_spent_time_seconds(task),
-            )
-        )
+    def sort_tasks(
+            tasks: List[Union[TaskData, 'Task']],
+            sorting_config: Optional[SortingConfig] = None
+    ) -> List[Union[TaskData, 'Task']]:
+        if not tasks or not sorting_config:
+            return tasks
+        return sorted(tasks, key=lambda task: TaskSortUtils._get_sort_key(task, sorting_config))
 
     @staticmethod
-    def _extract_health_status_value(task: Union[TaskData, 'Task']) -> int:
-        if not task.forecast or not task.forecast.health_status:
-            return 0
-        value = task.forecast.health_status.value
-        return value if isinstance(value, int) else 0
+    def _get_sort_key(task: Union[TaskData, 'Task'], sorting_config: SortingConfig) -> Tuple[Any, ...]:
+        task_stage = getattr(task, 'stage', None)
+        criteria_string = sorting_config.stage_sort_overrides.get(task_stage, sorting_config.default_sort_criteria)
+
+        sort_key_parts = []
+        for criteria_part in criteria_string.split(','):
+            criteria_part = criteria_part.strip()
+            if not criteria_part:
+                continue
+            is_ascending = not criteria_part.startswith('-')
+            criterion_name = criteria_part.lstrip('-')
+            if criterion_name in SORT_EXTRACTORS:
+                value_type, extractor_function = SORT_EXTRACTORS[criterion_name]
+                extracted_value = extractor_function(task)
+                sort_key_parts.append(TaskSortUtils._apply_sort_direction(extracted_value, value_type, is_ascending))
+        return tuple(sort_key_parts)
 
     @staticmethod
-    def _extract_assignee_name(task: Union[TaskData, 'Task']) -> str:
-        if not task.assignment or not task.assignment.assignee:
-            return ""
-        return task.assignment.assignee.display_name
-
-    @staticmethod
-    def _extract_priority_value(task: Union[TaskData, 'Task']) -> int:
-        if not task.priority:
-            return 999
-        return task.priority
-
-    @staticmethod
-    def _extract_task_spent_time_seconds(task: Union[TaskData, 'Task']) -> float:
-        if not task.time_tracking:
-            return 0.0
-
-        if hasattr(task.time_tracking, 'total_spent_time_days'):
-            total_spent_time_days = task.time_tracking.total_spent_time_days
-            if not total_spent_time_days:
-                return 0.0
-            return Duration.of(total_spent_time_days, TimeUnit.DAY).convert(TimeUnit.SECOND, TimePolicy.BUSINESS_HOURS).time_delta
-        elif hasattr(task.time_tracking, 'total_spent_time'):
-            total_spent_time = task.time_tracking.total_spent_time
-            if not total_spent_time:
-                return 0.0
-            return total_spent_time.convert(TimeUnit.SECOND, TimePolicy.BUSINESS_HOURS).time_delta
-
-        return 0.0
+    def _apply_sort_direction(value: Any, value_type: str, is_ascending: bool) -> Any:
+        if value_type == 'numeric':
+            return value if is_ascending else -value
+        if is_ascending:
+            return value
+        return '~' * 1000 if not value else chr(255) + value

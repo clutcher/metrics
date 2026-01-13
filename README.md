@@ -213,6 +213,29 @@ METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamA": "parent in (PROJ-123, PROJ-456, P
 METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamB": "[System.Parent] IN (174641, 176747, 179803)"}'
 ```
 
+#### Task Sorting Configuration
+Customize how tasks are sorted within each workflow stage:
+```bash
+# Default sorting criteria (applied to all stages unless overridden)
+# Supported criteria: priority, assignee, health, spent_time
+# Use '-' prefix for descending order (e.g., "-health" for worst health first)
+METRICS_DEFAULT_SORT_CRITERIA=-health,-spent_time
+
+# Stage-specific sorting (overrides default for specific stages)
+# Example: Sort "Ready for Dev" stage by priority first, then assignee
+METRICS_STAGE_SORT_OVERRIDES='{"Ready for Dev": "priority,assignee,-health"}'
+```
+
+**Available sort criteria:**
+- `priority` - Task priority (ascending: 1, 2, 3...)
+- `assignee` - Assignee name (alphabetical)
+- `health` - Health status (ascending: GREEN → YELLOW → RED)
+- `spent_time` - Time already spent on task
+
+**Sort direction:**
+- No prefix = ascending (e.g., `priority` for 1, 2, 3)
+- `-` prefix = descending (e.g., `-health` for RED, YELLOW, GREEN)
+
 #### Default Values
 Configure fallback values when data is missing:
 ```bash

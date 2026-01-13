@@ -213,7 +213,7 @@ class TestApiUIWebWorkflow(unittest.IsolatedAsyncioTestCase):
                       if mg.name == "Frontend Development Team"])
     
     async def test_shouldExecuteSortingWorkflowForPriorityBasedTaskDisplayInRetrospectives(self):
-        # Given - Tasks requiring priority-based sorting for retrospective analysis
+        # Given - Tasks with different time investments for retrospective analysis
         unsorted_tasks = [
             DomainTaskBuilder.domain_task_for_ui_conversion()
                 .with_time_spent_hours(8.0)   # Low effort
@@ -225,26 +225,24 @@ class TestApiUIWebWorkflow(unittest.IsolatedAsyncioTestCase):
                 .with_time_spent_hours(16.0)  # Medium effort
                 .build()
         ]
-        
+
         unsorted_tasks[0].id = "LOW-EFFORT"
-        unsorted_tasks[1].id = "HIGH-EFFORT" 
+        unsorted_tasks[1].id = "HIGH-EFFORT"
         unsorted_tasks[2].id = "MEDIUM-EFFORT"
-        
+
         self.task_search_api.mock.search.side_effect = [unsorted_tasks, []]
-        
-        # When - Execute sorting workflow
+
+        # When - Execute data workflow (note: sorting now happens in view layer via TaskGroupingUtils)
         result = await self.facade.get_tasks()
-        
-        # Then - Tasks should be sorted by time spent (descending)
+
+        # Then - All tasks should be returned with correct data
         self.assertEqual(3, len(result))
-        self.assertEqual("HIGH-EFFORT", result[0].id)    # 4 days first
-        self.assertEqual("MEDIUM-EFFORT", result[1].id)  # 2 days second
-        self.assertEqual("LOW-EFFORT", result[2].id)     # 1 day last
-        
-        # Verify sorting workflow maintained data integrity
-        self.assertEqual(4.0, result[0].time_tracking.total_spent_time_days)
-        self.assertEqual(2.0, result[1].time_tracking.total_spent_time_days)
-        self.assertEqual(1.0, result[2].time_tracking.total_spent_time_days)
+
+        # Verify workflow maintained data integrity for all tasks
+        task_by_id = {task.id: task for task in result}
+        self.assertEqual(4.0, task_by_id["HIGH-EFFORT"].time_tracking.total_spent_time_days)
+        self.assertEqual(2.0, task_by_id["MEDIUM-EFFORT"].time_tracking.total_spent_time_days)
+        self.assertEqual(1.0, task_by_id["LOW-EFFORT"].time_tracking.total_spent_time_days)
     
     def test_shouldExecuteFederatedDataFetcherWorkflowForComplexDataOrchestration(self):
         # Given - Complex data orchestration scenario with proper mock objects
@@ -329,17 +327,23 @@ class TestApiUIWebWorkflow(unittest.IsolatedAsyncioTestCase):
         
         # When - Execute sequential processing workflow
         result = await self.facade.get_tasks()
-        
+
         # Then - All tasks should be processed consistently
         self.assertEqual(10, len(result))
-        
-        # Verify sequential processing maintained data consistency (tasks now sorted by assignee)
-        # With new sorting: all developer.0 tasks first, then developer.1, then developer.2
-        expected_assignees = ['developer.0'] * 4 + ['developer.1'] * 3 + ['developer.2'] * 3
-        for i, task in enumerate(result):
-            self.assertEqual(expected_assignees[i], task.assignment.assignee.id)
+
+        # Verify sequential processing maintained data consistency for all tasks
+        # Note: sorting now happens in view layer via TaskGroupingUtils
+        developer_counts = {"developer.0": 0, "developer.1": 0, "developer.2": 0}
+        for task in result:
+            self.assertIn(task.assignment.assignee.id, developer_counts)
+            developer_counts[task.assignment.assignee.id] += 1
             self.assertIsNotNone(task.time_tracking)
             self.assertIsNotNone(task.system_metadata)
+
+        # Verify correct distribution (10 tasks, 3 developers cycling through i % 3)
+        self.assertEqual(4, developer_counts["developer.0"])  # indices 0,3,6,9
+        self.assertEqual(3, developer_counts["developer.1"])  # indices 1,4,7
+        self.assertEqual(3, developer_counts["developer.2"])  # indices 2,5,8
     
     async def test_shouldExecuteConditionalWorkflowBranchingForBusinessRuleApplication(self):
         # Given - Tasks requiring conditional workflow branching

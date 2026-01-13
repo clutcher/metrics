@@ -2,7 +2,7 @@ from django.conf import settings
 
 from .app.domain.model.config import (
     TasksConfig, JiraConfig, AzureConfig, ProjectConfig, WorkflowConfig,
-    TaskFilterConfig, MemberGroupConfig, EstimationConfig
+    TaskFilterConfig, MemberGroupConfig, EstimationConfig, SortingConfig
 )
 
 
@@ -51,7 +51,12 @@ def load_tasks_config() -> TasksConfig:
         default_seniority_level_when_missing=settings.METRICS_DEFAULT_SENIORITY_LEVEL_WHEN_MISSING,
         default_health_status_when_missing=settings.METRICS_DEFAULT_HEALTH_STATUS_WHEN_MISSING
     )
-    
+
+    sorting = SortingConfig(
+        stage_sort_overrides=settings.METRICS_STAGE_SORT_OVERRIDES,
+        default_sort_criteria=settings.METRICS_DEFAULT_SORT_CRITERIA
+    )
+
     return TasksConfig(
         jira=jira,
         azure=azure,
@@ -59,5 +64,6 @@ def load_tasks_config() -> TasksConfig:
         workflow=workflow,
         task_filter=task_filter,
         member_group=member_group,
-        estimation=estimation
+        estimation=estimation,
+        sorting=sorting
     )

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import List, Dict, Union, Optional
 
-from tasks.app.domain.model.config import WorkflowConfig
+from tasks.app.domain.model.config import WorkflowConfig, SortingConfig
 from ..data.hierarchical_item_data import HierarchicalItemData
 from ..data.task_data import TaskData
 from .task_sort_utils import TaskSortUtils
@@ -12,7 +12,8 @@ class TaskGroupingUtils:
     @staticmethod
     def group_ui_tasks_by_member_group_and_stage(
             ui_tasks: List[TaskData],
-            workflow_config: WorkflowConfig
+            workflow_config: WorkflowConfig,
+            sorting_config: Optional[SortingConfig] = None
     ) -> Union[List[HierarchicalItemData], List[TaskData]]:
         if not ui_tasks:
             return []
@@ -21,18 +22,18 @@ class TaskGroupingUtils:
         has_meaningful_stages = TaskGroupingUtils._has_meaningful_stages(ui_tasks)
 
         if not has_meaningful_member_groups and not has_meaningful_stages:
-            return TaskSortUtils.sort_tasks(ui_tasks)
+            return TaskSortUtils.sort_tasks(ui_tasks, sorting_config)
 
         if has_meaningful_member_groups and has_meaningful_stages:
-            return TaskGroupingUtils._create_member_group_and_stage_groups(ui_tasks, workflow_config)
+            return TaskGroupingUtils._create_member_group_and_stage_groups(ui_tasks, workflow_config, sorting_config)
 
         if has_meaningful_stages:
-            return TaskGroupingUtils._create_stage_groups_only(ui_tasks, workflow_config)
+            return TaskGroupingUtils._create_stage_groups_only(ui_tasks, workflow_config, sorting_config)
 
         if has_meaningful_member_groups:
-            return TaskGroupingUtils._create_member_group_groups_only(ui_tasks)
+            return TaskGroupingUtils._create_member_group_groups_only(ui_tasks, sorting_config)
 
-        return TaskSortUtils.sort_tasks(ui_tasks)
+        return TaskSortUtils.sort_tasks(ui_tasks, sorting_config)
 
     @staticmethod
     def _has_meaningful_member_groups(ui_tasks: List[TaskData]) -> bool:
@@ -53,7 +54,11 @@ class TaskGroupingUtils:
         return len(unique_stages) >= 1
 
     @staticmethod
-    def _create_member_group_and_stage_groups(ui_tasks: List[TaskData], workflow_config: WorkflowConfig) -> List[HierarchicalItemData]:
+    def _create_member_group_and_stage_groups(
+        ui_tasks: List[TaskData],
+        workflow_config: WorkflowConfig,
+        sorting_config: Optional[SortingConfig]
+    ) -> List[HierarchicalItemData]:
         stage_order = list(workflow_config.stages.keys())
         member_groups = TaskGroupingUtils._group_ui_tasks_by_member_group(ui_tasks)
 
@@ -65,7 +70,7 @@ class TaskGroupingUtils:
 
             member_group_tasks = member_groups[member_group_name]
             stages_dict = TaskGroupingUtils._group_ui_tasks_by_stage(member_group_tasks)
-            stage_groups = TaskGroupingUtils._create_stage_item_groups(stages_dict, stage_order)
+            stage_groups = TaskGroupingUtils._create_stage_item_groups(stages_dict, stage_order, sorting_config)
 
             if stage_groups:
                 grouped_result.append(HierarchicalItemData(
@@ -78,13 +83,20 @@ class TaskGroupingUtils:
         return grouped_result
 
     @staticmethod
-    def _create_stage_groups_only(ui_tasks: List[TaskData], workflow_config: WorkflowConfig) -> List[HierarchicalItemData]:
+    def _create_stage_groups_only(
+        ui_tasks: List[TaskData],
+        workflow_config: WorkflowConfig,
+        sorting_config: Optional[SortingConfig]
+    ) -> List[HierarchicalItemData]:
         stage_order = list(workflow_config.stages.keys())
         stages_dict = TaskGroupingUtils._group_ui_tasks_by_stage(ui_tasks)
-        return TaskGroupingUtils._create_stage_item_groups(stages_dict, stage_order)
+        return TaskGroupingUtils._create_stage_item_groups(stages_dict, stage_order, sorting_config)
 
     @staticmethod
-    def _create_member_group_groups_only(ui_tasks: List[TaskData]) -> List[HierarchicalItemData]:
+    def _create_member_group_groups_only(
+        ui_tasks: List[TaskData],
+        sorting_config: Optional[SortingConfig]
+    ) -> List[HierarchicalItemData]:
         member_groups = TaskGroupingUtils._group_ui_tasks_by_member_group(ui_tasks)
 
         grouped_result = []
@@ -94,7 +106,7 @@ class TaskGroupingUtils:
                 continue
 
             member_group_tasks = member_groups[member_group_name]
-            sorted_tasks = TaskSortUtils.sort_tasks(member_group_tasks)
+            sorted_tasks = TaskSortUtils.sort_tasks(member_group_tasks, sorting_config)
 
             grouped_result.append(HierarchicalItemData(
                 name=member_group_name,
@@ -120,7 +132,11 @@ class TaskGroupingUtils:
         return stages_dict
 
     @staticmethod
-    def _create_stage_item_groups(stages_dict: Dict[Optional[str], List[TaskData]], stage_order: List[str]) -> List[HierarchicalItemData]:
+    def _create_stage_item_groups(
+        stages_dict: Dict[Optional[str], List[TaskData]],
+        stage_order: List[str],
+        sorting_config: Optional[SortingConfig]
+    ) -> List[HierarchicalItemData]:
         stage_groups = []
         valid_stages = {k: v for k, v in stages_dict.items() if k is not None}
 
@@ -131,7 +147,7 @@ class TaskGroupingUtils:
 
         for stage_name in sorted_stage_names:
             stage_tasks = valid_stages[stage_name]
-            sorted_tasks = TaskSortUtils.sort_tasks(stage_tasks)
+            sorted_tasks = TaskSortUtils.sort_tasks(stage_tasks, sorting_config)
 
             stage_groups.append(HierarchicalItemData(
                 name=stage_name,

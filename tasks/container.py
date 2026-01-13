@@ -8,6 +8,7 @@ from .app.api.api_for_task_search import ApiForTaskSearch
 from .app.domain.assignee_search_service import AssigneeSearchService
 from .app.domain.convertors.task_metadata_convertor import TaskMetadataPopulator
 from .app.domain.model.task import TaskSearchCriteria, MemberGroup, WorkTimeExtractorType
+from .app.domain.model.config import SortingConfig
 from .app.domain.task_hierarchy_service import TaskHierarchyService
 from .app.domain.task_search_service import TaskSearchService
 from .app.spi.task_repository import TaskRepository
@@ -178,6 +179,9 @@ class TasksContainer:
 
     def get_workflow_config(self):
         return self._config.workflow
+
+    def get_sorting_config(self) -> SortingConfig:
+        return self._config.sorting
 
 
 tasks_container = TasksContainer()

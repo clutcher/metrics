@@ -19,6 +19,7 @@ class CurrentTasksView(TemplateView):
         self.tasks_facade = ui_web_container.tasks_facade
         self.members_facade = ui_web_container.members_facade
         self.workflow_config = tasks_container.get_workflow_config()
+        self.sorting_config = tasks_container.get_sorting_config()
 
     def get_template_names(self):
         if self.request.headers.get('HX-Request'):
@@ -55,7 +56,11 @@ class CurrentTasksView(TemplateView):
         return isinstance(tasks, list) and len(tasks) > 0 and isinstance(tasks[0], HierarchicalItemData)
 
     def _group_tasks(self, ui_tasks: List[TaskData]) -> Union[List[HierarchicalItemData], List[TaskData]]:
-        return TaskGroupingUtils.group_ui_tasks_by_member_group_and_stage(ui_tasks, self.workflow_config)
+        return TaskGroupingUtils.group_ui_tasks_by_member_group_and_stage(
+            ui_tasks,
+            self.workflow_config,
+            self.sorting_config
+        )
 
 
 class CurrentTasksChildrenView(TemplateView):
@@ -64,6 +69,7 @@ class CurrentTasksChildrenView(TemplateView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.child_tasks_facade = ui_web_container.child_tasks_facade
+        self.sorting_config = tasks_container.get_sorting_config()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,6 +77,6 @@ class CurrentTasksChildrenView(TemplateView):
         task_id = kwargs.get("task_id")
 
         child_tasks = asyncio.run(self.child_tasks_facade.get_child_tasks(task_id))
-        sorted_child_tasks = TaskSortUtils.sort_tasks(child_tasks)
+        sorted_child_tasks = TaskSortUtils.sort_tasks(child_tasks, self.sorting_config)
         context['child_tasks'] = sorted_child_tasks
         return context

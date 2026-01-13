@@ -268,6 +268,14 @@ Configuration is loaded via environment variables using the `environs` library.
   - **Azure example**: `{"TeamB": "[System.Parent] IN (174641, 176747)"}`
   - Works with both JIRA (JQL) and Azure DevOps (WIQL) query syntax
 
+#### Sorting Configuration
+- `METRICS_DEFAULT_SORT_CRITERIA`: Default sorting criteria for tasks (default: '-health,-spent_time')
+  - Supported criteria: priority, assignee, health, spent_time
+  - Use '-' prefix for descending order
+- `METRICS_STAGE_SORT_OVERRIDES`: JSON dict mapping stage names to custom sort criteria (default: {})
+  - Overrides default sorting for specific workflow stages
+  - **Example**: `{"Ready for Dev": "priority,assignee,-health"}`
+
 #### Default Values
 - `METRICS_DEFAULT_STORY_POINTS_VALUE_WHEN_MISSING`: Default story points when missing
 - `METRICS_DEFAULT_SENIORITY_LEVEL_WHEN_MISSING`: Default seniority level (default: 'middle')
@@ -291,6 +299,7 @@ class TasksConfig:
     jira: JiraConfig
     workflow: WorkflowConfig
     member_velocity: MemberVelocityConfig
+    sorting: SortingConfig
 ```
 
 ---

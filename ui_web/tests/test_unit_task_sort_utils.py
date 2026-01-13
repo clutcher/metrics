@@ -2,8 +2,13 @@ import unittest
 
 from sd_metrics_lib.utils.enums import HealthStatus
 
+from tasks.app.domain.model.config import SortingConfig
 from ui_web.tests.fixtures.ui_web_builders import TaskDataBuilder
 from ui_web.utils.task_sort_utils import TaskSortUtils
+
+
+def sorting_config(criteria: str = '-health,-spent_time') -> SortingConfig:
+    return SortingConfig(stage_sort_overrides={}, default_sort_criteria=criteria)
 
 
 class TestTaskSortUtilsHealthStatusPrioritization(unittest.TestCase):
@@ -24,7 +29,7 @@ class TestTaskSortUtilsHealthStatusPrioritization(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.RED, result[0].forecast.health_status)
         self.assertEqual(HealthStatus.YELLOW, result[1].forecast.health_status)
@@ -41,7 +46,7 @@ class TestTaskSortUtilsHealthStatusPrioritization(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.GREEN, result[0].forecast.health_status)
         self.assertIsNone(result[1].forecast)
@@ -62,7 +67,7 @@ class TestTaskSortUtilsHealthStatusPrioritization(unittest.TestCase):
 
         tasks = [green_task, yellow_task, red_task]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.RED, result[0].forecast.health_status)
         self.assertEqual(HealthStatus.YELLOW, result[1].forecast.health_status)
@@ -87,7 +92,7 @@ class TestTaskSortUtilsTeamMemberGrouping(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('assignee'))
 
         self.assertEqual("alice (Developer)", result[0].assignment.assignee.display_name)
         self.assertEqual("bob (Developer)", result[1].assignment.assignee.display_name)
@@ -109,7 +114,7 @@ class TestTaskSortUtilsTeamMemberGrouping(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('assignee'))
 
         self.assertIsNone(result[0].assignment.assignee)
         self.assertEqual("alice (Developer)", result[1].assignment.assignee.display_name)
@@ -127,7 +132,7 @@ class TestTaskSortUtilsTeamMemberGrouping(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertIn("ZEBRA", result[0].assignment.assignee.display_name)
         self.assertIn("alice", result[1].assignment.assignee.display_name)
@@ -154,7 +159,7 @@ class TestTaskSortUtilsTimeInvestmentTracking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(5.0, result[0].time_tracking.total_spent_time_days)
         self.assertEqual(3.0, result[1].time_tracking.total_spent_time_days)
@@ -173,7 +178,7 @@ class TestTaskSortUtilsTimeInvestmentTracking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(2.0, result[0].time_tracking.total_spent_time_days)
         self.assertIsNone(result[1].time_tracking.total_spent_time_days)
@@ -192,7 +197,7 @@ class TestTaskSortUtilsTimeInvestmentTracking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(1.0, result[0].time_tracking.total_spent_time_days)
         self.assertEqual(0.0, result[1].time_tracking.total_spent_time_days)
@@ -222,7 +227,7 @@ class TestTaskSortUtilsBusinessPriorityOrdering(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('priority'))
 
         self.assertEqual(1, result[0].priority)
         self.assertEqual(2, result[1].priority)
@@ -243,7 +248,7 @@ class TestTaskSortUtilsBusinessPriorityOrdering(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('priority'))
 
         self.assertEqual(2, result[0].priority)
         self.assertIsNone(result[1].priority)
@@ -264,7 +269,7 @@ class TestTaskSortUtilsBusinessPriorityOrdering(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('priority'))
 
         self.assertEqual(1, result[0].priority)
         self.assertEqual(100, result[1].priority)
@@ -284,7 +289,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.RED, result[0].forecast.health_status)
         self.assertEqual(HealthStatus.GREEN, result[1].forecast.health_status)
@@ -303,7 +308,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.RED, result[0].forecast.health_status)
         self.assertEqual(1.0, result[0].time_tracking.total_spent_time_days)
@@ -322,7 +327,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(HealthStatus.RED, result[0].forecast.health_status)
         self.assertEqual(3, result[0].priority)
@@ -341,7 +346,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('assignee,-spent_time'))
 
         self.assertEqual("alice (Developer)", result[0].assignment.assignee.display_name)
         self.assertEqual(1.0, result[0].time_tracking.total_spent_time_days)
@@ -360,7 +365,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('assignee,priority'))
 
         self.assertEqual("alice (Developer)", result[0].assignment.assignee.display_name)
         self.assertEqual(3, result[0].priority)
@@ -381,7 +386,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(5.0, result[0].time_tracking.total_spent_time_days)
         self.assertEqual(3, result[0].priority)
@@ -420,13 +425,13 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config('priority,assignee,-health,-spent_time'))
 
         self.assertEqual("PROJ-001", result[0].id)
-        self.assertEqual("PROJ-456", result[1].id)
-        self.assertEqual("PROJ-789", result[2].id)
-        self.assertEqual("PROJ-321", result[3].id)
-        self.assertEqual("PROJ-123", result[4].id)
+        self.assertEqual("PROJ-789", result[1].id)
+        self.assertEqual("PROJ-321", result[2].id)
+        self.assertEqual("PROJ-123", result[3].id)
+        self.assertEqual("PROJ-456", result[4].id)
 
     def test_shouldMaintainConsistentOrderingWhenAllBusinessCriteriaIdentical(self):
         task1 = (TaskDataBuilder.sprint_dashboard_task()
@@ -444,7 +449,7 @@ class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
 
         tasks = [task1, task2]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(2, len(result))
         self.assertIn(task1.id, [result[0].id, result[1].id])
@@ -456,7 +461,7 @@ class TestTaskSortUtilsDataQualityHandling(unittest.TestCase):
     def test_shouldHandleEmptySprintBacklogWhenNoTasksAssigned(self):
         tasks = []
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(0, len(result))
 
@@ -468,7 +473,7 @@ class TestTaskSortUtilsDataQualityHandling(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(1, len(result))
         self.assertEqual("PROJ-123", result[0].id)
@@ -481,7 +486,7 @@ class TestTaskSortUtilsDataQualityHandling(unittest.TestCase):
                 .build()
         ]
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(2, len(result))
 
@@ -496,7 +501,7 @@ class TestTaskSortUtilsDataQualityHandling(unittest.TestCase):
                    .build())
             tasks.append(task)
 
-        result = TaskSortUtils.sort_tasks(tasks)
+        result = TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(100, len(result))
 
@@ -512,6 +517,6 @@ class TestTaskSortUtilsDataQualityHandling(unittest.TestCase):
         tasks = [original_task1, original_task2]
         original_first_id = tasks[0].id
 
-        TaskSortUtils.sort_tasks(tasks)
+        TaskSortUtils.sort_tasks(tasks, sorting_config())
 
         self.assertEqual(original_first_id, tasks[0].id)
