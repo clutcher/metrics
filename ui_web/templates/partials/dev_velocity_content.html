@@ -37,8 +37,8 @@
 function initializeDevVelocityCharts() {
     document.getElementById('showAll-dev-velocity').addEventListener('click', () => {
         if (window.devVelocityChartInstance) {
-            window.devVelocityChartInstance.data.datasets.forEach(dataset => {
-                dataset.hidden = false;
+            window.devVelocityChartInstance.data.datasets.forEach((dataset, index) => {
+                window.devVelocityChartInstance.setDatasetVisibility(index, true);
             });
             window.devVelocityChartInstance.update();
         }
@@ -46,8 +46,8 @@ function initializeDevVelocityCharts() {
 
     document.getElementById('hideAll-dev-velocity').addEventListener('click', () => {
         if (window.devVelocityChartInstance) {
-            window.devVelocityChartInstance.data.datasets.forEach(dataset => {
-                dataset.hidden = true;
+            window.devVelocityChartInstance.data.datasets.forEach((dataset, index) => {
+                window.devVelocityChartInstance.setDatasetVisibility(index, false);
             });
             window.devVelocityChartInstance.update();
         }
@@ -55,8 +55,8 @@ function initializeDevVelocityCharts() {
 
     document.getElementById('showAll-dev-sp').addEventListener('click', () => {
         if (window.devStoryPointsChartInstance) {
-            window.devStoryPointsChartInstance.data.datasets.forEach(dataset => {
-                dataset.hidden = false;
+            window.devStoryPointsChartInstance.data.datasets.forEach((dataset, index) => {
+                window.devStoryPointsChartInstance.setDatasetVisibility(index, true);
             });
             window.devStoryPointsChartInstance.update();
         }
@@ -64,8 +64,8 @@ function initializeDevVelocityCharts() {
 
     document.getElementById('hideAll-dev-sp').addEventListener('click', () => {
         if (window.devStoryPointsChartInstance) {
-            window.devStoryPointsChartInstance.data.datasets.forEach(dataset => {
-                dataset.hidden = true;
+            window.devStoryPointsChartInstance.data.datasets.forEach((dataset, index) => {
+                window.devStoryPointsChartInstance.setDatasetVisibility(index, false);
             });
             window.devStoryPointsChartInstance.update();
         }
