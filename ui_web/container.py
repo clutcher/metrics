@@ -74,7 +74,8 @@ class UiWebContainer:
                 workflow_config=tasks_container.get_workflow_config(),
                 member_group_task_filter=self._get_member_group_task_filter(),
                 member_convertor=self.member_convertor,
-                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
+                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters,
+                merge_unassigned_into_filtered_group=tasks_container.get_member_group_config().merge_unassigned_into_filtered_group
             )
         return self._tasks_facade
 

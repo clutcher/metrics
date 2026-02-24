@@ -50,7 +50,7 @@ class AzureTaskConverter:
 
     def _populate_assignment(self, task: Task, azure_task) -> None:
         assignee = self._extract_assignee_from_azure_fields(azure_task)
-        member_group_name = TaskConversionUtils.determine_member_group(assignee, self.config)
+        member_group_name = TaskConversionUtils.determine_member_group_name(assignee, self.config)
         member_group_id = TaskConversionUtils.create_member_group_id(member_group_name)
         member_group = MemberGroup(id=member_group_id, name=member_group_name)
 

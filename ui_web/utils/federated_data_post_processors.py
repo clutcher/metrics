@@ -19,7 +19,7 @@ class MemberGroupTaskFilter:
         tasks_assigned_to_member_group = []
         for task in tasks:
             assignee_id = self._get_assignee_id(task)
-            if member_group_id == TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_ID:
+            if member_group_id == TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_NAME:
                 if self._is_assignee_of_unassigned_member_group(assignee_id):
                     tasks_assigned_to_member_group.append(task)
             elif self._is_assignee_of_group(assignee_id, member_group_id):

@@ -37,6 +37,7 @@ class MemberGroupConfig:
     members: Dict[str, Dict[str, Any]]
     default_member_group_when_missing: Optional[str]
     custom_filters: Optional[Dict[str, str]] = None
+    merge_unassigned_into_filtered_group: bool = False
 
     def get_available_member_groups(self) -> Dict[str, str]:
         member_groups = {}

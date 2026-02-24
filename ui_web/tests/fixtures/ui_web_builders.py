@@ -229,6 +229,10 @@ class DomainTaskBuilder:
         )
         return self
     
+    def with_member_group(self, member_group_id: str, member_group_name: str) -> 'DomainTaskBuilder':
+        self._member_group = MemberGroup(id=member_group_id, name=member_group_name)
+        return self
+
     def assigned_to_senior_developer(self) -> 'DomainTaskBuilder':
         self._assignee = Assignee(
             id="alice.senior",

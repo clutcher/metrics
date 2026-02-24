@@ -267,6 +267,7 @@ Configuration is loaded via environment variables using the `environs` library.
   - **JIRA example**: `{"TeamA": "parent in (PROJ-123, PROJ-456)"}`
   - **Azure example**: `{"TeamB": "[System.Parent] IN (174641, 176747)"}`
   - Works with both JIRA (JQL) and Azure DevOps (WIQL) query syntax
+- `METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP`: When true, tasks with "Unassigned" member group are relabeled to the filtered group when viewing a specific member group (default: false)
 
 #### Sorting Configuration
 - `METRICS_DEFAULT_SORT_CRITERIA`: Default sorting criteria for tasks (default: '-health,-spent_time')

@@ -10,7 +10,7 @@ from tasks.app.domain.model.task import Assignee, TaskStatus
 
 class TaskConversionUtils:
 
-    UNASSIGNED_MEMBER_GROUP_ID = 'Unassigned'
+    UNASSIGNED_MEMBER_GROUP_NAME = 'Unassigned'
 
     @staticmethod
     def normalize_status(status: str, config: TasksConfig) -> Optional[TaskStatus]:
@@ -31,11 +31,11 @@ class TaskConversionUtils:
             return None
 
     @staticmethod
-    def determine_member_group(assignee: Optional[Assignee], config: TasksConfig) -> str:
+    def determine_member_group_name(assignee: Optional[Assignee], config: TasksConfig) -> str:
         if assignee and assignee.id:
             assignee_member_groups = config.get_assignee_member_groups(assignee.id)
-            return assignee_member_groups[0] if assignee_member_groups else TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_ID
-        return TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_ID
+            return assignee_member_groups[0] if assignee_member_groups else TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_NAME
+        return TaskConversionUtils.UNASSIGNED_MEMBER_GROUP_NAME
 
     @staticmethod
     def create_member_group_id(team_name: str) -> str:

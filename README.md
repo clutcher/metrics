@@ -213,6 +213,13 @@ METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamA": "parent in (PROJ-123, PROJ-456, P
 METRICS_MEMBER_GROUP_CUSTOM_FILTERS='{"TeamB": "[System.Parent] IN (174641, 176747, 179803)"}'
 ```
 
+#### Merge Unassigned Tasks Into Filtered Group
+When filtering by a specific member group, unassigned tasks normally appear under a separate "Unassigned" header. Enable this to relabel them under the filtered group's header instead:
+```bash
+METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP=true
+```
+This only applies when viewing a specific member group — the "All Groups" view is unaffected.
+
 #### Task Sorting Configuration
 Customize how tasks are sorted within each workflow stage:
 ```bash
