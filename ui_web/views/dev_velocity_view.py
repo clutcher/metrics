@@ -46,6 +46,8 @@ class DevVelocityView(TemplateView):
             context["error"] = str(e)
 
         context["build_page_title"] = 'Developer Velocity Dashboard'
+        context["velocity_rolling_avg"] = 0
+        context["sp_rolling_avg"] = 0
         context["member_group_id"] = member_group_id or ''
 
         return context
@@ -62,13 +64,19 @@ class DevVelocityChartView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         member_group_id = self.request.GET.get('member_group_id')
+        rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+
+        extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
+        display_periods = 6
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods)
             )
 
-            velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(velocity_reports_data)
+            velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(
+                velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
+            )
             if velocity_chart and velocity_chart.labels:
                 velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
 
@@ -77,6 +85,7 @@ class DevVelocityChartView(TemplateView):
             context["month_velocity"] = "{}"
             context["error"] = str(e)
 
+        context["velocity_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
 
         return context
@@ -93,13 +102,19 @@ class DevStoryPointsChartView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         member_group_id = self.request.GET.get('member_group_id')
+        rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+
+        extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
+        display_periods = 6
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods)
             )
 
-            story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(velocity_reports_data)
+            story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(
+                velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
+            )
             if story_points_chart and story_points_chart.labels:
                 story_points_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(story_points_chart.labels)
 
@@ -108,6 +123,7 @@ class DevStoryPointsChartView(TemplateView):
             context["month_sp"] = "{}"
             context["error"] = str(e)
 
+        context["sp_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
 
         return context

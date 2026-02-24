@@ -9,6 +9,7 @@ from ..convertors.velocity_report_convertor import VelocityReportConvertor
 from ..data.chart_data import ChartData
 from ..data.member_data import MemberGroupFilterData
 from ..data.velocity_report_data import VelocityReportData
+from ..utils.chart_transform_utils import ChartTransformUtils
 
 
 class TeamVelocityFacade:
@@ -23,12 +24,20 @@ class TeamVelocityFacade:
         self.velocity_chart_convertor = velocity_chart_convertor
         self.velocity_report_convertor = velocity_report_convertor
 
-    async def get_velocity_reports_data(self, member_group_id: Optional[str] = None) -> List[VelocityReportData]:
-        velocity_reports = await self._get_velocity_reports(member_group_id)
+    async def get_velocity_reports_data(self, member_group_id: Optional[str] = None,
+                                         number_of_periods: int = 12) -> List[VelocityReportData]:
+        velocity_reports = await self._get_velocity_reports(member_group_id, number_of_periods)
         return self.velocity_report_convertor.convert_velocity_reports_to_data(velocity_reports)
 
-    def get_velocity_chart_data(self, velocity_reports_data: List[VelocityReportData]) -> Optional[ChartData]:
-        return self.velocity_chart_convertor.convert_velocity_reports_to_velocity_chart(velocity_reports_data)
+    def get_velocity_chart_data(self, velocity_reports_data: List[VelocityReportData],
+                                rolling_avg_window: int = 0,
+                                display_periods: int = 0) -> Optional[ChartData]:
+        chart = self.velocity_chart_convertor.convert_velocity_reports_to_velocity_chart(velocity_reports_data)
+        if rolling_avg_window > 0 and chart:
+            chart = ChartTransformUtils.apply_rolling_average(chart, rolling_avg_window)
+        if display_periods > 0 and chart:
+            chart = ChartTransformUtils.trim_to_last_n_periods(chart, display_periods)
+        return chart
 
     def get_story_points_chart_data(self, velocity_reports_data: List[VelocityReportData]) -> Optional[ChartData]:
         return self.velocity_chart_convertor.convert_velocity_reports_to_story_points_chart(velocity_reports_data)
@@ -41,10 +50,11 @@ class TeamVelocityFacade:
             available_member_groups=member_groups_data
         )
 
-    async def _get_velocity_reports(self, member_group_id: Optional[str]):
+    async def _get_velocity_reports(self, member_group_id: Optional[str],
+                                    number_of_periods: int = 12):
         criteria = ReportGenerationParameters(
             time_unit=TimeUnit.MONTH,
-            number_of_periods=12,
+            number_of_periods=number_of_periods,
             report_type=ReportType.MEMBER_GROUP_SCOPE,
             scope_id=member_group_id
         )
