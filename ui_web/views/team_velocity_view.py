@@ -37,7 +37,6 @@ class TeamVelocityView(TemplateView):
                 story_points_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(
                     story_points_chart.labels)
 
-
             context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(
                 velocity_chart) if velocity_chart else "{}"
             context["month_sp"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(
@@ -50,5 +49,37 @@ class TeamVelocityView(TemplateView):
             context["error"] = str(e)
 
         context["build_page_title"] = 'Team Velocity Dashboard'
+        context["member_group_id"] = member_group_id or ''
+
+        return context
+
+
+class TeamVelocityChartView(TemplateView):
+    template_name = 'partials/team_velocity_chart.html'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.team_velocity_facade = ui_web_container.team_velocity_facade
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        member_group_id = self.request.GET.get('member_group_id')
+
+        try:
+            velocity_reports_data = asyncio.run(
+                self.team_velocity_facade.get_velocity_reports_data(member_group_id)
+            )
+
+            velocity_chart = self.team_velocity_facade.get_velocity_chart_data(velocity_reports_data)
+            if velocity_chart and velocity_chart.labels:
+                velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
+
+            context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(velocity_chart) if velocity_chart else "{}"
+        except Exception as e:
+            context["month_velocity"] = "{}"
+            context["error"] = str(e)
+
+        context["member_group_id"] = member_group_id or ''
 
         return context

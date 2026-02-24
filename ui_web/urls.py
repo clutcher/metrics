@@ -3,10 +3,10 @@ from django.urls import path
 
 from .utils.url_utils import django_normalized_base_url
 from .views.current_tasks_view import CurrentTasksView, CurrentTasksChildrenView
-from .views.dev_velocity_view import DevVelocityView
+from .views.dev_velocity_view import DevVelocityView, DevVelocityChartView, DevStoryPointsChartView
 from .views.homepage_view import HomepageView
 from .views.task_forecast_view import TaskForecastView
-from .views.team_velocity_view import TeamVelocityView
+from .views.team_velocity_view import TeamVelocityView, TeamVelocityChartView
 
 app_name = 'ui_web'
 
@@ -29,4 +29,7 @@ urlpatterns = [
     path(_base_prefix + 'partials/tasks/', CurrentTasksView.as_view(), name='partials_tasks'),
     path(_base_prefix + 'partials/tasks/<str:task_id>/children/', CurrentTasksChildrenView.as_view(),
          name='partials_task_children'),
+    path(_base_prefix + 'partials/dev-velocity/chart/', DevVelocityChartView.as_view(), name='dev_velocity_chart'),
+    path(_base_prefix + 'partials/dev-velocity/sp-chart/', DevStoryPointsChartView.as_view(), name='dev_sp_chart'),
+    path(_base_prefix + 'partials/team-velocity/chart/', TeamVelocityChartView.as_view(), name='team_velocity_chart'),
 ]

@@ -1,0 +1,72 @@
+<div class="box">
+    <h3 class="title is-4">📊 Resolved Story Points</h3>
+    <canvas id="teamStoryPointsChart" width="400" height="200"></canvas>
+</div>
+
+<script>
+(function() {
+    function initTeamStoryPointsChart() {
+        if (typeof Chart === 'undefined') {
+            setTimeout(initTeamStoryPointsChart, 100);
+            return;
+        }
+
+        if (window.teamStoryPointsChartInstance) {
+            window.teamStoryPointsChartInstance.destroy();
+            window.teamStoryPointsChartInstance = null;
+        }
+
+        var canvas = document.getElementById('teamStoryPointsChart');
+        if (!canvas) {
+            return;
+        }
+
+        var chartData = {{ month_sp|safe }};
+
+        if (chartData && chartData.labels && chartData.data) {
+            window.teamStoryPointsChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: chartData.data.map(function(item) {
+                        return {
+                            label: item.developer === 'max_sp' ? 'Max Capacity' : item.developer,
+                            data: item.metrics,
+                            backgroundColor: item.color,
+                            borderColor: item.color,
+                            borderWidth: 1
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            usePointStyle: true,
+                            itemSort: function(a, b) { return b.raw - a.raw; }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTeamStoryPointsChart);
+    } else {
+        initTeamStoryPointsChart();
+    }
+})();
+</script>

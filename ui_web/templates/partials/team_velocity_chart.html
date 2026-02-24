@@ -1,0 +1,69 @@
+<div class="box">
+    <h3 class="title is-4">📈 Velocity</h3>
+    <canvas id="teamVelocityChart" width="400" height="200"></canvas>
+</div>
+
+<script>
+(function() {
+    function initTeamVelocityChart() {
+        if (typeof Chart === 'undefined') {
+            setTimeout(initTeamVelocityChart, 100);
+            return;
+        }
+
+        if (window.teamVelocityChartInstance) {
+            window.teamVelocityChartInstance.destroy();
+            window.teamVelocityChartInstance = null;
+        }
+
+        var canvas = document.getElementById('teamVelocityChart');
+        if (!canvas) {
+            return;
+        }
+
+        var chartData = {{ month_velocity|safe }};
+
+        if (chartData && chartData.labels && chartData.data) {
+            window.teamVelocityChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: chartData.data.map(function(item) {
+                        return {
+                            label: item.developer,
+                            data: item.metrics,
+                            borderColor: item.color,
+                            backgroundColor: item.color,
+                            fill: false,
+                            tension: 0.1
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            usePointStyle: true,
+                            itemSort: function(a, b) { return b.raw - a.raw; }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTeamVelocityChart);
+    } else {
+        initTeamVelocityChart();
+    }
+})();
+</script>

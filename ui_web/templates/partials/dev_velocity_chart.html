@@ -1,0 +1,108 @@
+<div class="box">
+    <h3 class="title is-4">📈 Developer Velocity (Last 6 Months)</h3>
+    <div class="buttons are-small">
+        <button class="button" id="showAll-dev-velocity">Show All</button>
+        <button class="button" id="hideAll-dev-velocity">Hide All</button>
+    </div>
+    <canvas id="velocityChart" width="400" height="200"></canvas>
+</div>
+
+<script>
+(function() {
+    function initVelocityChart() {
+        if (typeof Chart === 'undefined') {
+            setTimeout(initVelocityChart, 100);
+            return;
+        }
+
+        var showAllBtn = document.getElementById('showAll-dev-velocity');
+        var hideAllBtn = document.getElementById('hideAll-dev-velocity');
+
+        if (showAllBtn) {
+            showAllBtn.addEventListener('click', function() {
+                if (window.devVelocityChartInstance) {
+                    window.devVelocityChartInstance.data.datasets.forEach(function(dataset, index) {
+                        window.devVelocityChartInstance.setDatasetVisibility(index, true);
+                    });
+                    window.devVelocityChartInstance.update();
+                }
+            });
+        }
+
+        if (hideAllBtn) {
+            hideAllBtn.addEventListener('click', function() {
+                if (window.devVelocityChartInstance) {
+                    window.devVelocityChartInstance.data.datasets.forEach(function(dataset, index) {
+                        window.devVelocityChartInstance.setDatasetVisibility(index, false);
+                    });
+                    window.devVelocityChartInstance.update();
+                }
+            });
+        }
+
+        if (window.devVelocityChartInstance) {
+            window.devVelocityChartInstance.destroy();
+            window.devVelocityChartInstance = null;
+        }
+
+        var canvas = document.getElementById('velocityChart');
+        if (!canvas) {
+            return;
+        }
+
+        var chartData = {{ month_velocity|safe }};
+
+        if (chartData && chartData.labels && chartData.data) {
+            window.devVelocityChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: chartData.data.map(function(item) {
+                        return {
+                            label: item.developer,
+                            data: item.metrics.map(function(value) { return value === 0 ? null : value; }),
+                            borderColor: item.color,
+                            backgroundColor: item.color,
+                            fill: false,
+                            tension: 0.1,
+                            spanGaps: true
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            usePointStyle: true,
+                            itemSort: function(a, b) { return b.raw - a.raw; }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initVelocityChart);
+    } else {
+        initVelocityChart();
+    }
+})();
+</script>
