@@ -2,13 +2,16 @@ from typing import Optional, List
 
 from sd_metrics_lib.utils.time import TimeUnit
 
+from velocity.app.domain.model.config import MemberVelocityConfig
 from velocity.app.domain.model.velocity import ReportGenerationParameters, ReportType
 from ..convertors.member_convertor import MemberConvertor
 from ..convertors.velocity_chart_convertor import VelocityChartConvertor
 from ..convertors.velocity_report_convertor import VelocityReportConvertor
 from ..data.chart_data import ChartData
 from ..data.velocity_report_data import VelocityReportData
+from ..data.velocity_threshold_data import VelocityThresholdsData, VelocityLevelThreshold
 from ..utils.chart_transform_utils import ChartTransformUtils
+from ..utils.color_utils import ColorUtils
 
 
 class DevVelocityFacade:
@@ -16,7 +19,9 @@ class DevVelocityFacade:
                  create_velocity_search_criteria,
                  member_convertor: MemberConvertor,
                  velocity_chart_convertor: VelocityChartConvertor,
-                 velocity_report_convertor: VelocityReportConvertor):
+                 velocity_report_convertor: VelocityReportConvertor,
+                 member_velocity_config: MemberVelocityConfig,
+                 ideal_hours_per_day: float):
         self.velocity_api = velocity_api
         self.assignee_search_api = assignee_search_api
         self.available_member_groups = available_member_groups
@@ -24,6 +29,8 @@ class DevVelocityFacade:
         self.member_convertor = member_convertor
         self.velocity_chart_convertor = velocity_chart_convertor
         self.velocity_report_convertor = velocity_report_convertor
+        self._member_velocity_config = member_velocity_config
+        self._ideal_hours_per_day = ideal_hours_per_day
 
     async def get_velocity_reports_data(self, member_group_id: Optional[str] = None,
                                          number_of_periods: int = 6) -> List[VelocityReportData]:
@@ -49,6 +56,16 @@ class DevVelocityFacade:
         if display_periods > 0 and chart:
             chart = ChartTransformUtils.trim_to_last_n_periods(chart, display_periods)
         return chart
+
+    def get_velocity_thresholds(self) -> VelocityThresholdsData:
+        thresholds = []
+        for level_name, multiplier in self._member_velocity_config.seniority_levels.items():
+            threshold = self._ideal_hours_per_day / (self._member_velocity_config.story_points_to_ideal_hours_ratio * multiplier)
+            color = ColorUtils.generate_color(level_name)
+            thresholds.append(VelocityLevelThreshold(level_name, threshold, color))
+
+        thresholds.sort(key=lambda t: t.threshold)
+        return VelocityThresholdsData(thresholds)
 
     async def _get_velocity_reports(self, member_group_id: Optional[str],
                                     number_of_periods: int = 6):

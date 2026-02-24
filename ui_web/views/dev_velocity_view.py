@@ -1,4 +1,6 @@
 import asyncio
+import json
+from dataclasses import asdict
 
 from django.views.generic import TemplateView
 
@@ -24,6 +26,9 @@ class DevVelocityView(TemplateView):
 
         team_id = kwargs.get('team_id')
         member_group_id = team_id or self.request.GET.get('member_group_id')
+
+        velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
+        context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
 
         try:
             velocity_reports_data = asyncio.run(self.dev_velocity_facade.get_velocity_reports_data(member_group_id))
@@ -65,6 +70,9 @@ class DevVelocityChartView(TemplateView):
 
         member_group_id = self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+
+        velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
+        context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 6

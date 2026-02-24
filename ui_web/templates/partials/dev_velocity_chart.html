@@ -22,13 +22,13 @@
             return;
         }
 
-        var showAllBtn = document.getElementById('showAll-dev-velocity');
-        var hideAllBtn = document.getElementById('hideAll-dev-velocity');
+        const showAllBtn = document.getElementById('showAll-dev-velocity');
+        const hideAllBtn = document.getElementById('hideAll-dev-velocity');
 
         if (showAllBtn) {
-            showAllBtn.addEventListener('click', function() {
+            showAllBtn.addEventListener('click', () => {
                 if (window.devVelocityChartInstance) {
-                    window.devVelocityChartInstance.data.datasets.forEach(function(dataset, index) {
+                    window.devVelocityChartInstance.data.datasets.forEach((dataset, index) => {
                         window.devVelocityChartInstance.setDatasetVisibility(index, true);
                     });
                     window.devVelocityChartInstance.update();
@@ -37,9 +37,9 @@
         }
 
         if (hideAllBtn) {
-            hideAllBtn.addEventListener('click', function() {
+            hideAllBtn.addEventListener('click', () => {
                 if (window.devVelocityChartInstance) {
-                    window.devVelocityChartInstance.data.datasets.forEach(function(dataset, index) {
+                    window.devVelocityChartInstance.data.datasets.forEach((dataset, index) => {
                         window.devVelocityChartInstance.setDatasetVisibility(index, false);
                     });
                     window.devVelocityChartInstance.update();
@@ -52,29 +52,62 @@
             window.devVelocityChartInstance = null;
         }
 
-        var canvas = document.getElementById('velocityChart');
+        const canvas = document.getElementById('velocityChart');
         if (!canvas) {
+            console.error('Velocity chart canvas not found');
             return;
         }
 
-        var chartData = {{ month_velocity|safe }};
+        const chartData = {{ month_velocity|safe }};
+        const thresholdsData = {{ velocity_thresholds|safe }};
+
+        function hslToHsla(hsl, alpha) {
+            return hsl.replace('hsl(', 'hsla(').replace(')', `, ${alpha})`);
+        }
+
+        function buildThresholdAnnotations(thresholds) {
+            const annotations = {};
+            const rangePercent = 0.25;
+
+            thresholds.forEach((t) => {
+                const rangeMin = t.threshold * (1 - rangePercent);
+                const rangeMax = t.threshold * (1 + rangePercent);
+
+                annotations[`band_${t.level_name}`] = {
+                    type: 'box',
+                    yMin: rangeMin,
+                    yMax: rangeMax,
+                    backgroundColor: hslToHsla(t.color, 0.04),
+                    borderColor: hslToHsla(t.color, 0.2),
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                    label: {
+                        content: `${t.level_name} (~${t.threshold.toFixed(1)})`,
+                        display: true,
+                        position: 'end',
+                        color: 'rgba(200, 200, 200, 0.6)'
+                    }
+                };
+            });
+            return annotations;
+        }
+
+        const thresholdAnnotations = buildThresholdAnnotations(thresholdsData.thresholds);
 
         if (chartData && chartData.labels && chartData.data) {
             window.devVelocityChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: chartData.labels,
-                    datasets: chartData.data.map(function(item) {
-                        return {
-                            label: item.developer,
-                            data: item.metrics.map(function(value) { return value === 0 ? null : value; }),
-                            borderColor: item.color,
-                            backgroundColor: item.color,
-                            fill: false,
-                            tension: 0.1,
-                            spanGaps: true
-                        };
-                    })
+                    datasets: chartData.data.map(item => ({
+                        label: item.developer,
+                        data: item.metrics.map(value => value === 0 ? null : value),
+                        borderColor: item.color,
+                        backgroundColor: item.color,
+                        fill: false,
+                        tension: 0.1,
+                        spanGaps: true
+                    }))
                 },
                 options: {
                     responsive: true,
@@ -88,6 +121,9 @@
                         }
                     },
                     plugins: {
+                        annotation: {
+                            annotations: thresholdAnnotations
+                        },
                         legend: {
                             display: true,
                             position: 'bottom',
@@ -98,7 +134,7 @@
                         },
                         tooltip: {
                             usePointStyle: true,
-                            itemSort: function(a, b) { return b.raw - a.raw; }
+                            itemSort: (a, b) => b.raw - a.raw
                         }
                     }
                 }

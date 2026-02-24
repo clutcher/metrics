@@ -121,7 +121,9 @@ class UiWebContainer:
                 tasks_container.create_velocity_search_criteria,
                 self.member_convertor,
                 self._get_velocity_chart_convertor(),
-                self._get_velocity_report_convertor()
+                self._get_velocity_report_convertor(),
+                member_velocity_config=velocity_container.get_member_velocity_config(),
+                ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day
             )
         return self._dev_velocity_facade
 

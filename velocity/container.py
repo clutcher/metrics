@@ -3,6 +3,7 @@ from sd_metrics_lib.utils.time import TimePolicy
 
 from tasks.container import tasks_container
 from velocity.app.domain.calculation.member_group_resolver import MemberGroupResolver
+from .app.domain.model.config import MemberVelocityConfig
 from .app.api.api_for_report_generation import ApiForVelocityReportGeneration
 from .app.api.api_for_velocity_calculation import ApiForVelocityCalculation
 from .app.domain.calculation.velocity_report_calculator import VelocityReportCalculator
@@ -43,6 +44,9 @@ class VelocityContainer:
     @property
     def _member_group_resolver(self) -> MemberGroupResolver:
         return MemberGroupResolver(tasks_container.get_member_group_config())
+
+    def get_member_velocity_config(self) -> MemberVelocityConfig:
+        return self._config.member_velocity
 
     @property
     def ideal_time_policy(self) -> TimePolicy:

@@ -25,28 +25,27 @@
             window.teamVelocityChartInstance = null;
         }
 
-        var canvas = document.getElementById('teamVelocityChart');
+        const canvas = document.getElementById('teamVelocityChart');
         if (!canvas) {
+            console.error('Team velocity chart canvas not found');
             return;
         }
 
-        var chartData = {{ month_velocity|safe }};
+        const chartData = {{ month_velocity|safe }};
 
         if (chartData && chartData.labels && chartData.data) {
             window.teamVelocityChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: chartData.labels,
-                    datasets: chartData.data.map(function(item) {
-                        return {
-                            label: item.developer,
-                            data: item.metrics,
-                            borderColor: item.color,
-                            backgroundColor: item.color,
-                            fill: false,
-                            tension: 0.1
-                        };
-                    })
+                    datasets: chartData.data.map(item => ({
+                        label: item.developer,
+                        data: item.metrics,
+                        borderColor: item.color,
+                        backgroundColor: item.color,
+                        fill: false,
+                        tension: 0.1
+                    }))
                 },
                 options: {
                     responsive: true,
@@ -61,7 +60,7 @@
                         },
                         tooltip: {
                             usePointStyle: true,
-                            itemSort: function(a, b) { return b.raw - a.raw; }
+                            itemSort: (a, b) => b.raw - a.raw
                         }
                     }
                 }
