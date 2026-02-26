@@ -5,7 +5,7 @@ from typing import Optional
 from sd_metrics_lib.utils.enums import HealthStatus
 from sd_metrics_lib.utils.time import TimeUnit, Duration
 
-from .enums import TargetType, SubjectType, VelocityStrategy, StoryPointsStrategy
+from .enums import TargetType, SubjectType, VelocityStrategy, StoryPointsStrategy, TaskScope
 
 
 @dataclass(slots=True)
@@ -38,3 +38,4 @@ class ForecastGenerationParameters:
     subject: Subject
     time_unit: TimeUnit
     start_date: datetime = datetime.now()
+    task_scope: TaskScope = TaskScope.ACTIVE_ONLY

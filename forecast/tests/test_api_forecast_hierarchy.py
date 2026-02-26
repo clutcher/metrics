@@ -5,7 +5,7 @@ from sd_metrics_lib.utils.time import TimePolicy, TimeUnit
 
 from forecast.app.domain.forecast_service import ForecastService
 from forecast.app.domain.model.config import ForecastConfig, CalculationConfig, SeniorityConfig
-from forecast.app.domain.model.enums import StoryPointsStrategy
+from forecast.app.domain.model.enums import StoryPointsStrategy, TaskScope
 from forecast.tests.fixtures.forecast_builders import ForecastParametersBuilder, BusinessVelocityScenarios
 from forecast.tests.fixtures.task_builders import TaskBuilder, BusinessScenarios
 from forecast.tests.mocks.mock_task_repository import MockTaskRepository
@@ -255,6 +255,27 @@ class TestApiForecastHierarchy(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(expected_child_direct_estimation, child.forecast.estimation_time.time_delta, places=2)
         self.assertAlmostEqual(expected_parent_aggregated_estimation, parent.forecast.estimation_time.time_delta, places=2)
     
+    async def test_shouldPassAllTaskScopeToRepositoryWhenIncludingCompletedTasks(self):
+        # Given
+        task = BusinessScenarios.green_health_task()
+        tasks = [task]
+
+        parameters = (ForecastParametersBuilder.default_parameters()
+                     .with_cumulative_story_points()
+                     .build())
+        parameters.task_scope = TaskScope.ALL
+
+        self.task_repository.mock.get_tasks_with_full_hierarchy.return_value = tasks
+        self.velocity_repository.mock.get_velocity = AsyncMock(
+            return_value=BusinessVelocityScenarios.average_team_velocity()
+        )
+
+        # When
+        await self.forecast_service.generate_forecasts_for_task_ids(["AUTH-123"], parameters)
+
+        # Then
+        self.task_repository.mock.get_tasks_with_full_hierarchy.assert_called_once_with(["AUTH-123"], TaskScope.ALL)
+
     async def test_shouldUseCorrectRepositoryMethodBasedOnStrategy(self):
         task = BusinessScenarios.green_health_task()
         tasks = [task]
@@ -277,7 +298,7 @@ class TestApiForecastHierarchy(unittest.IsolatedAsyncioTestCase):
         await self.forecast_service.generate_forecasts_for_task_ids(["AUTH-123"], cumulative_parameters)
         
         self.task_repository.mock.get_tasks.assert_called_once_with(["AUTH-123"])
-        self.task_repository.mock.get_tasks_with_full_hierarchy.assert_called_once_with(["AUTH-123"])
+        self.task_repository.mock.get_tasks_with_full_hierarchy.assert_called_once_with(["AUTH-123"], TaskScope.ACTIVE_ONLY)
 
 
 if __name__ == '__main__':

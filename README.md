@@ -17,7 +17,7 @@ Transform your JIRA or Azure DevOps data into actionable development insights:
 - **📋 Current Tasks**: Real-time view of active work with completion forecasts
 - **🚀 Team Velocity**: Track story points and delivery trends over time with rolling averages
 - **👨‍💻 Developer Velocity**: Individual velocity metrics with seniority-level thresholds, rolling averages, and unfinished task inclusion
-- **🔮 Task Forecasting**: Predict completion dates based on team velocity
+- **🔮 Task Forecasting**: Predict completion dates based on team velocity, with completed vs remaining work breakdown
 
 <details>
 <summary>📸 View Screenshots</summary>

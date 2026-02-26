@@ -165,6 +165,6 @@ class ForecastService(ApiForForecast):
         if StoryPointsStrategy.DIRECT == parameters.story_points_strategy:
             return await self._task_repository.get_tasks(task_ids)
         elif StoryPointsStrategy.CUMULATIVE == parameters.story_points_strategy:
-            return await self._task_repository.get_tasks_with_full_hierarchy(task_ids)
+            return await self._task_repository.get_tasks_with_full_hierarchy(task_ids, parameters.task_scope)
 
         return []

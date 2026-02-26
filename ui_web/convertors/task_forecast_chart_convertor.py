@@ -14,16 +14,14 @@ class TaskForecastChartConvertor:
     def convert_task_data_list_to_chart(self, task_data_list: List[TaskData]) -> Optional[ChartData]:
         if not task_data_list:
             return None
-        
-        chart_tasks = []
-        for task_data in task_data_list:
-            chart_tasks.append(task_data)
-            if task_data.child_tasks:
-                chart_tasks.extend(child for child in task_data.child_tasks 
-                                 if TaskForecastChartUtils._is_task_data_active(child))
-        
+
+        chart_tasks = self._collect_chart_tasks(task_data_list)
+
+        if not chart_tasks:
+            return None
+
         chart_data_dict = self._prepare_chart_data_from_task_data(chart_tasks)
-        
+
         datasets = [
             ChartDatasetData(
                 label=dataset.get('label', ''),
@@ -36,7 +34,7 @@ class TaskForecastChartConvertor:
             )
             for dataset in chart_data_dict.get('datasets', [])
         ]
-        
+
         return ChartData(
             labels=chart_data_dict.get('labels', []),
             datasets=datasets,
@@ -44,10 +42,19 @@ class TaskForecastChartConvertor:
             max_date=chart_data_dict.get('max_date')
         )
 
+    @staticmethod
+    def _collect_chart_tasks(task_data_list: List[TaskData]) -> List[TaskData]:
+        chart_tasks = []
+        for task_data in task_data_list:
+            chart_tasks.append(task_data)
+            if task_data.child_tasks:
+                chart_tasks.extend(task_data.child_tasks)
+        return chart_tasks
+
     def _prepare_chart_data_from_task_data(self, task_data_list: List[TaskData]):
         chart_date_range = self._calculate_chart_date_range_from_task_data(task_data_list)
         chart_datasets = self._build_chart_datasets_from_task_data(task_data_list)
-        
+
         return {
             'labels': [dataset['label'] for dataset in chart_datasets],
             'datasets': chart_datasets,
@@ -76,7 +83,7 @@ class TaskForecastChartConvertor:
 
         min_task_date = min(task_dates)
         max_task_date = max(task_dates)
-        
+
         return {
             'min_date': min_task_date - timedelta(days=7),
             'max_date': max_task_date + timedelta(days=7)
@@ -85,26 +92,30 @@ class TaskForecastChartConvertor:
     def _build_chart_datasets_from_task_data(self, task_data_list: List[TaskData]):
         time_unit_abbrev = self._get_time_unit_abbreviation(settings.METRICS_DEFAULT_VELOCITY_TIME_UNIT)
         chart_datasets = []
-        
+
         for task_index, task_data in enumerate(task_data_list):
             if self._task_data_has_forecast_dates(task_data):
-                dataset = self._create_task_data_chart_dataset(task_data, task_index, len(task_data_list), time_unit_abbrev)
+                is_done = TaskForecastChartUtils.is_task_data_done(task_data)
+                dataset = self._create_task_data_chart_dataset(
+                    task_data, task_index, len(task_data_list), time_unit_abbrev, is_done
+                )
                 chart_datasets.append(dataset)
-        
+
         return chart_datasets
 
     @staticmethod
     def _task_data_has_forecast_dates(task_data: TaskData) -> bool:
-        return (task_data.forecast and 
+        return (task_data.forecast and
                 task_data.forecast.start_date and
                 task_data.forecast.end_date)
 
     @staticmethod
-    def _create_task_data_chart_dataset(task_data: TaskData, task_index: int, total_tasks: int, time_unit_abbrev: str):
+    def _create_task_data_chart_dataset(task_data: TaskData, task_index: int, total_tasks: int,
+                                         time_unit_abbrev: str, is_done: bool = False):
         estimation_hours = 0.0
         if task_data.forecast and task_data.forecast.estimation_time_days:
             estimation_hours = task_data.forecast.estimation_time_days * 8.0
-            
+
         task_label = f"{task_data.id}: {task_data.title} ({estimation_hours:.1f}{time_unit_abbrev})"
         task_y_position = total_tasks - task_index
         task_color = ColorUtils.generate_color(task_data.id)
@@ -124,7 +135,7 @@ class TaskForecastChartConvertor:
             'fill': False,
             'borderColor': task_color,
             'backgroundColor': task_color,
-            'borderWidth': 15,
+            'borderWidth': 15 if not is_done else 8,
             'pointRadius': 0
         }
 
@@ -138,4 +149,3 @@ class TaskForecastChartConvertor:
             'MONTH': 'm'
         }
         return abbreviations.get(time_unit_name.upper(), 'h')
-

@@ -11,35 +11,46 @@ class TaskForecastChartUtils:
     @staticmethod
     def flatten_task_data_hierarchy_for_table(task_data: TaskData, level: int = 0) -> List[TaskForecastBreakdownItem]:
         tasks = []
+
+        has_children = task_data.child_tasks is not None and len(task_data.child_tasks) > 0
+
+        tasks.append(TaskForecastChartUtils._create_breakdown_item(task_data, level, has_children))
+
+        if task_data.child_tasks:
+            for child in task_data.child_tasks:
+                tasks.extend(TaskForecastChartUtils.flatten_task_data_hierarchy_for_table(child, level + 1))
+
+        return tasks
+
+    @staticmethod
+    def is_task_data_done(task_data: TaskData) -> bool:
+        if not task_data.system_metadata or not task_data.system_metadata.original_status:
+            return False
+
+        return task_data.system_metadata.original_status in settings.METRICS_DONE_STATUS_CODES
+
+    @staticmethod
+    def _create_breakdown_item(task_data: TaskData, level: int,
+                                has_children: bool) -> TaskForecastBreakdownItem:
         estimation_days = 0.0
         if task_data.forecast and task_data.forecast.estimation_time_days:
             estimation_days = task_data.forecast.estimation_time_days
-        
-        active_children = []
-        if task_data.child_tasks:
-            for child in task_data.child_tasks:
-                if TaskForecastChartUtils._is_task_data_active(child):
-                    active_children.append(child)
-        
-        tasks.append(TaskForecastBreakdownItem(
+
+        status = ""
+        if task_data.system_metadata and task_data.system_metadata.original_status:
+            status = task_data.system_metadata.original_status
+
+        task_url = None
+        if task_data.system_metadata:
+            task_url = task_data.system_metadata.url
+
+        return TaskForecastBreakdownItem(
             task_id=task_data.id,
             task_title=task_data.title,
             estimation_days=estimation_days,
             level=level,
-            has_children=len(active_children) > 0
-        ))
-        
-        for child in active_children:
-            tasks.extend(TaskForecastChartUtils.flatten_task_data_hierarchy_for_table(child, level + 1))
-        
-        return tasks
-
-    @staticmethod
-    def _is_task_data_active(task_data: TaskData) -> bool:
-        if not task_data.system_metadata or not task_data.system_metadata.original_status:
-            return True
-        
-        task_status = task_data.system_metadata.original_status
-        done_statuses = settings.METRICS_DONE_STATUS_CODES
-        
-        return task_status not in done_statuses
+            has_children=has_children,
+            is_done=TaskForecastChartUtils.is_task_data_done(task_data),
+            status=status,
+            task_url=task_url
+        )

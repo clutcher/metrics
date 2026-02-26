@@ -28,3 +28,8 @@ class VelocityStrategy(Enum):
 class StoryPointsStrategy(Enum):
     DIRECT = auto()
     CUMULATIVE = auto()
+
+
+class TaskScope(Enum):
+    ACTIVE_ONLY = auto()
+    ALL = auto()

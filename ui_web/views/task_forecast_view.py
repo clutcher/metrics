@@ -2,6 +2,7 @@ import asyncio
 
 from django.views.generic import TemplateView
 
+from forecast.app.domain.model.enums import TaskScope
 from ..container import ui_web_container
 from ..utils.chart_json_utils import ChartJsonUtils
 
@@ -39,6 +40,7 @@ class TaskForecastView(TemplateView):
                 context["task_forecast"] = self.task_forecast_facade.get_forecast_summary_from_data(task_hierarchy)
                 context["chart_data"] = ChartJsonUtils.convert_chart_data_to_timeline_chartjs_json(
                     forecast_chart) if forecast_chart else ""
+                context["include_done_tasks"] = request_data.task_scope == TaskScope.ALL
 
             context["success"] = True
         except Exception as e:

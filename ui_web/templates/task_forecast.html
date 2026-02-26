@@ -43,6 +43,19 @@
                 </div>
             </div>
         </div>
+        <div class="columns">
+            <div class="column">
+                <div class="field">
+                    <div class="control">
+                        <label class="checkbox">
+                            <input type="checkbox" name="include_done_tasks" value="true"
+                                   {% if forecast_params.task_scope.name == "ALL" %}checked{% endif %}>
+                            Include Completed Tasks
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="field">
             <div class="control">
                 <button class="button is-primary" type="submit">Generate Forecast</button>

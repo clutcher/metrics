@@ -1,7 +1,7 @@
 {% if error %}
 <article class="message is-danger">
     <div class="message-header">
-        <p>⚠️ Error Loading Forecast Data</p>
+        <p>Error Loading Forecast Data</p>
     </div>
     <div class="message-body">
         <p><strong>{{ error }}</strong></p>
@@ -17,9 +17,13 @@
                 <div class="columns">
                     <div class="column">
                         <p><strong>Total Estimation:</strong> {{ task_forecast.total_estimation_days|floatformat:1 }} {{ time_unit|default:"days" }}</p>
-                        <p><strong>Forecasted Start:</strong> {{ task_forecast.forecasted_start_date|date:"M d, Y" }}</p>
+                        {% if include_done_tasks and task_forecast.completed_estimation_days > 0 %}
+                        <p><strong>Completed:</strong> {{ task_forecast.completed_estimation_days|floatformat:1 }} {{ time_unit|default:"days" }}</p>
+                        <p><strong>Remaining:</strong> {{ task_forecast.remaining_estimation_days|floatformat:1 }} {{ time_unit|default:"days" }}</p>
+                        {% endif %}
                     </div>
                     <div class="column">
+                        <p><strong>Forecasted Start:</strong> {{ task_forecast.forecasted_start_date|date:"M d, Y" }}</p>
                         <p><strong>Forecasted End:</strong> {{ task_forecast.forecasted_end_date|date:"M d, Y" }}</p>
                         {% if task_forecast.average_team_velocity %}
                         <p><strong>Average Velocity:</strong> {{ task_forecast.average_team_velocity|floatformat:2 }} story points/day</p>
@@ -29,10 +33,21 @@
             </div>
         </div>
 
+        {% if chart_data %}
         <div class="box">
             <h2 class="title is-3">Timeline Chart</h2>
             <canvas id="taskForecastChart-{{ request.resolver_match.kwargs.task_id|default:'default' }}" width="400" height="200"></canvas>
         </div>
+        {% elif include_done_tasks %}
+        <div class="box">
+            <h2 class="title is-3">Timeline Chart</h2>
+            <article class="message is-success">
+                <div class="message-body">
+                    All tasks are completed. No remaining work to forecast on the timeline.
+                </div>
+            </article>
+        </div>
+        {% endif %}
 
         <div class="box">
             <h2 class="title is-3">Task Breakdown</h2>
@@ -41,14 +56,15 @@
                     <thead>
                         <tr>
                             <th>Task</th>
+                            <th>Status</th>
                             <th>Estimation ({{ time_unit|default:"days" }})</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for task_forecast_item in task_forecast.task_forecasts %}
-                            <tr data-level="{{ task_forecast_item.level }}" 
+                            <tr data-level="{{ task_forecast_item.level }}"
                                 data-task-id="{{ task_forecast_item.task_id }}"
-                                class="task-row{% if task_forecast_item.level > 0 %} child-task level-{{ task_forecast_item.level }} is-hidden{% endif %}"
+                                class="task-row{% if task_forecast_item.level > 0 %} child-task level-{{ task_forecast_item.level }} is-hidden{% endif %}{% if task_forecast_item.is_done %} has-text-grey-light{% endif %}"
                                 id="task-{{ forloop.counter0 }}">
                                 <td style="padding-left: {{ task_forecast_item.level|add:1 }}rem;">
                                     {% if task_forecast_item.has_children %}
@@ -56,8 +72,23 @@
                                             <i class="iconoir-nav-arrow-right expand-icon"></i>
                                         </button>
                                     {% endif %}
-                                    <strong>{{ task_forecast_item.task_id }}</strong><br>
-                                    <small>{{ task_forecast_item.task_title }}</small>
+                                    <strong{% if task_forecast_item.is_done %} style="text-decoration: line-through"{% endif %}>
+                                        {% if task_forecast_item.task_url %}
+                                            <a href="{{ task_forecast_item.task_url }}" target="_blank">{{ task_forecast_item.task_id }}</a>
+                                        {% else %}
+                                            {{ task_forecast_item.task_id }}
+                                        {% endif %}
+                                    </strong><br>
+                                    <small{% if task_forecast_item.is_done %} style="text-decoration: line-through"{% endif %}>{{ task_forecast_item.task_title }}</small>
+                                </td>
+                                <td>
+                                    {% if task_forecast_item.is_done %}
+                                        <span class="tag is-success">{{ task_forecast_item.status }}</span>
+                                    {% elif task_forecast_item.status %}
+                                        <span class="tag is-warning">{{ task_forecast_item.status }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if task_forecast_item.estimation_days > 0 %}
@@ -94,21 +125,21 @@ function initializeTaskForecastChart() {
     }
 
     const canvasId = 'taskForecastChart-{{ request.resolver_match.kwargs.task_id|default:"default" }}';
-    
+
     if (window.taskForecastChartInstance) {
         window.taskForecastChartInstance.destroy();
         window.taskForecastChartInstance = null;
     }
 
     const canvas = document.getElementById(canvasId);
-    
+
     if (!canvas) {
         console.error('Canvas element not found: ' + canvasId);
         return;
     }
 
     const chartData = JSON.parse('{{ chart_data|escapejs }}');
-    
+
     const ctx = canvas.getContext('2d');
     window.taskForecastChartInstance = new Chart(ctx, {
         type: 'line',

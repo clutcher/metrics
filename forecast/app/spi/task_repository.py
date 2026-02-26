@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from ..domain.model.enums import TaskScope
 from ..domain.model.task import Task
 
 
@@ -11,5 +12,6 @@ class TaskRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_tasks_with_full_hierarchy(self, task_ids: List[str]) -> List[Task]:
+    async def get_tasks_with_full_hierarchy(self, task_ids: List[str],
+                                             task_scope: TaskScope = TaskScope.ACTIVE_ONLY) -> List[Task]:
         pass

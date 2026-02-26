@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
 
+from forecast.app.domain.model.enums import TaskScope
+
 from .task_data import TaskData
 
 
@@ -11,6 +13,7 @@ class TaskForecastParamsData:
     start_date: Optional[str] = None
     member_group: Optional[str] = None
     time_unit: str = 'day'
+    task_scope: TaskScope = TaskScope.ACTIVE_ONLY
 
 
 @dataclass(slots=True)
@@ -20,6 +23,9 @@ class TaskForecastBreakdownItem:
     estimation_days: float
     level: int
     has_children: bool
+    is_done: bool = False
+    status: str = ""
+    task_url: Optional[str] = None
 
 
 @dataclass(slots=True)
@@ -30,6 +36,8 @@ class TaskForecastSummaryData:
     forecasted_end_date: datetime
     average_team_velocity: Optional[float]
     task_forecasts: List[TaskForecastBreakdownItem]
+    completed_estimation_days: float = 0.0
+    remaining_estimation_days: float = 0.0
 
 
 @dataclass(slots=True)
@@ -37,6 +45,7 @@ class TaskForecastRequestData:
     task_id: Optional[str] = None
     start_date: Optional[str] = None
     member_group: Optional[str] = None
+    task_scope: TaskScope = TaskScope.ACTIVE_ONLY
 
 
 @dataclass(slots=True)
@@ -45,7 +54,7 @@ class TaskForecastData:
     task_forecast: Optional[TaskForecastSummaryData]
     chart_data: str
     task_id: Optional[str]
-    start_date: Optional[str] 
+    start_date: Optional[str]
     member_group: Optional[str]
     time_unit: str
     success: bool

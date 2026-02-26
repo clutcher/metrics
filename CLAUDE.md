@@ -210,6 +210,16 @@ Query parameters supported by chart partials:
 - `rolling_avg` — Rolling average window size (integer, e.g., `3` for 3-month average)
 - `all_tasks` — Include unfinished tasks (`true`/`false`, dev velocity only)
 
+### 6. Task Scope Filtering
+
+The `TaskScope` enum (`forecast/app/domain/model/enums.py`) controls which tasks are included in forecast calculations:
+- `TaskScope.ACTIVE_ONLY` — Only active/in-progress tasks (default)
+- `TaskScope.ALL` — All tasks including completed ones
+
+This enum flows from the UI request through `ForecastGenerationParameters` to the repository layer, where it maps to `HierarchyTraversalCriteria(exclude_done_tasks=...)` at the module boundary. The facade applies additional filtering using `METRICS_DONE_STATUS_CODES` to ensure consistency between the domain-level status and the UI-level display.
+
+The task forecast page (`/task-forecast/`) uses this to provide an "Include Completed Tasks" toggle that shows completed vs remaining work breakdown in the summary, with done tasks visually differentiated (strikethrough, status tags, thinner chart bars).
+
 ---
 
 ## 4. Dependencies & Integration
@@ -483,7 +493,7 @@ The `ui_web` module acts as a presentation layer and federation gateway, combini
 #### Important Files
 
 - **Entry Points**: `metrics/urls.py` → `ui_web/urls.py`
-- **Views**: `ui_web/views/` (package with `dev_velocity_view.py`, `team_velocity_view.py`, `current_tasks_view.py`, etc.)
+- **Views**: `ui_web/views/` (package with `dev_velocity_view.py`, `team_velocity_view.py`, `current_tasks_view.py`, `task_forecast_view.py`, etc.)
 - **Controllers**: `ui_web/controllers/` (business logic)
 - **Templates**: `ui_web/templates/` (Bulma + htmx)
 - **Configuration**: `metrics/settings/defaults_metrics.py`

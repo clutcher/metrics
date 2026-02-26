@@ -5,6 +5,7 @@ from django.conf import settings
 from tasks.app.api.api_for_task_hierarchy import ApiForTaskHierarchy
 from tasks.app.api.api_for_task_search import ApiForTaskSearch
 from tasks.app.domain.model.task import HierarchyTraversalCriteria, EnrichmentOptions
+from ..app.domain.model.enums import TaskScope
 from ..app.spi.task_repository import TaskRepository
 
 
@@ -21,10 +22,11 @@ class TasksApiRepository(TaskRepository):
         )
         return await self._tasks_search_api.search_by_ids(task_ids, enrichment)
 
-    async def get_tasks_with_full_hierarchy(self, task_ids: List[str]) -> List:
+    async def get_tasks_with_full_hierarchy(self, task_ids: List[str],
+                                             task_scope: TaskScope = TaskScope.ACTIVE_ONLY) -> List:
         criteria = HierarchyTraversalCriteria(
             max_depth=5,
-            exclude_done_tasks=True
+            exclude_done_tasks=task_scope == TaskScope.ACTIVE_ONLY
         )
 
         return await self._tasks_hierarchy_api.get_tasks_with_full_hierarchy(task_ids, criteria)
