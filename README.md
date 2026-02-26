@@ -4,7 +4,7 @@ A Django-based team velocity and task tracking dashboard that connects to JIRA a
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)
-![Django 5.2+](https://img.shields.io/badge/django-5.2+-green.svg)
+![Django 6.0+](https://img.shields.io/badge/django-6.0+-green.svg)
 ![HTMX](https://img.shields.io/badge/htmx-1.9.12-blue)
 ![Chart.js](https://img.shields.io/badge/Chart.js-4.5.1-orange)
 ![chartjs-plugin-annotation](https://img.shields.io/badge/chartjs--plugin--annotation-3.1.0-orange)
@@ -525,4 +525,4 @@ This ensures battle-tested metric calculations while maintaining clean architect
 
 ---
 
-Built with Django 5.2, sd-metrics-lib 7.0, and modern web standards for sustainable software development metrics.
+Built with Django 6.0, sd-metrics-lib 7.0, and modern web standards for sustainable software development metrics.

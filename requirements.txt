@@ -1,11 +1,11 @@
-sd-metrics-lib[azure,jira]==7.0
+sd-metrics-lib[azure,jira]==7.0.1
 
-Django==5.2.7
-django-compressor==4.5.1
+Django==6.0.2
+django-compressor==4.6.0
 whitenoise==6.11.0
 
-gunicorn==23.0.0
-environs==14.3.0
+gunicorn==25.1.0
+environs==14.6.0
 
-pytest==8.4.2
-pytest-django==4.11.1
+pytest==9.0.2
+pytest-django==4.12.0

@@ -215,10 +215,10 @@ Query parameters supported by chart partials:
 ## 4. Dependencies & Integration
 
 ### Core Dependencies
-- **Django 5.2.6**: Web framework and admin interface
-- **sd-metrics-lib[azure,jira] 6.3.0**: Core metrics calculation library
-- **django-compressor 4.5.1**: Static file compression
-- **environs 14.3.0**: Environment variable parsing
+- **Django 6.0.2**: Web framework and admin interface
+- **sd-metrics-lib[azure,jira] 7.0.1**: Core metrics calculation library
+- **django-compressor 4.6.0**: Static file compression
+- **environs 14.6.0**: Environment variable parsing
 
 ### sd-metrics-lib Integration
 
