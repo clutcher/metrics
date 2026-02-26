@@ -19,6 +19,7 @@
         </button>
     </div>
     <canvas id="velocityChart" width="400" height="200"></canvas>
+    <p class="help has-text-grey">Click on a data point to see task details below</p>
 </div>
 
 <script>
@@ -101,6 +102,20 @@
 
         const thresholdAnnotations = buildThresholdAnnotations(thresholdsData.thresholds);
 
+        const taskDetailsBaseUrl = '{% url "ui_web:dev_velocity_tasks" %}';
+        const memberGroupId = '{{ member_group_id }}';
+        const allTasks = '{{ include_all_statuses|yesno:"true,false" }}';
+
+        function getVisibleDevelopers(chart) {
+            const visible = [];
+            chart.data.datasets.forEach(function(dataset, index) {
+                if (chart.isDatasetVisible(index)) {
+                    visible.push(chartData.data[index].developer);
+                }
+            });
+            return visible;
+        }
+
         if (chartData && chartData.labels && chartData.data) {
             window.devVelocityChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'line',
@@ -118,6 +133,19 @@
                 },
                 options: {
                     responsive: true,
+                    onClick: function(event, elements, chart) {
+                        if (!elements || elements.length === 0) return;
+                        const period = chartData.labels[elements[0].index];
+                        const developers = getVisibleDevelopers(chart);
+                        if (developers.length === 0) return;
+                        const url = taskDetailsBaseUrl + '?developers=' + encodeURIComponent(developers.join(','))
+                            + '&period=' + encodeURIComponent(period)
+                            + '&member_group_id=' + encodeURIComponent(memberGroupId)
+                            + (allTasks === 'true' ? '&all_tasks=true' : '');
+                        htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
+                            document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
+                        });
+                    },
                     interaction: {
                         intersect: false,
                         mode: 'index'

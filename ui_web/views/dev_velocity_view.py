@@ -1,11 +1,15 @@
 import asyncio
+import calendar
 import json
 from dataclasses import asdict
+from datetime import datetime
 
 from django.views.generic import TemplateView
 
 from ..container import ui_web_container
+from ..data.hierarchical_item_data import HierarchicalItemData
 from ..utils.chart_json_utils import ChartJsonUtils
+from ..utils.task_grouping_utils import TaskGroupingUtils
 from ..utils.velocity_sort_utils import VelocitySortUtils
 
 
@@ -153,3 +157,66 @@ class DevStoryPointsChartView(TemplateView):
         context["include_all_statuses"] = include_all_statuses
 
         return context
+
+
+class DevVelocityTasksView(TemplateView):
+    template_name = 'partials/dev_velocity_tasks.html'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tasks_velocity_facade = ui_web_container.tasks_velocity_facade
+        self.summary_convertor = ui_web_container.developer_velocity_summary_convertor
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        developer_names, period, member_group_id, include_all_statuses = self._parse_request_params()
+
+        try:
+            start_date, end_date = self._parse_month_period(period)
+            velocity_tasks = asyncio.run(
+                self.tasks_velocity_facade.get_tasks(
+                    developer_names, start_date, end_date, member_group_id, include_all_statuses
+                )
+            )
+            context["task_groups"] = self._build_task_hierarchy(velocity_tasks, period)
+        except Exception as e:
+            context["task_groups"] = []
+            context["error"] = str(e)
+
+        return context
+
+    def _build_task_hierarchy(self, velocity_tasks, period):
+        developer_groups = self._group_by_developer(velocity_tasks)
+        total_count = sum(g.count for g in developer_groups)
+        return [HierarchicalItemData(
+            name=f"Tasks — {period}",
+            type="member_group",
+            count=total_count,
+            items=developer_groups
+        )]
+
+    def _group_by_developer(self, velocity_tasks):
+        groups = TaskGroupingUtils.group_tasks_by_key(
+            velocity_tasks,
+            key_extractor=lambda t: t.assignment.assignee.display_name,
+            group_type="task_velocity"
+        )
+        return self.summary_convertor.enrich_with_summaries(groups)
+
+    def _parse_request_params(self):
+        period = self.request.GET.get('period', '')
+        member_group_id = self.request.GET.get('member_group_id')
+        include_all_statuses = self.request.GET.get('all_tasks') == 'true'
+
+        developers_param = self.request.GET.get('developers', '')
+        developer_names = [d.strip() for d in developers_param.split(',') if d.strip()]
+
+        return developer_names, period, member_group_id, include_all_statuses
+
+
+    @staticmethod
+    def _parse_month_period(period: str):
+        year, month = int(period[:4]), int(period[5:7])
+        last_day = calendar.monthrange(year, month)[1]
+        return datetime(year, month, 1), datetime(year, month, last_day)

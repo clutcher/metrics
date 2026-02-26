@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from django.conf import settings
 from sd_metrics_lib.utils.time import TimePolicy
 
@@ -44,6 +46,9 @@ class VelocityContainer:
     @property
     def _member_group_resolver(self) -> MemberGroupResolver:
         return MemberGroupResolver(tasks_container.get_member_group_config())
+
+    def resolve_member_group_members(self, member_group_id: Optional[str]) -> Optional[List[str]]:
+        return self._member_group_resolver.resolve_members(member_group_id)
 
     def get_member_velocity_config(self) -> MemberVelocityConfig:
         return self._config.member_velocity

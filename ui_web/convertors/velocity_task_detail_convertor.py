@@ -1,3 +1,5 @@
+from typing import List
+
 from sd_metrics_lib.calculators.story_points import ProportionalStoryPointCalculator
 from sd_metrics_lib.utils.time import Duration, TimeUnit, TimePolicy
 
@@ -7,6 +9,20 @@ from ..data.velocity_task_detail_data import TaskVelocityData
 
 
 class VelocityTaskDetailConvertor:
+
+    @staticmethod
+    def convert_tasks_to_developers_breakdown(tasks: List[Task],
+                                              developer_names: List[str]) -> List[TaskVelocityData]:
+        result = []
+        for task in tasks:
+            if not task.story_points or task.story_points <= 0:
+                continue
+            if not task.time_tracking or not task.time_tracking.spent_time_by_assignee:
+                continue
+            for developer_name in developer_names:
+                if developer_name in task.time_tracking.spent_time_by_assignee:
+                    result.append(VelocityTaskDetailConvertor.convert_task_for_developer(task, developer_name))
+        return result
 
     @staticmethod
     def convert_task_for_developer(task: Task, developer_name: str) -> TaskVelocityData:

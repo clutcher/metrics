@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Callable
 
 from tasks.app.domain.model.config import WorkflowConfig, SortingConfig
 from ..data.hierarchical_item_data import HierarchicalItemData
@@ -34,6 +34,21 @@ class TaskGroupingUtils:
             return TaskGroupingUtils._create_member_group_groups_only(ui_tasks, sorting_config)
 
         return TaskSortUtils.sort_tasks(ui_tasks, sorting_config)
+
+    @staticmethod
+    def group_tasks_by_key(tasks: List[TaskData],
+                            key_extractor: Callable[[TaskData], Optional[str]],
+                            group_type: str) -> List[HierarchicalItemData]:
+        groups = defaultdict(list)
+        for task in tasks:
+            key = key_extractor(task)
+            if key is not None:
+                groups[key].append(task)
+
+        return [
+            HierarchicalItemData(name=name, type=group_type, count=len(group_tasks), items=group_tasks)
+            for name, group_tasks in sorted(groups.items())
+        ]
 
     @staticmethod
     def _has_meaningful_member_groups(ui_tasks: List[TaskData]) -> bool:

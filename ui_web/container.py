@@ -8,9 +8,12 @@ from .convertors.task_convertor import TaskConvertor
 from .convertors.task_forecast_chart_convertor import TaskForecastChartConvertor
 from .convertors.task_forecast_convertor import TaskForecastConvertor
 from .convertors.velocity_chart_convertor import VelocityChartConvertor
+from .convertors.developer_velocity_summary_convertor import DeveloperVelocitySummaryConvertor
 from .convertors.velocity_report_convertor import VelocityReportConvertor
+from .convertors.velocity_task_detail_convertor import VelocityTaskDetailConvertor
 from .facades.child_tasks_facade import ChildTasksFacade
 from .facades.dev_velocity_facade import DevVelocityFacade
+from .facades.tasks_velocity_facade import TasksVelocityFacade
 from .facades.members_facade import MembersFacade
 from .facades.task_forecast_facade import TaskForecastFacade
 from .facades.tasks_facade import TasksFacade
@@ -26,6 +29,7 @@ class UiWebContainer:
         self._task_forecast_convertor = None
         self._velocity_chart_convertor = None
         self._velocity_report_convertor = None
+        self._velocity_task_detail_convertor = None
         self._task_forecast_chart_convertor = None
 
         self._tasks_facade = None
@@ -33,6 +37,8 @@ class UiWebContainer:
         self._members_facade = None
         self._team_velocity_facade = None
         self._dev_velocity_facade = None
+        self._tasks_velocity_facade = None
+        self._developer_velocity_summary_convertor = None
         self._task_forecast_facade = None
         self._member_group_task_filter = None
 
@@ -115,17 +121,35 @@ class UiWebContainer:
     def dev_velocity_facade(self) -> DevVelocityFacade:
         if self._dev_velocity_facade is None:
             self._dev_velocity_facade = DevVelocityFacade(
-                velocity_container.velocity_report_generation_api,
-                tasks_container.assignee_search_api,
-                tasks_container.get_available_member_groups(),
-                tasks_container.create_velocity_search_criteria,
-                self.member_convertor,
-                self._get_velocity_chart_convertor(),
-                self._get_velocity_report_convertor(),
+                velocity_api=velocity_container.velocity_report_generation_api,
+                assignee_search_api=tasks_container.assignee_search_api,
+                available_member_groups=tasks_container.get_available_member_groups(),
+                velocity_chart_convertor=self._get_velocity_chart_convertor(),
+                velocity_report_convertor=self._get_velocity_report_convertor(),
                 member_velocity_config=velocity_container.get_member_velocity_config(),
                 ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day
             )
         return self._dev_velocity_facade
+
+    @property
+    def tasks_velocity_facade(self) -> TasksVelocityFacade:
+        if self._tasks_velocity_facade is None:
+            self._tasks_velocity_facade = TasksVelocityFacade(
+                task_search_api=tasks_container.task_search_api,
+                create_velocity_search_criteria=tasks_container.create_velocity_search_criteria,
+                resolve_member_group_members=velocity_container.resolve_member_group_members,
+                velocity_task_detail_convertor=self._get_velocity_task_detail_convertor(),
+                in_progress_status_codes=tasks_container.get_workflow_config().in_progress_status_codes
+            )
+        return self._tasks_velocity_facade
+
+    @property
+    def developer_velocity_summary_convertor(self) -> DeveloperVelocitySummaryConvertor:
+        if self._developer_velocity_summary_convertor is None:
+            self._developer_velocity_summary_convertor = DeveloperVelocitySummaryConvertor(
+                ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day
+            )
+        return self._developer_velocity_summary_convertor
 
     @property
     def task_forecast_facade(self) -> TaskForecastFacade:
@@ -142,6 +166,11 @@ class UiWebContainer:
         if self._member_group_task_filter is None:
             self._member_group_task_filter = MemberGroupTaskFilter(tasks_container.get_member_group_config())
         return self._member_group_task_filter
+
+    def _get_velocity_task_detail_convertor(self) -> VelocityTaskDetailConvertor:
+        if self._velocity_task_detail_convertor is None:
+            self._velocity_task_detail_convertor = VelocityTaskDetailConvertor()
+        return self._velocity_task_detail_convertor
 
     def _get_velocity_chart_convertor(self) -> VelocityChartConvertor:
         if self._velocity_chart_convertor is None:

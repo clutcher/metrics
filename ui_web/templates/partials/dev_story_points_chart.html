@@ -5,6 +5,7 @@
         <button class="button" id="hideAll-dev-sp">Hide All</button>
     </div>
     <canvas id="storyPointsChart" width="400" height="200"></canvas>
+    <p class="help has-text-grey">Click on a bar to see task details below</p>
 </div>
 
 <script>
@@ -52,6 +53,20 @@
 
         var chartData = {{ month_sp|safe }};
 
+        var taskDetailsBaseUrl = '{% url "ui_web:dev_velocity_tasks" %}';
+        var memberGroupId = '{{ member_group_id }}';
+        var allTasks = '{{ include_all_statuses|yesno:"true,false" }}';
+
+        function getVisibleDevelopers(chart) {
+            var visible = [];
+            chart.data.datasets.forEach(function(dataset, index) {
+                if (chart.isDatasetVisible(index)) {
+                    visible.push(chartData.data[index].developer);
+                }
+            });
+            return visible;
+        }
+
         if (chartData && chartData.labels && chartData.data) {
             window.devStoryPointsChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'bar',
@@ -69,6 +84,19 @@
                 },
                 options: {
                     responsive: true,
+                    onClick: function(event, elements, chart) {
+                        if (!elements || elements.length === 0) return;
+                        var period = chartData.labels[elements[0].index];
+                        var developers = getVisibleDevelopers(chart);
+                        if (developers.length === 0) return;
+                        var url = taskDetailsBaseUrl + '?developers=' + encodeURIComponent(developers.join(','))
+                            + '&period=' + encodeURIComponent(period)
+                            + '&member_group_id=' + encodeURIComponent(memberGroupId)
+                            + (allTasks === 'true' ? '&all_tasks=true' : '');
+                        htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
+                            document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
+                        });
+                    },
                     interaction: {
                         intersect: false,
                         mode: 'index'

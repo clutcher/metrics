@@ -4,7 +4,6 @@ from sd_metrics_lib.utils.time import TimeUnit
 
 from velocity.app.domain.model.config import MemberVelocityConfig
 from velocity.app.domain.model.velocity import ReportGenerationParameters, ReportType
-from ..convertors.member_convertor import MemberConvertor
 from ..convertors.velocity_chart_convertor import VelocityChartConvertor
 from ..convertors.velocity_report_convertor import VelocityReportConvertor
 from ..data.chart_data import ChartData
@@ -15,20 +14,17 @@ from ..utils.color_utils import ColorUtils
 
 
 class DevVelocityFacade:
-    def __init__(self, velocity_api, assignee_search_api, available_member_groups,
-                 create_velocity_search_criteria,
-                 member_convertor: MemberConvertor,
+    def __init__(self, velocity_api, assignee_search_api,
+                 available_member_groups,
                  velocity_chart_convertor: VelocityChartConvertor,
                  velocity_report_convertor: VelocityReportConvertor,
                  member_velocity_config: MemberVelocityConfig,
                  ideal_hours_per_day: float):
-        self.velocity_api = velocity_api
-        self.assignee_search_api = assignee_search_api
-        self.available_member_groups = available_member_groups
-        self.create_velocity_search_criteria = create_velocity_search_criteria
-        self.member_convertor = member_convertor
-        self.velocity_chart_convertor = velocity_chart_convertor
-        self.velocity_report_convertor = velocity_report_convertor
+        self._velocity_api = velocity_api
+        self._assignee_search_api = assignee_search_api
+        self._available_member_groups = available_member_groups
+        self._velocity_chart_convertor = velocity_chart_convertor
+        self._velocity_report_convertor = velocity_report_convertor
         self._member_velocity_config = member_velocity_config
         self._ideal_hours_per_day = ideal_hours_per_day
 
@@ -36,12 +32,12 @@ class DevVelocityFacade:
                                          number_of_periods: int = 6,
                                          include_all_statuses: bool = False) -> List[VelocityReportData]:
         velocity_reports = await self._get_velocity_reports(member_group_id, number_of_periods, include_all_statuses)
-        return self.velocity_report_convertor.convert_velocity_reports_to_data_with_names(velocity_reports)
+        return self._velocity_report_convertor.convert_velocity_reports_to_data_with_names(velocity_reports)
 
     def get_velocity_chart_data(self, velocity_reports_data: List[VelocityReportData],
                                 rolling_avg_window: int = 0,
                                 display_periods: int = 0) -> Optional[ChartData]:
-        chart = self.velocity_chart_convertor.convert_dev_velocity_reports_to_velocity_chart(velocity_reports_data)
+        chart = self._velocity_chart_convertor.convert_dev_velocity_reports_to_velocity_chart(velocity_reports_data)
         if rolling_avg_window > 0 and chart:
             chart = ChartTransformUtils.apply_rolling_average(chart, rolling_avg_window)
         if display_periods > 0 and chart:
@@ -51,7 +47,7 @@ class DevVelocityFacade:
     def get_story_points_chart_data(self, velocity_reports_data: List[VelocityReportData],
                                     rolling_avg_window: int = 0,
                                     display_periods: int = 0) -> Optional[ChartData]:
-        chart = self.velocity_chart_convertor.convert_dev_velocity_reports_to_story_points_chart(velocity_reports_data)
+        chart = self._velocity_chart_convertor.convert_dev_velocity_reports_to_story_points_chart(velocity_reports_data)
         if rolling_avg_window > 0 and chart:
             chart = ChartTransformUtils.apply_rolling_average(chart, rolling_avg_window)
         if display_periods > 0 and chart:
@@ -78,4 +74,4 @@ class DevVelocityFacade:
             scope_id=member_group_id,
             include_all_statuses=include_all_statuses
         )
-        return await self.velocity_api.generate_velocity_report(criteria)
+        return await self._velocity_api.generate_velocity_report(criteria)
