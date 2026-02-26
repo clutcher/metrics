@@ -176,7 +176,7 @@ Views act like frontend controllers, making multiple facade calls and handling p
 class TeamVelocityView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         try:
             # Independent component data fetching
             context["velocity_chart"] = asyncio.run(self.facade.get_velocity_chart_data())
@@ -188,9 +188,27 @@ class TeamVelocityView(TemplateView):
             context["member_groups"] = []
             context["success"] = False
             context["error"] = str(e)
-        
+
         return context
 ```
+
+### 5. HTMX Partial Chart Views
+
+Charts are implemented as independently loadable htmx partials, each with its own URL endpoint, view class, and template. This enables dynamic chart updates (e.g., toggling rolling averages or filters) without full page reloads.
+
+**URL Pattern**: `partials/{dashboard}/chart/`
+**View Pattern**: Dedicated `TemplateView` subclass per chart partial
+**Template Pattern**: `partials/{chart_name}.html` included in parent content templates
+
+Example endpoints:
+- `partials/dev-velocity/chart/` — Developer velocity chart
+- `partials/dev-velocity/sp-chart/` — Developer story points chart
+- `partials/team-velocity/chart/` — Team velocity chart
+
+Query parameters supported by chart partials:
+- `member_group_id` — Filter by team/member group
+- `rolling_avg` — Rolling average window size (integer, e.g., `3` for 3-month average)
+- `all_tasks` — Include unfinished tasks (`true`/`false`, dev velocity only)
 
 ---
 
@@ -329,9 +347,10 @@ Modern JavaScript-heavy frontend development is an anti-pattern. Instead, rely o
     - Avoid custom JavaScript libraries (React, Vue, Alpine.js)
     - Philosophy: Browsers should natively support htmx-like functionality
 
-- **Data Visualization**: **Chart.js** - Essential for dashboard metrics
-    - Only JavaScript library exception due to project requirements
-    - Use for all charts, graphs, and data visualizations
+- **Data Visualization**: **Chart.js** + **chartjs-plugin-annotation** - Essential for dashboard metrics
+    - Only JavaScript library exceptions due to project requirements
+    - Use Chart.js for all charts, graphs, and data visualizations
+    - Use chartjs-plugin-annotation for threshold/annotation overlays on charts
 
 ### Implementation Approach
 - Start with semantic HTML structure
@@ -378,6 +397,24 @@ Modern JavaScript-heavy frontend development is an anti-pattern. Instead, rely o
 - **Unit Tests**: Pure calculations, algorithms, mathematical formulas, validation rules
 - **Never test calculator/utility classes through service APIs** - creates slow, complex tests
 - **Each behavior tested once** - at the most appropriate level only
+
+### Test Coverage Scope
+
+**What to test:**
+- **Domain services** (`app/domain/`) — API-level tests with mocked SPI dependencies
+- **Facades** (`ui_web/facades/`) — API-level tests with mocked module APIs
+- **Calculators** (`app/domain/calculation/`) — Unit tests, pure logic
+- **Utility classes** (`ui_web/utils/`) — Unit tests, pure static methods
+- **Extractors / Resolvers** — Unit tests, pure logic
+- **Convertors with business logic** (`ui_web/convertors/`, `app/domain/convertors/`) — Unit tests when they contain calculations, filtering, or transformation logic
+
+**What NOT to test:**
+- **Views** — presentation controllers, no business logic
+- **Containers** — DI wiring only
+- **Adapter repositories** (`out/` layer) — thin delegation to module APIs
+- **Data classes / Enums** — tested implicitly through their consumers
+- **Templates** — HTML rendering, not business logic
+- **Private methods directly** — always test through the public API of the owning class
 
 ### Business Behavior Testing Rules
 
@@ -446,7 +483,7 @@ The `ui_web` module acts as a presentation layer and federation gateway, combini
 #### Important Files
 
 - **Entry Points**: `metrics/urls.py` → `ui_web/urls.py`
-- **Views**: `ui_web/views.py`, `ui_web/views_partials.py`
+- **Views**: `ui_web/views/` (package with `dev_velocity_view.py`, `team_velocity_view.py`, `current_tasks_view.py`, etc.)
 - **Controllers**: `ui_web/controllers/` (business logic)
 - **Templates**: `ui_web/templates/` (Bulma + htmx)
 - **Configuration**: `metrics/settings/defaults_metrics.py`

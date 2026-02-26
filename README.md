@@ -5,8 +5,9 @@ A Django-based team velocity and task tracking dashboard that connects to JIRA a
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Django 5.2+](https://img.shields.io/badge/django-5.2+-green.svg)
-![HTMX](https://img.shields.io/badge/htmx-1.9.10-blue)
-![Chart.js](https://img.shields.io/badge/Chart.js-4.5.0-orange)
+![HTMX](https://img.shields.io/badge/htmx-1.9.12-blue)
+![Chart.js](https://img.shields.io/badge/Chart.js-4.5.1-orange)
+![chartjs-plugin-annotation](https://img.shields.io/badge/chartjs--plugin--annotation-3.1.0-orange)
 ![Bulma CSS](https://img.shields.io/badge/bulma-1.0.4-green)
 
 ## What It Does
@@ -14,8 +15,8 @@ A Django-based team velocity and task tracking dashboard that connects to JIRA a
 Transform your JIRA or Azure DevOps data into actionable development insights:
 
 - **📋 Current Tasks**: Real-time view of active work with completion forecasts
-- **🚀 Team Velocity**: Track story points and delivery trends over time
-- **👨‍💻 Developer Velocity**: Individual velocity metrics
+- **🚀 Team Velocity**: Track story points and delivery trends over time with rolling averages
+- **👨‍💻 Developer Velocity**: Individual velocity metrics with seniority-level thresholds, rolling averages, and unfinished task inclusion
 - **🔮 Task Forecasting**: Predict completion dates based on team velocity
 
 <details>
