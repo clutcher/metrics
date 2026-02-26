@@ -27,7 +27,11 @@ class ReportGenerationService(ApiForVelocityReportGeneration):
         if metrics_calculation_function is None:
             return None
             
-        calculation_function = partial(metrics_calculation_function, scope_id=generation_parameters.scope_id)
+        calculation_function = partial(
+            metrics_calculation_function,
+            scope_id=generation_parameters.scope_id,
+            include_all_statuses=generation_parameters.include_all_statuses
+        )
         
         period_reports = await self._calculate_time_ranged_data_async(
             generation_parameters.time_unit,

@@ -27,8 +27,9 @@ class VelocityReportCalculator:
     async def calculate_velocity_report_for_period(self,
                                                    start_date: datetime,
                                                    end_date: datetime,
-                                                   scope_id: Optional[str] = None) -> VelocityReport:
-        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id)
+                                                   scope_id: Optional[str] = None,
+                                                   include_all_statuses: bool = False) -> VelocityReport:
+        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, include_all_statuses)
 
         if not tasks:
             return VelocityReport(
@@ -58,8 +59,9 @@ class VelocityReportCalculator:
     async def calculate_scoped_velocity_reports_for_period(self,
                                                            start_date: datetime,
                                                            end_date: datetime,
-                                                           scope_id: Optional[str] = None) -> List[VelocityReport]:
-        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id)
+                                                           scope_id: Optional[str] = None,
+                                                           include_all_statuses: bool = False) -> List[VelocityReport]:
+        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, include_all_statuses)
 
         if not tasks:
             return []
@@ -99,9 +101,17 @@ class VelocityReportCalculator:
             allowed_scope_ids = set(self._member_group_resolver.resolve_members(member_group_id) or [])
         return allowed_scope_ids
 
-    def _create_velocity_search_criteria(self, start_date: datetime, end_date: datetime, member_group_id: Optional[str] = None):
+    def _create_velocity_search_criteria(self, start_date: datetime, end_date: datetime,
+                                          member_group_id: Optional[str] = None,
+                                          include_all_statuses: bool = False):
         search_criteria = deepcopy(self.__velocity_search_criteria_template)
-        search_criteria.resolution_date_range = (start_date, end_date)
+
+        if include_all_statuses:
+            search_criteria.status_filter = None
+            search_criteria.resolution_date_range = None
+            search_criteria.last_modified_date_range = (start_date, end_date)
+        else:
+            search_criteria.resolution_date_range = (start_date, end_date)
 
         members_of_member_group = self._member_group_resolver.resolve_members(member_group_id)
         if members_of_member_group:
@@ -110,6 +120,9 @@ class VelocityReportCalculator:
         return search_criteria
 
     async def _fetch_tasks_for_period(self, start_date: datetime, end_date: datetime,
-                                      member_group_id: Optional[str] = None):
-        search_criteria = self._create_velocity_search_criteria(start_date, end_date, member_group_id)
+                                      member_group_id: Optional[str] = None,
+                                      include_all_statuses: bool = False):
+        search_criteria = self._create_velocity_search_criteria(
+            start_date, end_date, member_group_id, include_all_statuses
+        )
         return await self._task_repository.search(search_criteria)

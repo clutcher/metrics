@@ -81,6 +81,37 @@ class TestApiVelocityReportGeneration(unittest.IsolatedAsyncioTestCase):
         call_count = self.velocity_calculator.calculate_velocity_report_for_period.call_count
         self.assertEqual(6, call_count)
 
+    async def test_shouldPassIncludeAllStatusesToCalculatorWhenGeneratingReport(self):
+        # Given
+        parameters = (ReportParametersBuilder.sprint_planning_report()
+                     .for_scope("development-team")
+                     .build())
+        parameters.include_all_statuses = True
+
+        self.velocity_calculator.calculate_velocity_report_for_period.return_value = self._create_sample_report()
+
+        # When
+        await self.report_service.generate_velocity_report(parameters)
+
+        # Then
+        call_kwargs = self.velocity_calculator.calculate_velocity_report_for_period.call_args
+        self.assertTrue(call_kwargs.kwargs["include_all_statuses"])
+
+    async def test_shouldDefaultIncludeAllStatusesToFalseWhenNotSpecified(self):
+        # Given
+        parameters = (ReportParametersBuilder.sprint_planning_report()
+                     .for_scope("development-team")
+                     .build())
+
+        self.velocity_calculator.calculate_velocity_report_for_period.return_value = self._create_sample_report()
+
+        # When
+        await self.report_service.generate_velocity_report(parameters)
+
+        # Then
+        call_kwargs = self.velocity_calculator.calculate_velocity_report_for_period.call_args
+        self.assertFalse(call_kwargs.kwargs["include_all_statuses"])
+
     def _create_sample_report(self):
         from velocity.app.domain.model.velocity import VelocityReport
         return VelocityReport(

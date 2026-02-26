@@ -33,8 +33,9 @@ class DevVelocityFacade:
         self._ideal_hours_per_day = ideal_hours_per_day
 
     async def get_velocity_reports_data(self, member_group_id: Optional[str] = None,
-                                         number_of_periods: int = 6) -> List[VelocityReportData]:
-        velocity_reports = await self._get_velocity_reports(member_group_id, number_of_periods)
+                                         number_of_periods: int = 6,
+                                         include_all_statuses: bool = False) -> List[VelocityReportData]:
+        velocity_reports = await self._get_velocity_reports(member_group_id, number_of_periods, include_all_statuses)
         return self.velocity_report_convertor.convert_velocity_reports_to_data_with_names(velocity_reports)
 
     def get_velocity_chart_data(self, velocity_reports_data: List[VelocityReportData],
@@ -68,11 +69,13 @@ class DevVelocityFacade:
         return VelocityThresholdsData(thresholds)
 
     async def _get_velocity_reports(self, member_group_id: Optional[str],
-                                    number_of_periods: int = 6):
+                                    number_of_periods: int = 6,
+                                    include_all_statuses: bool = False):
         criteria = ReportGenerationParameters(
             time_unit=TimeUnit.MONTH,
             number_of_periods=number_of_periods,
             report_type=ReportType.MEMBER_SCOPE,
-            scope_id=member_group_id
+            scope_id=member_group_id,
+            include_all_statuses=include_all_statuses
         )
         return await self.velocity_api.generate_velocity_report(criteria)

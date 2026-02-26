@@ -17,6 +17,7 @@ class ReportGenerationParameters:
     number_of_periods: int
     report_type: ReportType = None
     scope_id: Optional[str] = None
+    include_all_statuses: bool = False
 
 
 @dataclass(slots=True)
