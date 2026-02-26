@@ -26,20 +26,33 @@ class DevVelocityView(TemplateView):
 
         team_id = kwargs.get('team_id')
         member_group_id = team_id or self.request.GET.get('member_group_id')
+        rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+        include_all_statuses = self.request.GET.get('all_tasks') == 'true'
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
 
+        extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
+        display_periods = 6
+
         try:
-            velocity_reports_data = asyncio.run(self.dev_velocity_facade.get_velocity_reports_data(member_group_id))
+            velocity_reports_data = asyncio.run(
+                self.dev_velocity_facade.get_velocity_reports_data(
+                    member_group_id, 6 + extra_periods, include_all_statuses
+                )
+            )
 
-            velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(velocity_reports_data)
+            velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(
+                velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
+            )
             if velocity_chart and velocity_chart.labels:
-                velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(velocity_chart)
 
-            story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(velocity_reports_data)
+            story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(
+                velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
+            )
             if story_points_chart and story_points_chart.labels:
-                story_points_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(story_points_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(story_points_chart)
 
             context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(velocity_chart) if velocity_chart else "{}"
             context["month_sp"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(story_points_chart) if story_points_chart else "{}"
@@ -51,9 +64,10 @@ class DevVelocityView(TemplateView):
             context["error"] = str(e)
 
         context["build_page_title"] = 'Developer Velocity Dashboard'
-        context["velocity_rolling_avg"] = 0
-        context["sp_rolling_avg"] = 0
+        context["velocity_rolling_avg"] = rolling_avg
+        context["sp_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
+        context["include_all_statuses"] = include_all_statuses
 
         return context
 
@@ -70,6 +84,7 @@ class DevVelocityChartView(TemplateView):
 
         member_group_id = self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+        include_all_statuses = self.request.GET.get('all_tasks') == 'true'
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
@@ -79,14 +94,14 @@ class DevVelocityChartView(TemplateView):
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses)
             )
 
             velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(
                 velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
             )
             if velocity_chart and velocity_chart.labels:
-                velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(velocity_chart)
 
             context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(velocity_chart) if velocity_chart else "{}"
         except Exception as e:
@@ -95,6 +110,7 @@ class DevVelocityChartView(TemplateView):
 
         context["velocity_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
+        context["include_all_statuses"] = include_all_statuses
 
         return context
 
@@ -111,20 +127,21 @@ class DevStoryPointsChartView(TemplateView):
 
         member_group_id = self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+        include_all_statuses = self.request.GET.get('all_tasks') == 'true'
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 6
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses)
             )
 
             story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(
                 velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
             )
             if story_points_chart and story_points_chart.labels:
-                story_points_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(story_points_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(story_points_chart)
 
             context["month_sp"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(story_points_chart) if story_points_chart else "{}"
         except Exception as e:
@@ -133,5 +150,6 @@ class DevStoryPointsChartView(TemplateView):
 
         context["sp_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
+        context["include_all_statuses"] = include_all_statuses
 
         return context

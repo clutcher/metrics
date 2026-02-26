@@ -24,18 +24,25 @@ class TeamVelocityView(TemplateView):
 
         team_id = kwargs.get('team_id')
         member_group_id = team_id or self.request.GET.get('member_group_id')
+        rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+
+        extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
+        display_periods = 12
 
         try:
-            velocity_reports_data = asyncio.run(self.team_velocity_facade.get_velocity_reports_data(member_group_id))
+            velocity_reports_data = asyncio.run(
+                self.team_velocity_facade.get_velocity_reports_data(member_group_id, 12 + extra_periods)
+            )
 
-            velocity_chart = self.team_velocity_facade.get_velocity_chart_data(velocity_reports_data)
+            velocity_chart = self.team_velocity_facade.get_velocity_chart_data(
+                velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
+            )
             if velocity_chart and velocity_chart.labels:
-                velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(velocity_chart)
 
             story_points_chart = self.team_velocity_facade.get_story_points_chart_data(velocity_reports_data)
             if story_points_chart and story_points_chart.labels:
-                story_points_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(
-                    story_points_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(story_points_chart)
 
             context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(
                 velocity_chart) if velocity_chart else "{}"
@@ -49,7 +56,7 @@ class TeamVelocityView(TemplateView):
             context["error"] = str(e)
 
         context["build_page_title"] = 'Team Velocity Dashboard'
-        context["velocity_rolling_avg"] = 0
+        context["velocity_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
 
         return context
@@ -80,7 +87,7 @@ class TeamVelocityChartView(TemplateView):
                 velocity_reports_data, rolling_avg, display_periods if rolling_avg > 0 else 0
             )
             if velocity_chart and velocity_chart.labels:
-                velocity_chart.labels = VelocitySortUtils.sort_chart_labels_chronologically(velocity_chart.labels)
+                VelocitySortUtils.sort_chart_data_chronologically(velocity_chart)
 
             context["month_velocity"] = ChartJsonUtils.convert_chart_data_to_chartjs_json(velocity_chart) if velocity_chart else "{}"
         except Exception as e:
