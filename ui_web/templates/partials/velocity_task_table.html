@@ -1,0 +1,44 @@
+<div class="table-container">
+    <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Title</th>
+                <th scope="col">Total SP</th>
+                <th scope="col">Dev SP</th>
+                <th scope="col">Dev Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td><code>{{ task.id }}</code></td>
+                <td>
+                    {% if task.system_metadata.url %}
+                        <a href="{{ task.system_metadata.url }}" target="_blank">{{ task.title }}</a>
+                    {% else %}
+                        {{ task.title }}
+                    {% endif %}
+                </td>
+                <td>{{ task.story_points|floatformat:1|default:"-" }}</td>
+                <td>{{ task.developer_story_points|floatformat:2 }}</td>
+                <td>{{ task.developer_time_hours|floatformat:1 }}h</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if summary %}
+        <tfoot>
+            <tr>
+                <th colspan="2"></th>
+                <th></th>
+                <th>{{ summary.total_story_points|floatformat:2 }} SP</th>
+                <th>{{ summary.total_time_hours|floatformat:1 }}h
+                    {% if summary.velocity %}
+                        &middot; {{ summary.velocity|floatformat:2 }} SP/day
+                    {% endif %}
+                </th>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>

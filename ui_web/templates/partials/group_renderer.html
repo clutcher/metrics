@@ -29,5 +29,19 @@
                 </div>
             </details>
         </article>
+    {% elif item.type == "task_velocity" %}
+        <article class="panel mt-4">
+            <details open>
+                <summary class="panel-heading">
+                    <span class="mr-2">
+                        <i class="iconoir-nav-arrow-down"></i>
+                    </span>
+                    {{ item.name }} ({{ item.count }})
+                </summary>
+                <div class="panel-block is-block">
+                    {% include "partials/velocity_task_table.html" with tasks=item.items summary=item.summary %}
+                </div>
+            </details>
+        </article>
     {% endif %}
 {% endfor %}

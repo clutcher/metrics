@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Optional, Union
 
 from .task_data import TaskData
 
@@ -10,3 +10,4 @@ class HierarchicalItemData:
     type: str
     count: int
     items: List[Union['HierarchicalItemData', TaskData]]
+    summary: Optional[object] = None
