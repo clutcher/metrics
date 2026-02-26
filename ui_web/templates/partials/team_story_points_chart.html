@@ -1,6 +1,7 @@
 <div class="box">
     <h3 class="title is-4">📊 Resolved Story Points</h3>
     <canvas id="teamStoryPointsChart" width="400" height="200"></canvas>
+    <p class="help has-text-grey">Click on a bar to see task details below</p>
 </div>
 
 <script>
@@ -22,6 +23,8 @@
         }
 
         var chartData = {{ month_sp|safe }};
+        var taskDetailsBaseUrl = '{% url "ui_web:team_velocity_tasks" %}';
+        var memberGroupId = '{{ member_group_id }}';
 
         if (chartData && chartData.labels && chartData.data) {
             window.teamStoryPointsChartInstance = new Chart(canvas.getContext('2d'), {
@@ -40,6 +43,15 @@
                 },
                 options: {
                     responsive: true,
+                    onClick: function(event, elements) {
+                        if (!elements || elements.length === 0) return;
+                        var period = chartData.labels[elements[0].index];
+                        var url = taskDetailsBaseUrl + '?period=' + encodeURIComponent(period)
+                            + '&member_group_id=' + encodeURIComponent(memberGroupId);
+                        htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
+                            document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
+                        });
+                    },
                     scales: {
                         x: {
                             stacked: true

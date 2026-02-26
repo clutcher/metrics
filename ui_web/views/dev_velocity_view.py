@@ -159,13 +159,40 @@ class DevStoryPointsChartView(TemplateView):
         return context
 
 
-class DevVelocityTasksView(TemplateView):
+class BaseVelocityTasksView(TemplateView):
     template_name = 'partials/dev_velocity_tasks.html'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.tasks_velocity_facade = ui_web_container.tasks_velocity_facade
         self.summary_convertor = ui_web_container.developer_velocity_summary_convertor
+
+    def _build_task_hierarchy(self, velocity_tasks, period):
+        developer_groups = self._group_by_developer(velocity_tasks)
+        total_count = sum(g.count for g in developer_groups)
+        return [HierarchicalItemData(
+            name=f"Tasks — {period}",
+            type="member_group",
+            count=total_count,
+            items=developer_groups
+        )]
+
+    def _group_by_developer(self, velocity_tasks):
+        groups = TaskGroupingUtils.group_tasks_by_key(
+            velocity_tasks,
+            key_extractor=lambda t: t.assignment.assignee.display_name,
+            group_type="task_velocity"
+        )
+        return self.summary_convertor.enrich_with_summaries(groups)
+
+    @staticmethod
+    def _parse_month_period(period: str):
+        year, month = int(period[:4]), int(period[5:7])
+        last_day = calendar.monthrange(year, month)[1]
+        return datetime(year, month, 1), datetime(year, month, last_day)
+
+
+class DevVelocityTasksView(BaseVelocityTasksView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -186,24 +213,6 @@ class DevVelocityTasksView(TemplateView):
 
         return context
 
-    def _build_task_hierarchy(self, velocity_tasks, period):
-        developer_groups = self._group_by_developer(velocity_tasks)
-        total_count = sum(g.count for g in developer_groups)
-        return [HierarchicalItemData(
-            name=f"Tasks — {period}",
-            type="member_group",
-            count=total_count,
-            items=developer_groups
-        )]
-
-    def _group_by_developer(self, velocity_tasks):
-        groups = TaskGroupingUtils.group_tasks_by_key(
-            velocity_tasks,
-            key_extractor=lambda t: t.assignment.assignee.display_name,
-            group_type="task_velocity"
-        )
-        return self.summary_convertor.enrich_with_summaries(groups)
-
     def _parse_request_params(self):
         period = self.request.GET.get('period', '')
         member_group_id = self.request.GET.get('member_group_id')
@@ -213,10 +222,3 @@ class DevVelocityTasksView(TemplateView):
         developer_names = [d.strip() for d in developers_param.split(',') if d.strip()]
 
         return developer_names, period, member_group_id, include_all_statuses
-
-
-    @staticmethod
-    def _parse_month_period(period: str):
-        year, month = int(period[:4]), int(period[5:7])
-        last_day = calendar.monthrange(year, month)[1]
-        return datetime(year, month, 1), datetime(year, month, last_day)

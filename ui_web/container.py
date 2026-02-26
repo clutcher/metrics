@@ -139,7 +139,8 @@ class UiWebContainer:
                 create_velocity_search_criteria=tasks_container.create_velocity_search_criteria,
                 resolve_member_group_members=velocity_container.resolve_member_group_members,
                 velocity_task_detail_convertor=self._get_velocity_task_detail_convertor(),
-                in_progress_status_codes=tasks_container.get_workflow_config().in_progress_status_codes
+                in_progress_status_codes=tasks_container.get_workflow_config().in_progress_status_codes,
+                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
             )
         return self._tasks_velocity_facade
 

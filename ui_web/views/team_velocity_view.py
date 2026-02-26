@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from ..container import ui_web_container
 from ..utils.chart_json_utils import ChartJsonUtils
 from ..utils.velocity_sort_utils import VelocitySortUtils
+from .dev_velocity_view import BaseVelocityTasksView
 
 
 class TeamVelocityView(TemplateView):
@@ -60,6 +61,33 @@ class TeamVelocityView(TemplateView):
         context["member_group_id"] = member_group_id or ''
 
         return context
+
+
+class TeamVelocityTasksView(BaseVelocityTasksView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        period, member_group_id = self._parse_request_params()
+
+        try:
+            start_date, end_date = self._parse_month_period(period)
+            velocity_tasks = asyncio.run(
+                self.tasks_velocity_facade.get_team_tasks(
+                    start_date, end_date, member_group_id
+                )
+            )
+            context["task_groups"] = self._build_task_hierarchy(velocity_tasks, period)
+        except Exception as e:
+            context["task_groups"] = []
+            context["error"] = str(e)
+
+        return context
+
+    def _parse_request_params(self):
+        period = self.request.GET.get('period', '')
+        member_group_id = self.request.GET.get('member_group_id')
+        return period, member_group_id
 
 
 class TeamVelocityChartView(TemplateView):
