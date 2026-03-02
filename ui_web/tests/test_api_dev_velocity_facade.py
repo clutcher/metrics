@@ -121,6 +121,18 @@ class TestDevVelocityFacadeCustomFilter(unittest.IsolatedAsyncioTestCase):
         parameters = self.velocity_api.mock.generate_velocity_report.call_args[0][0]
         self.assertTrue(parameters.task_filter.include_all_statuses)
 
+    async def test_shouldPassDevelopmentStageStatusesAsWorklogTransitionStatuses(self):
+        # Given
+        self.velocity_api.mock.generate_velocity_report.return_value = []
+        facade = _create_facade(self.velocity_api, self.assignee_search_api)
+
+        # When
+        await facade.get_velocity_reports_data()
+
+        # Then
+        parameters = self.velocity_api.mock.generate_velocity_report.call_args[0][0]
+        self.assertEqual(["In Progress", "Development"], parameters.task_filter.worklog_transition_statuses)
+
 
 if __name__ == '__main__':
     unittest.main()

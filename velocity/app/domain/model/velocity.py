@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Optional
+from typing import List, Optional
 
 from sd_metrics_lib.utils.time import TimeUnit
 
@@ -15,6 +15,7 @@ class ReportType(Enum):
 class TaskFilter:
     include_all_statuses: bool = False
     custom_query: Optional[str] = None
+    worklog_transition_statuses: Optional[List[str]] = None
 
 
 @dataclass(slots=True)

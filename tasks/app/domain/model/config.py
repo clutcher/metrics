@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Set
 
 
 @dataclass(slots=True)
@@ -38,6 +38,12 @@ class MemberGroupConfig:
     default_member_group_when_missing: Optional[str]
     custom_filters: Optional[Dict[str, str]] = None
     merge_unassigned_into_filtered_group: bool = False
+
+    def get_members_by_stage(self, stage_name: str) -> Set[str]:
+        return {
+            member_id for member_id, member_data in self.members.items()
+            if stage_name in member_data.get('stages', [])
+        }
 
     def get_available_member_groups(self) -> Dict[str, str]:
         member_groups = {}

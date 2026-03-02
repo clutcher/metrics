@@ -125,3 +125,33 @@ class TestApiVelocitySearchCriteria(unittest.IsolatedAsyncioTestCase):
         captured_criteria = self.task_repository.mock.search.call_args[0][0]
         self.assertIsNone(captured_criteria.raw_jql_filter)
         self.assertCountEqual(["alice", "bob", "carol", "dave"], captured_criteria.assignee_filter)
+
+    async def test_shouldPassWorklogEnrichmentWhenTaskFilterHasTransitionStatuses(self):
+        # Given
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 1, 31)
+        self.task_repository.mock.search.return_value = []
+        dev_statuses = ["In Progress", "Development"]
+
+        # When
+        await self.calculator.calculate_velocity_report_for_period(
+            start_date, end_date,
+            task_filter=TaskFilter(worklog_transition_statuses=dev_statuses)
+        )
+
+        # Then
+        captured_enrichment = self.task_repository.mock.search.call_args[0][1]
+        self.assertEqual(dev_statuses, captured_enrichment.worklog_transition_statuses)
+
+    async def test_shouldNotPassEnrichmentWhenTaskFilterHasNoTransitionStatuses(self):
+        # Given
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 1, 31)
+        self.task_repository.mock.search.return_value = []
+
+        # When
+        await self.calculator.calculate_velocity_report_for_period(start_date, end_date)
+
+        # Then
+        captured_enrichment = self.task_repository.mock.search.call_args[0][1]
+        self.assertIsNone(captured_enrichment)

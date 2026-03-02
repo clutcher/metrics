@@ -20,7 +20,8 @@ class DevVelocityFacade:
                  velocity_report_convertor: VelocityReportConvertor,
                  member_velocity_config: MemberVelocityConfig,
                  ideal_hours_per_day: float,
-                 member_group_custom_filters: Optional[Dict[str, str]] = None):
+                 member_group_custom_filters: Optional[Dict[str, str]] = None,
+                 development_stage_status_codes: Optional[List[str]] = None):
         self._velocity_api = velocity_api
         self._assignee_search_api = assignee_search_api
         self._available_member_groups = available_member_groups
@@ -29,6 +30,7 @@ class DevVelocityFacade:
         self._member_velocity_config = member_velocity_config
         self._ideal_hours_per_day = ideal_hours_per_day
         self._member_group_custom_filters = member_group_custom_filters
+        self._development_stage_status_codes = development_stage_status_codes
 
     def has_custom_filter(self, member_group_id: Optional[str]) -> bool:
         if not member_group_id or not self._member_group_custom_filters:
@@ -87,6 +89,7 @@ class DevVelocityFacade:
             number_of_periods=number_of_periods,
             report_type=ReportType.MEMBER_SCOPE,
             scope_id=member_group_id,
-            task_filter=TaskFilter(include_all_statuses=include_all_statuses, custom_query=custom_query)
+            task_filter=TaskFilter(include_all_statuses=include_all_statuses, custom_query=custom_query,
+                                  worklog_transition_statuses=self._development_stage_status_codes)
         )
         return await self._velocity_api.generate_velocity_report(criteria)

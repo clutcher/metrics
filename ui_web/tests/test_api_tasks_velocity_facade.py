@@ -180,5 +180,37 @@ class TestTasksVelocityFacadeTeamTasks(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("parent in (PROJ-100)", search_criteria.raw_jql_filter)
 
 
+class TestTasksVelocityFacadeWorklogTransitionStatuses(unittest.IsolatedAsyncioTestCase):
+
+    def setUp(self):
+        self.task_search_api = MockTaskSearchApi()
+        self.velocity_calculation_api = MockVelocityCalculationApi()
+        self.velocity_calculation_api.mock.calculate_ideal_velocity.return_value = 2.0
+
+    async def test_shouldUseDevelopmentStageStatusesForDevVelocityTasks(self):
+        # Given
+        self.task_search_api.mock.search.return_value = []
+        facade = _create_facade(self.task_search_api, self.velocity_calculation_api)
+
+        # When
+        await facade.get_tasks(["alice"], _START_DATE, _END_DATE)
+
+        # Then
+        enrichment = self.task_search_api.mock.search.call_args[0][1]
+        self.assertEqual(_DEVELOPMENT_STAGE_STATUSES, enrichment.worklog_transition_statuses)
+
+    async def test_shouldUseInProgressStatusesForTeamVelocityTasks(self):
+        # Given
+        self.task_search_api.mock.search.return_value = []
+        facade = _create_facade(self.task_search_api, self.velocity_calculation_api)
+
+        # When
+        await facade.get_team_tasks(_START_DATE, _END_DATE)
+
+        # Then
+        enrichment = self.task_search_api.mock.search.call_args[0][1]
+        self.assertEqual(_IN_PROGRESS_STATUSES, enrichment.worklog_transition_statuses)
+
+
 if __name__ == '__main__':
     unittest.main()

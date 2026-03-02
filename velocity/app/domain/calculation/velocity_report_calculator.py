@@ -5,6 +5,7 @@ from typing import Optional, List, Callable
 from sd_metrics_lib.calculators.velocity import GeneralizedTeamVelocityCalculator, UserVelocityCalculator
 from sd_metrics_lib.sources.tasks import ProxyTaskProvider
 
+from tasks.app.domain.model.task import EnrichmentOptions
 from velocity.app.domain.calculation.member_group_resolver import MemberGroupResolver
 from velocity.app.domain.calculation.proxy_extractors import (
     TaskModuleStoryPointExtractor, TaskModuleTotalSpentTimeExtractor, TaskModuleWorklogExtractor
@@ -136,4 +137,14 @@ class VelocityReportCalculator:
         search_criteria = self._create_velocity_search_criteria(
             start_date, end_date, member_group_id, task_filter
         )
-        return await self._task_repository.search(search_criteria)
+        enrichment = VelocityReportCalculator._build_enrichment(task_filter)
+        return await self._task_repository.search(search_criteria, enrichment)
+
+    @staticmethod
+    def _build_enrichment(task_filter: TaskFilter) -> Optional[EnrichmentOptions]:
+        if not task_filter or not task_filter.worklog_transition_statuses:
+            return None
+        return EnrichmentOptions(
+            include_time_tracking=True,
+            worklog_transition_statuses=task_filter.worklog_transition_statuses
+        )

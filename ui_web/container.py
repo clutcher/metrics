@@ -129,7 +129,8 @@ class UiWebContainer:
                 velocity_report_convertor=self._get_velocity_report_convertor(),
                 member_velocity_config=velocity_container.get_member_velocity_config(),
                 ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day,
-                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
+                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters,
+                development_stage_status_codes=tasks_container.get_workflow_config().stages.get("Development", [])
             )
         return self._dev_velocity_facade
 
@@ -143,6 +144,7 @@ class UiWebContainer:
                 velocity_task_detail_convertor=self._get_velocity_task_detail_convertor(),
                 velocity_calculation_api=velocity_container.velocity_calculation_api,
                 in_progress_status_codes=tasks_container.get_workflow_config().in_progress_status_codes,
+                development_stage_status_codes=tasks_container.get_workflow_config().stages.get("Development", []),
                 member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
             )
         return self._tasks_velocity_facade

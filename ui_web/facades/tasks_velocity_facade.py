@@ -17,6 +17,7 @@ class TasksVelocityFacade:
                  velocity_task_detail_convertor: VelocityTaskDetailConvertor,
                  velocity_calculation_api: ApiForVelocityCalculation,
                  in_progress_status_codes: List[str],
+                 development_stage_status_codes: List[str],
                  member_group_custom_filters: Optional[Dict[str, str]] = None):
         self._task_search_api = task_search_api
         self._create_velocity_search_criteria = create_velocity_search_criteria
@@ -24,6 +25,7 @@ class TasksVelocityFacade:
         self._velocity_task_detail_convertor = velocity_task_detail_convertor
         self._velocity_calculation_api = velocity_calculation_api
         self._in_progress_status_codes = in_progress_status_codes
+        self._development_stage_status_codes = development_stage_status_codes
         self._member_group_custom_filters = member_group_custom_filters
 
     async def get_tasks(self, developer_names: List[str],
@@ -32,7 +34,8 @@ class TasksVelocityFacade:
                         include_all_statuses: bool = False,
                         use_custom_filter: bool = False) -> List[TaskVelocityData]:
         custom_query = self._get_custom_filter(member_group_id) if use_custom_filter else None
-        tasks = await self._search_tasks(start_date, end_date, member_group_id, include_all_statuses, custom_query)
+        tasks = await self._search_tasks(start_date, end_date, member_group_id, include_all_statuses, custom_query,
+                                         self._development_stage_status_codes)
         developer_velocities = await self._compute_developer_velocities(developer_names)
         return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(
             tasks, developer_names, developer_velocities
@@ -69,11 +72,12 @@ class TasksVelocityFacade:
     async def _search_tasks(self, start_date: datetime, end_date: datetime,
                              member_group_id: Optional[str],
                              include_all_statuses: bool,
-                             custom_query: Optional[str] = None):
+                             custom_query: Optional[str] = None,
+                             worklog_transition_statuses: Optional[List[str]] = None):
         criteria = self._create_search_criteria(start_date, end_date, member_group_id, include_all_statuses, custom_query)
         enrichment = EnrichmentOptions(
             include_time_tracking=True,
-            worklog_transition_statuses=self._in_progress_status_codes
+            worklog_transition_statuses=worklog_transition_statuses or self._in_progress_status_codes
         )
         return await self._task_search_api.search(criteria, enrichment)
 
