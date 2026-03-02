@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Callable
 
+from sd_metrics_lib.utils.time import TimeUnit
+
 from tasks.app.domain.model.task import EnrichmentOptions
+from velocity.app.api.api_for_velocity_calculation import ApiForVelocityCalculation
 from ..convertors.velocity_task_detail_convertor import VelocityTaskDetailConvertor
 from ..data.velocity_task_detail_data import TaskVelocityData
 
@@ -12,12 +15,14 @@ class TasksVelocityFacade:
                  create_velocity_search_criteria: Callable,
                  resolve_member_group_members: Callable,
                  velocity_task_detail_convertor: VelocityTaskDetailConvertor,
+                 velocity_calculation_api: ApiForVelocityCalculation,
                  in_progress_status_codes: List[str],
                  member_group_custom_filters: Optional[Dict[str, str]] = None):
         self._task_search_api = task_search_api
         self._create_velocity_search_criteria = create_velocity_search_criteria
         self._resolve_member_group_members = resolve_member_group_members
         self._velocity_task_detail_convertor = velocity_task_detail_convertor
+        self._velocity_calculation_api = velocity_calculation_api
         self._in_progress_status_codes = in_progress_status_codes
         self._member_group_custom_filters = member_group_custom_filters
 
@@ -28,7 +33,10 @@ class TasksVelocityFacade:
                         use_custom_filter: bool = False) -> List[TaskVelocityData]:
         custom_query = self._get_custom_filter(member_group_id) if use_custom_filter else None
         tasks = await self._search_tasks(start_date, end_date, member_group_id, include_all_statuses, custom_query)
-        return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(tasks, developer_names)
+        developer_velocities = await self._compute_developer_velocities(developer_names)
+        return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(
+            tasks, developer_names, developer_velocities
+        )
 
     async def get_team_tasks(self, start_date: datetime, end_date: datetime,
                              member_group_id: Optional[str] = None,
@@ -36,7 +44,19 @@ class TasksVelocityFacade:
         custom_query = self._get_custom_filter(member_group_id) if use_custom_filter else None
         tasks = await self._search_tasks(start_date, end_date, member_group_id, False, custom_query)
         all_developer_names = TasksVelocityFacade._extract_developer_names(tasks)
-        return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(tasks, all_developer_names)
+        developer_velocities = await self._compute_developer_velocities(all_developer_names)
+        return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(
+            tasks, all_developer_names, developer_velocities
+        )
+
+    async def _compute_developer_velocities(self,
+                                             developer_names: List[str]) -> Dict[str, Optional[float]]:
+        velocities = {}
+        for name in developer_names:
+            velocities[name] = await self._velocity_calculation_api.calculate_ideal_velocity(
+                name, TimeUnit.DAY
+            )
+        return velocities
 
     @staticmethod
     def _extract_developer_names(tasks):

@@ -5,8 +5,11 @@
                 <th scope="col">ID</th>
                 <th scope="col">Title</th>
                 <th scope="col">Total SP</th>
+                <th scope="col">Total Est.</th>
                 <th scope="col">Dev SP</th>
+                <th scope="col">Dev Est.</th>
                 <th scope="col">Dev Time</th>
+                <th scope="col">Deviation</th>
             </tr>
         </thead>
         <tbody>
@@ -21,20 +24,66 @@
                     {% endif %}
                 </td>
                 <td>{{ task.story_points|floatformat:1|default:"-" }}</td>
+                <td>
+                    {% if task.total_estimated_days is not None %}
+                        {{ task.total_estimated_days|floatformat:1 }}d
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
                 <td>{{ task.developer_story_points|floatformat:2 }}</td>
-                <td>{{ task.developer_time_hours|floatformat:1 }}h</td>
+                <td>
+                    {% if task.estimated_days is not None %}
+                        {{ task.estimated_days|floatformat:1 }}d
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ task.developer_time_days|floatformat:1 }}d</td>
+                <td>
+                    {% if task.deviation_percent is not None %}
+                        <span class="{% if task.deviation_percent >= 0 %}has-text-success{% else %}has-text-danger{% endif %}">
+                            {{ task.deviation_percent|floatformat:0 }}%
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
         {% if summary %}
         <tfoot>
             <tr>
-                <th colspan="2"></th>
+                <th colspan="2">
+                    {% if summary.working_days is not None %}
+                        Working Days: {{ summary.working_days|floatformat:1 }} / {{ summary.working_days_in_month }}
+                        {% if summary.workload_percent is not None %}
+                            ({{ summary.workload_percent|floatformat:0 }}%)
+                        {% endif %}
+                    {% endif %}
+                    {% if summary.velocity %}
+                        <br>Velocity: {{ summary.velocity|floatformat:2 }} SP/day
+                    {% endif %}
+                </th>
+                <th>
+                    {% if summary.total_task_story_points is not None %}
+                        {{ summary.total_task_story_points|floatformat:1 }} SP
+                    {% endif %}
+                </th>
                 <th></th>
                 <th>{{ summary.total_story_points|floatformat:2 }} SP</th>
-                <th>{{ summary.total_time_hours|floatformat:1 }}h
-                    {% if summary.velocity %}
-                        &middot; {{ summary.velocity|floatformat:2 }} SP/day
+                <th>
+                    {% if summary.total_estimated_days is not None %}
+                        {{ summary.total_estimated_days|floatformat:1 }}d
+                    {% endif %}
+                </th>
+                <th>{{ summary.total_time_days|floatformat:1 }}d</th>
+                <th>
+                    {% if summary.average_deviation_percent is not None %}
+                        <span class="{% if summary.average_deviation_percent >= 0 %}has-text-success{% else %}has-text-danger{% endif %}">
+                            {{ summary.average_deviation_percent|floatformat:0 }}%
+                        </span>
                     {% endif %}
                 </th>
             </tr>

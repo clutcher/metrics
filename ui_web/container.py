@@ -141,6 +141,7 @@ class UiWebContainer:
                 create_velocity_search_criteria=tasks_container.create_velocity_search_criteria,
                 resolve_member_group_members=velocity_container.resolve_member_group_members,
                 velocity_task_detail_convertor=self._get_velocity_task_detail_convertor(),
+                velocity_calculation_api=velocity_container.velocity_calculation_api,
                 in_progress_status_codes=tasks_container.get_workflow_config().in_progress_status_codes,
                 member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
             )
@@ -150,7 +151,7 @@ class UiWebContainer:
     def developer_velocity_summary_convertor(self) -> DeveloperVelocitySummaryConvertor:
         if self._developer_velocity_summary_convertor is None:
             self._developer_velocity_summary_convertor = DeveloperVelocitySummaryConvertor(
-                ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day
+                working_days_per_month=velocity_container.ideal_time_policy.days_per_month
             )
         return self._developer_velocity_summary_convertor
 
@@ -172,7 +173,9 @@ class UiWebContainer:
 
     def _get_velocity_task_detail_convertor(self) -> VelocityTaskDetailConvertor:
         if self._velocity_task_detail_convertor is None:
-            self._velocity_task_detail_convertor = VelocityTaskDetailConvertor()
+            self._velocity_task_detail_convertor = VelocityTaskDetailConvertor(
+                time_policy=velocity_container.ideal_time_policy
+            )
         return self._velocity_task_detail_convertor
 
     def _get_velocity_chart_convertor(self) -> VelocityChartConvertor:
