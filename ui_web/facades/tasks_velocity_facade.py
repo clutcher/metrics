@@ -24,8 +24,10 @@ class TasksVelocityFacade:
     async def get_tasks(self, developer_names: List[str],
                         start_date: datetime, end_date: datetime,
                         member_group_id: Optional[str] = None,
-                        include_all_statuses: bool = False) -> List[TaskVelocityData]:
-        tasks = await self._search_tasks(start_date, end_date, member_group_id, include_all_statuses)
+                        include_all_statuses: bool = False,
+                        use_custom_filter: bool = False) -> List[TaskVelocityData]:
+        custom_query = self._get_custom_filter(member_group_id) if use_custom_filter else None
+        tasks = await self._search_tasks(start_date, end_date, member_group_id, include_all_statuses, custom_query)
         return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(tasks, developer_names)
 
     async def get_team_tasks(self, start_date: datetime, end_date: datetime,

@@ -128,7 +128,8 @@ class UiWebContainer:
                 velocity_chart_convertor=self._get_velocity_chart_convertor(),
                 velocity_report_convertor=self._get_velocity_report_convertor(),
                 member_velocity_config=velocity_container.get_member_velocity_config(),
-                ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day
+                ideal_hours_per_day=velocity_container.ideal_time_policy.hours_per_day,
+                member_group_custom_filters=tasks_container.get_member_group_config().custom_filters
             )
         return self._dev_velocity_facade
 

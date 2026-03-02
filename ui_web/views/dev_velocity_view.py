@@ -32,6 +32,7 @@ class DevVelocityView(TemplateView):
         member_group_id = team_id or self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
         include_all_statuses = self.request.GET.get('all_tasks') == 'true'
+        use_custom_filter = self.request.GET.get('use_custom_filter') == 'true'
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
@@ -42,7 +43,7 @@ class DevVelocityView(TemplateView):
         try:
             velocity_reports_data = asyncio.run(
                 self.dev_velocity_facade.get_velocity_reports_data(
-                    member_group_id, 6 + extra_periods, include_all_statuses
+                    member_group_id, 6 + extra_periods, include_all_statuses, use_custom_filter
                 )
             )
 
@@ -72,6 +73,8 @@ class DevVelocityView(TemplateView):
         context["sp_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
         context["include_all_statuses"] = include_all_statuses
+        context["use_custom_filter"] = use_custom_filter
+        context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
 
         return context
 
@@ -89,6 +92,7 @@ class DevVelocityChartView(TemplateView):
         member_group_id = self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
         include_all_statuses = self.request.GET.get('all_tasks') == 'true'
+        use_custom_filter = self.request.GET.get('use_custom_filter') == 'true'
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
@@ -98,7 +102,7 @@ class DevVelocityChartView(TemplateView):
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses, use_custom_filter)
             )
 
             velocity_chart = self.dev_velocity_facade.get_velocity_chart_data(
@@ -115,6 +119,8 @@ class DevVelocityChartView(TemplateView):
         context["velocity_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
         context["include_all_statuses"] = include_all_statuses
+        context["use_custom_filter"] = use_custom_filter
+        context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
 
         return context
 
@@ -132,13 +138,14 @@ class DevStoryPointsChartView(TemplateView):
         member_group_id = self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
         include_all_statuses = self.request.GET.get('all_tasks') == 'true'
+        use_custom_filter = self.request.GET.get('use_custom_filter') == 'true'
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 6
 
         try:
             velocity_reports_data = asyncio.run(
-                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses)
+                self.dev_velocity_facade.get_velocity_reports_data(member_group_id, 6 + extra_periods, include_all_statuses, use_custom_filter)
             )
 
             story_points_chart = self.dev_velocity_facade.get_story_points_chart_data(
@@ -155,6 +162,8 @@ class DevStoryPointsChartView(TemplateView):
         context["sp_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
         context["include_all_statuses"] = include_all_statuses
+        context["use_custom_filter"] = use_custom_filter
+        context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
 
         return context
 
@@ -197,13 +206,13 @@ class DevVelocityTasksView(BaseVelocityTasksView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        developer_names, period, member_group_id, include_all_statuses = self._parse_request_params()
+        developer_names, period, member_group_id, include_all_statuses, use_custom_filter = self._parse_request_params()
 
         try:
             start_date, end_date = self._parse_month_period(period)
             velocity_tasks = asyncio.run(
                 self.tasks_velocity_facade.get_tasks(
-                    developer_names, start_date, end_date, member_group_id, include_all_statuses
+                    developer_names, start_date, end_date, member_group_id, include_all_statuses, use_custom_filter
                 )
             )
             context["task_groups"] = self._build_task_hierarchy(velocity_tasks, period)
@@ -217,8 +226,9 @@ class DevVelocityTasksView(BaseVelocityTasksView):
         period = self.request.GET.get('period', '')
         member_group_id = self.request.GET.get('member_group_id')
         include_all_statuses = self.request.GET.get('all_tasks') == 'true'
+        use_custom_filter = self.request.GET.get('use_custom_filter') == 'true'
 
         developers_param = self.request.GET.get('developers', '')
         developer_names = [d.strip() for d in developers_param.split(',') if d.strip()]
 
-        return developer_names, period, member_group_id, include_all_statuses
+        return developer_names, period, member_group_id, include_all_statuses, use_custom_filter
