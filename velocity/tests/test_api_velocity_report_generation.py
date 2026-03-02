@@ -5,9 +5,10 @@ from datetime import datetime, timedelta
 from velocity.app.domain.calculation.member_group_resolver import MemberGroupResolver
 from velocity.app.domain.calculation.velocity_report_calculator import VelocityReportCalculator
 from velocity.app.domain.report_generation_service import ReportGenerationService
+from velocity.app.domain.model.velocity import TaskFilter
 from velocity.tests.fixtures.velocity_builders import (
-    ReportParametersBuilder, 
-    VelocityConfigBuilder, 
+    ReportParametersBuilder,
+    VelocityConfigBuilder,
     BusinessScenarios
 )
 from velocity.tests.mocks.mock_task_repository import MockTaskRepository
@@ -81,12 +82,12 @@ class TestApiVelocityReportGeneration(unittest.IsolatedAsyncioTestCase):
         call_count = self.velocity_calculator.calculate_velocity_report_for_period.call_count
         self.assertEqual(6, call_count)
 
-    async def test_shouldPassIncludeAllStatusesToCalculatorWhenGeneratingReport(self):
+    async def test_shouldPassTaskFilterToCalculatorWhenGeneratingReport(self):
         # Given
         parameters = (ReportParametersBuilder.sprint_planning_report()
                      .for_scope("development-team")
                      .build())
-        parameters.include_all_statuses = True
+        parameters.task_filter = TaskFilter(include_all_statuses=True)
 
         self.velocity_calculator.calculate_velocity_report_for_period.return_value = self._create_sample_report()
 
@@ -95,9 +96,9 @@ class TestApiVelocityReportGeneration(unittest.IsolatedAsyncioTestCase):
 
         # Then
         call_kwargs = self.velocity_calculator.calculate_velocity_report_for_period.call_args
-        self.assertTrue(call_kwargs.kwargs["include_all_statuses"])
+        self.assertTrue(call_kwargs.kwargs["task_filter"].include_all_statuses)
 
-    async def test_shouldDefaultIncludeAllStatusesToFalseWhenNotSpecified(self):
+    async def test_shouldPassDefaultTaskFilterWhenNotSpecified(self):
         # Given
         parameters = (ReportParametersBuilder.sprint_planning_report()
                      .for_scope("development-team")
@@ -110,7 +111,8 @@ class TestApiVelocityReportGeneration(unittest.IsolatedAsyncioTestCase):
 
         # Then
         call_kwargs = self.velocity_calculator.calculate_velocity_report_for_period.call_args
-        self.assertFalse(call_kwargs.kwargs["include_all_statuses"])
+        self.assertFalse(call_kwargs.kwargs["task_filter"].include_all_statuses)
+        self.assertIsNone(call_kwargs.kwargs["task_filter"].custom_query)
 
     def _create_sample_report(self):
         from velocity.app.domain.model.velocity import VelocityReport

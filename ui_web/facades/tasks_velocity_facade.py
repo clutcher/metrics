@@ -29,8 +29,10 @@ class TasksVelocityFacade:
         return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(tasks, developer_names)
 
     async def get_team_tasks(self, start_date: datetime, end_date: datetime,
-                             member_group_id: Optional[str] = None) -> List[TaskVelocityData]:
-        tasks = await self._search_tasks(start_date, end_date, member_group_id, False)
+                             member_group_id: Optional[str] = None,
+                             use_custom_filter: bool = False) -> List[TaskVelocityData]:
+        custom_query = self._get_custom_filter(member_group_id) if use_custom_filter else None
+        tasks = await self._search_tasks(start_date, end_date, member_group_id, False, custom_query)
         all_developer_names = TasksVelocityFacade._extract_developer_names(tasks)
         return self._velocity_task_detail_convertor.convert_tasks_to_developers_breakdown(tasks, all_developer_names)
 
@@ -44,8 +46,9 @@ class TasksVelocityFacade:
 
     async def _search_tasks(self, start_date: datetime, end_date: datetime,
                              member_group_id: Optional[str],
-                             include_all_statuses: bool):
-        criteria = self._create_search_criteria(start_date, end_date, member_group_id, include_all_statuses)
+                             include_all_statuses: bool,
+                             custom_query: Optional[str] = None):
+        criteria = self._create_search_criteria(start_date, end_date, member_group_id, include_all_statuses, custom_query)
         enrichment = EnrichmentOptions(
             include_time_tracking=True,
             worklog_transition_statuses=self._in_progress_status_codes
@@ -54,19 +57,20 @@ class TasksVelocityFacade:
 
     def _create_search_criteria(self, start_date: datetime, end_date: datetime,
                                  member_group_id: Optional[str],
-                                 include_all_statuses: bool):
+                                 include_all_statuses: bool,
+                                 custom_query: Optional[str] = None):
         criteria = self._create_velocity_search_criteria(start_date, end_date)
         if include_all_statuses:
             criteria.status_filter = None
             criteria.resolution_date_range = None
             criteria.last_modified_date_range = (start_date, end_date)
-        self._apply_member_group_filter(criteria, member_group_id)
+        self._apply_member_group_filter(criteria, member_group_id, custom_query)
         return criteria
 
-    def _apply_member_group_filter(self, criteria, member_group_id: Optional[str]):
-        custom_filter = self._get_custom_filter(member_group_id)
-        if custom_filter:
-            criteria.raw_jql_filter = custom_filter
+    def _apply_member_group_filter(self, criteria, member_group_id: Optional[str],
+                                   custom_query: Optional[str] = None):
+        if custom_query:
+            criteria.raw_jql_filter = custom_query
             return
         members = self._resolve_member_group_members(member_group_id)
         if members:

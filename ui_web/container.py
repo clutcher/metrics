@@ -113,7 +113,8 @@ class UiWebContainer:
                 tasks_container.get_available_member_groups(),
                 self.member_convertor,
                 self._get_velocity_chart_convertor(),
-                self._get_velocity_report_convertor()
+                self._get_velocity_report_convertor(),
+                tasks_container.get_member_group_config().custom_filters
             )
         return self._team_velocity_facade
 

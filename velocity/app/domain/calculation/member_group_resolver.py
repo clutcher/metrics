@@ -16,3 +16,11 @@ class MemberGroupResolver:
                 assignees.append(member)
 
         return assignees if assignees else None
+
+    def resolve_custom_filter(self, member_group_id: Optional[str]) -> Optional[str]:
+        if not member_group_id or not self.member_group_config:
+            return None
+        custom_filters = self.member_group_config.custom_filters
+        if not custom_filters:
+            return None
+        return custom_filters.get(member_group_id)

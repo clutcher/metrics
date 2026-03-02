@@ -3,7 +3,7 @@ from typing import Optional, List
 from sd_metrics_lib.utils.time import TimeUnit
 
 from velocity.app.domain.model.config import MemberVelocityConfig
-from velocity.app.domain.model.velocity import ReportGenerationParameters, ReportType
+from velocity.app.domain.model.velocity import ReportGenerationParameters, ReportType, TaskFilter
 from ..convertors.velocity_chart_convertor import VelocityChartConvertor
 from ..convertors.velocity_report_convertor import VelocityReportConvertor
 from ..data.chart_data import ChartData
@@ -72,6 +72,6 @@ class DevVelocityFacade:
             number_of_periods=number_of_periods,
             report_type=ReportType.MEMBER_SCOPE,
             scope_id=member_group_id,
-            include_all_statuses=include_all_statuses
+            task_filter=TaskFilter(include_all_statuses=include_all_statuses)
         )
         return await self._velocity_api.generate_velocity_report(criteria)

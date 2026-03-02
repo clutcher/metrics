@@ -10,13 +10,13 @@ from velocity.app.domain.calculation.proxy_extractors import (
     TaskModuleStoryPointExtractor, TaskModuleTotalSpentTimeExtractor, TaskModuleWorklogExtractor
 )
 from velocity.app.domain.model.config import VelocityConfig
-from velocity.app.domain.model.velocity import VelocityReport
+from velocity.app.domain.model.velocity import TaskFilter, VelocityReport
 from velocity.app.spi.task_repository import TaskRepository
 
 
 class VelocityReportCalculator:
 
-    def __init__(self, task_repository: TaskRepository, configuration: VelocityConfig, 
+    def __init__(self, task_repository: TaskRepository, configuration: VelocityConfig,
                  member_group_resolver: MemberGroupResolver,
                  velocity_search_criteria_factory: Callable[[], any]):
         self._task_repository = task_repository
@@ -28,8 +28,8 @@ class VelocityReportCalculator:
                                                    start_date: datetime,
                                                    end_date: datetime,
                                                    scope_id: Optional[str] = None,
-                                                   include_all_statuses: bool = False) -> VelocityReport:
-        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, include_all_statuses)
+                                                   task_filter: TaskFilter = None) -> VelocityReport:
+        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, task_filter)
 
         if not tasks:
             return VelocityReport(
@@ -60,8 +60,8 @@ class VelocityReportCalculator:
                                                            start_date: datetime,
                                                            end_date: datetime,
                                                            scope_id: Optional[str] = None,
-                                                           include_all_statuses: bool = False) -> List[VelocityReport]:
-        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, include_all_statuses)
+                                                           task_filter: TaskFilter = None) -> List[VelocityReport]:
+        tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, task_filter)
 
         if not tasks:
             return []
@@ -71,7 +71,7 @@ class VelocityReportCalculator:
             story_point_extractor=TaskModuleStoryPointExtractor,
             worklog_extractor=TaskModuleWorklogExtractor
         )
-        
+
         scope_velocities = velocity_calculator.calculate()
         scope_story_points = velocity_calculator.get_story_points()
 
@@ -82,9 +82,9 @@ class VelocityReportCalculator:
         for scope_id, velocity in scope_velocities.items():
             if allowed_scope_ids and scope_id not in allowed_scope_ids:
                 continue
-                
+
             story_points = scope_story_points.get(scope_id, 0.0)
-            
+
             velocity_reports.append(VelocityReport(
                 start_date=start_date,
                 end_date=end_date,
@@ -103,26 +103,37 @@ class VelocityReportCalculator:
 
     def _create_velocity_search_criteria(self, start_date: datetime, end_date: datetime,
                                           member_group_id: Optional[str] = None,
-                                          include_all_statuses: bool = False):
+                                          task_filter: TaskFilter = None):
         search_criteria = deepcopy(self.__velocity_search_criteria_template)
 
-        if include_all_statuses:
+        if self._should_search_all_statuses(task_filter):
             search_criteria.status_filter = None
             search_criteria.resolution_date_range = None
             search_criteria.last_modified_date_range = (start_date, end_date)
         else:
             search_criteria.resolution_date_range = (start_date, end_date)
 
-        members_of_member_group = self._member_group_resolver.resolve_members(member_group_id)
-        if members_of_member_group:
-            search_criteria.assignee_filter = members_of_member_group
+        if self._should_use_customer_member_group_query(task_filter):
+            search_criteria.raw_jql_filter = self._should_use_customer_member_group_query(task_filter)
+        else:
+            members_of_member_group = self._member_group_resolver.resolve_members(member_group_id)
+            if members_of_member_group:
+                search_criteria.assignee_filter = members_of_member_group
 
         return search_criteria
 
+    @staticmethod
+    def _should_use_customer_member_group_query(task_filter: TaskFilter) -> str | None:
+        return task_filter and task_filter.custom_query
+
+    @staticmethod
+    def _should_search_all_statuses(task_filter: TaskFilter) -> bool:
+        return task_filter and task_filter.include_all_statuses
+
     async def _fetch_tasks_for_period(self, start_date: datetime, end_date: datetime,
                                       member_group_id: Optional[str] = None,
-                                      include_all_statuses: bool = False):
+                                      task_filter: TaskFilter = None):
         search_criteria = self._create_velocity_search_criteria(
-            start_date, end_date, member_group_id, include_all_statuses
+            start_date, end_date, member_group_id, task_filter
         )
         return await self._task_repository.search(search_criteria)

@@ -30,7 +30,7 @@ class ReportGenerationService(ApiForVelocityReportGeneration):
         calculation_function = partial(
             metrics_calculation_function,
             scope_id=generation_parameters.scope_id,
-            include_all_statuses=generation_parameters.include_all_statuses
+            task_filter=generation_parameters.task_filter
         )
         
         period_reports = await self._calculate_time_ranged_data_async(

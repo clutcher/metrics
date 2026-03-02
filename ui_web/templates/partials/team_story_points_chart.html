@@ -1,5 +1,16 @@
 <div class="box">
-    <h3 class="title is-4">📊 Resolved Story Points</h3>
+    <h3 class="title is-4">📊 Resolved Story Points{% if use_custom_filter %} — Member Group Custom Filter{% endif %}</h3>
+    {% if has_custom_filter %}
+    <div class="buttons are-small">
+        <button class="button {% if use_custom_filter %}is-info{% endif %}"
+                hx-get="{% url 'ui_web:team_sp_chart' %}?member_group_id={{ member_group_id }}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-target="#team-sp-chart-container"
+                hx-swap="innerHTML"
+                hx-indicator="#loading-indicator">
+            Member Group Custom Filter
+        </button>
+    </div>
+    {% endif %}
     <canvas id="teamStoryPointsChart" width="400" height="200"></canvas>
     <p class="help has-text-grey">Click on a bar to see task details below</p>
 </div>
@@ -25,6 +36,7 @@
         var chartData = {{ month_sp|safe }};
         var taskDetailsBaseUrl = '{% url "ui_web:team_velocity_tasks" %}';
         var memberGroupId = '{{ member_group_id }}';
+        var useCustomFilter = '{{ use_custom_filter|yesno:"true,false" }}';
 
         if (chartData && chartData.labels && chartData.data) {
             window.teamStoryPointsChartInstance = new Chart(canvas.getContext('2d'), {
@@ -47,7 +59,8 @@
                         if (!elements || elements.length === 0) return;
                         var period = chartData.labels[elements[0].index];
                         var url = taskDetailsBaseUrl + '?period=' + encodeURIComponent(period)
-                            + '&member_group_id=' + encodeURIComponent(memberGroupId);
+                            + '&member_group_id=' + encodeURIComponent(memberGroupId)
+                            + (useCustomFilter === 'true' ? '&use_custom_filter=true' : '');
                         htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
                             document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
                         });

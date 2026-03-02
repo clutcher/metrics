@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
@@ -12,12 +12,18 @@ class ReportType(Enum):
 
 
 @dataclass(slots=True)
+class TaskFilter:
+    include_all_statuses: bool = False
+    custom_query: Optional[str] = None
+
+
+@dataclass(slots=True)
 class ReportGenerationParameters:
     time_unit: TimeUnit
     number_of_periods: int
     report_type: ReportType = None
     scope_id: Optional[str] = None
-    include_all_statuses: bool = False
+    task_filter: TaskFilter = field(default_factory=TaskFilter)
 
 
 @dataclass(slots=True)
