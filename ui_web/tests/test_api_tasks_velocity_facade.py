@@ -28,8 +28,6 @@ def _build_task(task_id, title, story_points, time_by_assignee):
     return Task(
         id=task_id,
         title=title,
-        created_at=datetime(2024, 1, 5),
-        updated_at=datetime(2024, 1, 20),
         system_metadata=SystemMetadata(original_status="Done", project_key="PROJ"),
         assignment=Assignment(),
         time_tracking=time_tracking,

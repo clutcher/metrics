@@ -23,6 +23,7 @@ class AzureTaskConverter:
         self._populate_assignment(task, azure_task)
         self._populate_time_tracking(task, azure_task)
         self._populate_system_metadata(task, azure_task)
+        self._populate_parent(task, azure_task)
         self._populate_child_tasks(task, azure_task)
         return task
 
@@ -36,8 +37,6 @@ class AzureTaskConverter:
         return Task(
             id=str(azure_task.id),
             title=azure_task.fields.get("System.Title", ""),
-            created_at=TaskConversionUtils.parse_date(azure_task.fields.get("System.CreatedDate")),
-            updated_at=TaskConversionUtils.parse_date(azure_task.fields.get("System.ChangedDate")),
             status=TaskConversionUtils.normalize_status(azure_status, self.config),
             stage=TaskConversionUtils.get_stage_name_for_status(azure_status, self.config),
             story_points=story_points,
@@ -73,12 +72,34 @@ class AzureTaskConverter:
     def _populate_system_metadata(self, task: Task, azure_task) -> None:
         azure_status = azure_task.fields.get("System.State", "")
         project_name = azure_task.fields.get("System.TeamProject") or ""
-        url = f"{self.config.azure.azure_organization_url.rstrip('/')}/{project_name}/_workitems/edit/{azure_task.id}"
 
         task.system_metadata = SystemMetadata(
             original_status=azure_status,
             project_key=project_name,
-            url=url
+            url=self._build_work_item_url(azure_task.id, project_name)
+        )
+
+    def _build_work_item_url(self, work_item_id, project_name: str) -> str:
+        return f"{self.config.azure.azure_organization_url.rstrip('/')}/{project_name}/_workitems/edit/{work_item_id}"
+
+    def _populate_parent(self, task: Task, azure_task) -> None:
+        parent_id_value = azure_task.fields.get("System.Parent")
+        if not parent_id_value:
+            return
+
+        project_name = azure_task.fields.get("System.TeamProject") or ""
+        parent_id = str(parent_id_value)
+
+        task.parent = Task(
+            id=parent_id,
+            title='',
+            system_metadata=SystemMetadata(
+                original_status='',
+                project_key=project_name,
+                url=self._build_work_item_url(parent_id, project_name)
+            ),
+            assignment=Assignment(assignee=None, member_group=None),
+            time_tracking=TimeTracking()
         )
 
     @staticmethod

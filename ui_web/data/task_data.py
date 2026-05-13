@@ -51,6 +51,7 @@ class TaskData:
     priority: Optional[int] = None
     child_tasks: Optional[List['TaskData']] = None
     child_tasks_count: int = 0
+    parent: Optional['TaskData'] = None
     stage: Optional[str] = None
     forecast: Optional[ForecastData] = None
 

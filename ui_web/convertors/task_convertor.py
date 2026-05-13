@@ -21,6 +21,8 @@ class TaskConvertor:
         if task.child_tasks:
             child_tasks_data = [self.convert_task_to_data(child_task) for child_task in task.child_tasks]
 
+        parent_data = self.convert_task_to_data(task.parent) if task.parent else None
+
         return TaskData(
             id=task.id,
             title=task.title,
@@ -32,7 +34,8 @@ class TaskConvertor:
             child_tasks_count=task.child_tasks_count or 0,
             stage=task.stage,
             forecast=self._convert_forecast_to_data(task.forecast) if task.forecast else None,
-            child_tasks=child_tasks_data
+            child_tasks=child_tasks_data,
+            parent=parent_data
         )
 
     @staticmethod

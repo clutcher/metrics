@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 
 from sd_metrics_lib.utils.time import Duration, TimeUnit
@@ -11,8 +10,6 @@ class TaskBuilder:
     def __init__(self, task_id: str, title: str):
         self._id = task_id
         self._title = title
-        self._created_at = datetime(2024, 1, 1, 10, 0, 0)
-        self._updated_at = datetime(2024, 1, 15, 14, 30, 0)
         self._story_points: Optional[float] = None
         self._assignee: Optional[Assignee] = None
         self._member_group: Optional[MemberGroup] = None
@@ -176,24 +173,7 @@ class TaskBuilder:
     def with_url(self, url: str) -> 'TaskBuilder':
         self._url = url
         return self
-    
-    def with_dates(self, created_at: datetime, updated_at: datetime) -> 'TaskBuilder':
-        self._created_at = created_at
-        self._updated_at = updated_at
-        return self
-    
-    def created_last_week(self) -> 'TaskBuilder':
-        now = datetime.now()
-        created = now - timedelta(days=7)
-        updated = now - timedelta(days=2)
-        return self.with_dates(created, updated)
-    
-    def created_this_sprint(self) -> 'TaskBuilder':
-        now = datetime.now()
-        created = now - timedelta(days=10)
-        updated = now - timedelta(hours=6)
-        return self.with_dates(created, updated)
-    
+
     def build(self) -> Task:
         assignment = Assignment(
             assignee=self._assignee,
@@ -215,8 +195,6 @@ class TaskBuilder:
         return Task(
             id=self._id,
             title=self._title,
-            created_at=self._created_at,
-            updated_at=self._updated_at,
             system_metadata=system_metadata,
             assignment=assignment,
             time_tracking=time_tracking,
@@ -360,7 +338,6 @@ class BusinessScenarios:
                 .assigned_to_senior_developer()
                 .with_time_spent_hours(24.0)
                 .completed()
-                .created_last_week()
                 .build(),
             
             TaskBuilder.technical_debt_cleanup()
@@ -368,7 +345,6 @@ class BusinessScenarios:
                 .assigned_to_senior_developer()
                 .with_time_spent_hours(20.0)
                 .completed()
-                .created_last_week()
                 .build(),
             
             TaskBuilder.critical_production_bug()
@@ -376,7 +352,6 @@ class BusinessScenarios:
                 .assigned_to_senior_developer()
                 .with_time_spent_hours(12.0)
                 .in_progress()
-                .created_this_sprint()
                 .build()
         ]
     
@@ -389,7 +364,6 @@ class BusinessScenarios:
                 .assigned_to_junior_developer()
                 .with_time_spent_hours(16.0)
                 .completed()
-                .created_last_week()
                 .build(),
             
             TaskBuilder.research_spike()
@@ -397,7 +371,6 @@ class BusinessScenarios:
                 .assigned_to_junior_developer()
                 .with_time_spent_hours(12.0)
                 .completed()
-                .created_last_week()
                 .build(),
             
             TaskBuilder.capacity_planning_task()
@@ -405,7 +378,6 @@ class BusinessScenarios:
                 .assigned_to_junior_developer()
                 .with_time_spent_hours(18.0)
                 .in_progress()
-                .created_this_sprint()
                 .build()
         ]
     
@@ -435,7 +407,6 @@ class BusinessScenarios:
                 .assigned_to_senior_developer()
                 .with_time_spent_hours(20.0)
                 .completed()
-                .created_last_week()
                 .build(),
             
             TaskBuilder.technical_debt_cleanup()
@@ -443,7 +414,6 @@ class BusinessScenarios:
                 .assigned_to_junior_developer()
                 .with_time_spent_hours(8.0)
                 .completed()
-                .created_last_week()
                 .build()
         ]
     
@@ -455,7 +425,6 @@ class BusinessScenarios:
                 .assigned_to_senior_developer()
                 .with_time_spent_hours(12.0)
                 .in_progress()
-                .created_this_sprint()
                 .build(),
             
             TaskBuilder.research_spike()
@@ -463,7 +432,6 @@ class BusinessScenarios:
                 .assigned_to_team_lead()
                 .with_time_spent_hours(6.0)
                 .in_progress()
-                .created_this_sprint()
                 .build()
         ]
     

@@ -22,6 +22,7 @@ class JiraTaskConverter:
         self._populate_assignment(task, jira_task)
         self._populate_time_tracking(task, jira_task)
         self._populate_system_metadata(task, jira_task)
+        self._populate_parent(task, jira_task)
         self._populate_child_tasks(task, jira_task)
         return task
 
@@ -36,8 +37,6 @@ class JiraTaskConverter:
         return Task(
             id=jira_task['key'],
             title=task_fields.get('summary', ''),
-            created_at=TaskConversionUtils.parse_date(task_fields.get('created')),
-            updated_at=TaskConversionUtils.parse_date(task_fields.get('updated')),
             status=TaskConversionUtils.normalize_status(jira_status, self.config),
             stage=TaskConversionUtils.get_stage_name_for_status(jira_status, self.config),
             story_points=story_points,
@@ -74,12 +73,34 @@ class JiraTaskConverter:
         task_fields = jira_task['fields']
         jira_status = task_fields.get('status', {}).get('name', '')
         project_key = jira_task['key'].split('-')[0]
-        url = f"{self.config.jira.jira_server_url.rstrip('/')}/browse/{jira_task['key']}"
 
         task.system_metadata = SystemMetadata(
             original_status=jira_status,
             project_key=project_key,
-            url=url
+            url=self._build_browse_url(jira_task['key'])
+        )
+
+    def _build_browse_url(self, key: str) -> str:
+        return f"{self.config.jira.jira_server_url.rstrip('/')}/browse/{key}"
+
+    def _populate_parent(self, task: Task, jira_task: dict) -> None:
+        parent_data = jira_task.get('fields', {}).get('parent')
+        if not parent_data or not parent_data.get('key'):
+            return
+
+        parent_key = parent_data['key']
+        parent_title = parent_data.get('fields', {}).get('summary', '')
+
+        task.parent = Task(
+            id=parent_key,
+            title=parent_title,
+            system_metadata=SystemMetadata(
+                original_status='',
+                project_key=parent_key.split('-')[0],
+                url=self._build_browse_url(parent_key)
+            ),
+            assignment=Assignment(assignee=None, member_group=None),
+            time_tracking=TimeTracking()
         )
 
     @staticmethod

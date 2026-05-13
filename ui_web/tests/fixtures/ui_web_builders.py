@@ -199,8 +199,6 @@ class DomainTaskBuilder:
     def __init__(self, task_id: str, title: str):
         self._id = task_id
         self._title = title
-        self._created_at = datetime(2024, 1, 1, 10, 0, 0)
-        self._updated_at = datetime(2024, 1, 15, 14, 30, 0)
         self._story_points: Optional[float] = None
         self._assignee: Optional[Assignee] = None
         self._member_group: Optional[MemberGroup] = None
@@ -269,8 +267,6 @@ class DomainTaskBuilder:
         return Task(
             id=self._id,
             title=self._title,
-            created_at=self._created_at,
-            updated_at=self._updated_at,
             system_metadata=system_metadata,
             assignment=assignment,
             time_tracking=time_tracking,

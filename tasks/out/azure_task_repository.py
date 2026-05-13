@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
@@ -43,7 +43,9 @@ class AzureTaskRepository(TaskRepository):
         query = self._build_search_query(search_criteria)
         azure_tasks = await self._fetch_azure_tasks(query)
         converter = self._create_converter_for_criteria(search_criteria, enrichment)
-        return [converter.convert_to_task(azure_task) for azure_task in azure_tasks]
+        tasks = [converter.convert_to_task(azure_task) for azure_task in azure_tasks]
+        self._enrich_parent_titles(tasks)
+        return tasks
 
     def _build_search_query(self, search_criteria: Optional[TaskSearchCriteria]) -> str:
         if search_criteria is None:
@@ -84,6 +86,7 @@ class AzureTaskRepository(TaskRepository):
             "System.ChangedDate",
             "System.TeamProject",
             "System.AreaPath",
+            "System.Parent",
             "Microsoft.VSTS.Common.Priority"
         ])
 
@@ -100,6 +103,44 @@ class AzureTaskRepository(TaskRepository):
 
         cached_provider = CachingTaskProvider(base_provider, self._cache)
         return cached_provider.get_tasks()
+
+    def _enrich_parent_titles(self, tasks: List[Task]) -> None:
+        unresolved_parent_ids = self._collect_unresolved_parent_ids(tasks)
+        if not unresolved_parent_ids:
+            return
+
+        parent_titles_by_id = self._fetch_parent_titles(unresolved_parent_ids)
+        for task in tasks:
+            if task.parent and not task.parent.title:
+                resolved_title = parent_titles_by_id.get(task.parent.id)
+                if resolved_title:
+                    task.parent.title = resolved_title
+
+    @staticmethod
+    def _collect_unresolved_parent_ids(tasks: List[Task]) -> List[int]:
+        unique_parent_ids = set()
+        for task in tasks:
+            if not task.parent or task.parent.title:
+                continue
+            try:
+                unique_parent_ids.add(int(task.parent.id))
+            except (TypeError, ValueError):
+                continue
+        return list(unique_parent_ids)
+
+    def _fetch_parent_titles(self, parent_ids: List[int]) -> Dict[str, str]:
+        azure_client = self.connection.clients.get_work_item_tracking_client()
+        titles_by_id: Dict[str, str] = {}
+        batch_size = 200
+        for batch_start in range(0, len(parent_ids), batch_size):
+            batch = parent_ids[batch_start:batch_start + batch_size]
+            work_items = azure_client.get_work_items(ids=batch, fields=["System.Title"])
+            for work_item in work_items:
+                if work_item is None:
+                    continue
+                title = work_item.fields.get("System.Title", "")
+                titles_by_id[str(work_item.id)] = title
+        return titles_by_id
 
     def _create_converter_for_criteria(self, criteria: Optional[TaskSearchCriteria],
                                        enrichment: Optional[EnrichmentOptions] = None) -> AzureTaskConverter:

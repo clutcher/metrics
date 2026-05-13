@@ -50,6 +50,15 @@
                     {% else %}
                         {{ task.title }}
                     {% endif %}
+                    {% if task.parent %}
+                        <div class="is-size-7 has-text-grey-light">
+                            {% if task.parent.system_metadata.url %}
+                                <a href="{{ task.parent.system_metadata.url }}" target="_blank" class="has-text-grey-light">{{ task.parent.title|default:task.parent.id }}</a>
+                            {% else %}
+                                {{ task.parent.title|default:task.parent.id }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </td>
                 <td>
                     {% if task.forecast and task.forecast.health_status %}
@@ -94,9 +103,9 @@
                 <td>{{ task.story_points|default:"-" }}</td>
                 <td>
                     {% if task.child_tasks_count and task.child_tasks_count > 0 %}
-                        <button class="button is-small" 
-                                hx-get="{% url 'ui_web:partials_task_children' task.id %}" 
-                                hx-target="#children-{{ task.id }}" 
+                        <button class="button is-small"
+                                hx-get="{% url 'ui_web:partials_task_children' task.id %}"
+                                hx-target="#children-{{ task.id }}"
                                 hx-swap="innerHTML">
                             <span class="mr-2">
                                 <i class="iconoir-nav-arrow-right" id="expand-icon-{{ task.id }}"></i>

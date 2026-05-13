@@ -359,7 +359,6 @@ class TestApiUIWebEdgeCases(unittest.IsolatedAsyncioTestCase):
         inconsistent_task = inconsistent_tasks[0]
         # Simulate inconsistent data types that might come from external systems
         inconsistent_task.story_points = "5"  # String instead of float
-        inconsistent_task.created_at = "2024-01-01"  # String instead of datetime
         
         self.task_search_api.mock.search.side_effect = [inconsistent_tasks, []]
         

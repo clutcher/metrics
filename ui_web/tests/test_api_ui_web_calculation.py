@@ -1,5 +1,5 @@
 import unittest
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 
 from sd_metrics_lib.utils.enums import HealthStatus
@@ -56,8 +56,6 @@ class TestApiUIWebCalculation(unittest.TestCase):
         task = Task(
             id="PROJ-123",
             title="Calculate business capacity",
-            created_at=datetime(2024, 1, 1, 10, 0, 0),
-            updated_at=datetime(2024, 1, 15, 14, 30, 0),
             assignment=Assignment(),
             time_tracking=time_tracking,
             system_metadata=SystemMetadata(original_status="In Progress", project_key="PROJ")
@@ -84,8 +82,6 @@ class TestApiUIWebCalculation(unittest.TestCase):
         task = Task(
             id="PROJ-456",
             title="Project estimation calculation",
-            created_at=datetime(2024, 1, 1, 10, 0, 0),
-            updated_at=datetime(2024, 1, 15, 14, 30, 0),
             assignment=Assignment(),
             time_tracking=TimeTracking(),
             forecast=forecast,
@@ -220,8 +216,6 @@ class TestApiUIWebCalculation(unittest.TestCase):
         zero_time_task = Task(
             id="PROJ-999",
             title="Task with no time tracking",
-            created_at=datetime(2024, 1, 1, 10, 0, 0),
-            updated_at=datetime(2024, 1, 15, 14, 30, 0),
             assignment=Assignment(),
             time_tracking=None,
             system_metadata=SystemMetadata(original_status="To Do", project_key="PROJ")
@@ -246,8 +240,6 @@ class TestApiUIWebCalculation(unittest.TestCase):
         task = Task(
             id="PROJ-BILLING",
             title="High precision billing task",
-            created_at=datetime(2024, 1, 1, 10, 0, 0),
-            updated_at=datetime(2024, 1, 15, 14, 30, 0),
             assignment=Assignment(),
             time_tracking=precise_time_tracking,
             system_metadata=SystemMetadata(original_status="Done", project_key="PROJ")
@@ -282,8 +274,6 @@ class TestApiUIWebCalculation(unittest.TestCase):
         return Task(
             id=f"PROJ-{int(hours)}H",
             title=f"Task with {hours} hours",
-            created_at=datetime(2024, 1, 1, 10, 0, 0),
-            updated_at=datetime(2024, 1, 15, 14, 30, 0),
             assignment=Assignment(),
             time_tracking=TimeTracking(total_spent_time=Duration.of(hours, TimeUnit.HOUR)),
             system_metadata=SystemMetadata(original_status="Done", project_key="PROJ")

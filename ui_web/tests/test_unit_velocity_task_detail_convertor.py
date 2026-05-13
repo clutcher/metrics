@@ -1,5 +1,4 @@
 import unittest
-from datetime import datetime
 
 from sd_metrics_lib.utils.time import Duration, TimeUnit, TimePolicy
 
@@ -291,8 +290,6 @@ def _build_task(task_id, title, story_points=None, time_by_assignee=None, system
     return Task(
         id=task_id,
         title=title,
-        created_at=datetime(2024, 1, 1),
-        updated_at=datetime(2024, 1, 15),
         system_metadata=system_metadata,
         assignment=Assignment(),
         time_tracking=time_tracking,

@@ -63,20 +63,18 @@ class SystemMetadata:
 class Task:
     id: str
     title: str
-    created_at: datetime
-    updated_at: datetime
     system_metadata: SystemMetadata
     assignment: Assignment
     time_tracking: TimeTracking
-    
+
     status: Optional[TaskStatus] = None
     stage: Optional[str] = None
     story_points: Optional[float] = None
     priority: Optional[int] = None
     child_tasks_count: Optional[int] = None
     child_tasks: Optional[List['Task']] = None
-    
-    # Duck typing placeholder for forecast data
+    parent: Optional['Task'] = None
+
     forecast: Optional['Forecast'] = None
 
 
