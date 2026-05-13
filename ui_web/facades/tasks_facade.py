@@ -24,7 +24,8 @@ class TasksFacade:
                  member_group_task_filter: MemberGroupTaskFilter,
                  member_convertor: MemberConvertor,
                  member_group_custom_filters: Optional[Dict[str, str]] = None,
-                 merge_unassigned_into_filtered_group: bool = False):
+                 merge_unassigned_into_filtered_group: bool = False,
+                 release_column_enabled: bool = False):
         self.task_search_api = task_search_api
         self.forecast_api = forecast_api
         self.available_member_groups = available_member_groups
@@ -36,6 +37,7 @@ class TasksFacade:
         self.member_convertor = member_convertor
         self.member_group_custom_filters = member_group_custom_filters
         self.merge_unassigned_into_filtered_group = merge_unassigned_into_filtered_group
+        self._release_column_enabled = release_column_enabled
 
     async def get_tasks(self, member_group_id: Optional[str] = None) -> List[TaskData]:
         tasks = await self._fetch_tasks(member_group_id)
@@ -44,6 +46,9 @@ class TasksFacade:
     def get_available_member_groups(self) -> List[MemberGroupData]:
         return [self.member_convertor.convert_member_group_to_data(group) for group in
                 self.available_member_groups]
+
+    def is_release_column_enabled(self) -> bool:
+        return self._release_column_enabled
 
     async def _fetch_tasks(self, member_group_id: Optional[str]) -> List[Task]:
         current_tasks_future = self._build_task_fetcher(

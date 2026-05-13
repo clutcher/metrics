@@ -60,6 +60,12 @@ class SystemMetadata:
 
 
 @dataclass(slots=True)
+class Release:
+    id: str
+    name: str
+
+
+@dataclass(slots=True)
 class Task:
     id: str
     title: str
@@ -74,6 +80,7 @@ class Task:
     child_tasks_count: Optional[int] = None
     child_tasks: Optional[List['Task']] = None
     parent: Optional['Task'] = None
+    releases: Optional[List[Release]] = None
 
     forecast: Optional['Forecast'] = None
 

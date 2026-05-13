@@ -89,6 +89,8 @@ class AzureTaskRepository(TaskRepository):
             "System.Parent",
             "Microsoft.VSTS.Common.Priority"
         ])
+        if self.config.azure.release_field:
+            additional_fields.append(self.config.azure.release_field)
 
         base_provider = AzureTaskProvider(
             azure_client,

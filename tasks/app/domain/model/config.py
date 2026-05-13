@@ -8,11 +8,13 @@ class JiraConfig:
     jira_email: Optional[str]
     jira_api_token: Optional[str]
     story_point_custom_field_id: str
+    release_field: Optional[str] = None
 
 @dataclass(slots=True)
 class AzureConfig:
     azure_organization_url: Optional[str]
     azure_pat: Optional[str]
+    release_field: Optional[str] = None
 
 @dataclass(slots=True)
 class ProjectConfig:

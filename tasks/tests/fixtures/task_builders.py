@@ -2,7 +2,7 @@ from typing import List, Optional, Dict
 
 from sd_metrics_lib.utils.time import Duration, TimeUnit
 
-from tasks.app.domain.model.task import Task, Assignment, Assignee, TimeTracking, SystemMetadata, TaskStatus, MemberGroup
+from tasks.app.domain.model.task import Task, Assignment, Assignee, TimeTracking, SystemMetadata, TaskStatus, MemberGroup, Release
 
 
 class TaskBuilder:
@@ -23,6 +23,7 @@ class TaskBuilder:
         self._project_key = "PROJ"
         self._url: Optional[str] = None
         self._child_tasks_count: Optional[int] = None
+        self._releases: Optional[List[Release]] = None
     
     @classmethod
     def sprint_story(cls) -> 'TaskBuilder':
@@ -174,6 +175,10 @@ class TaskBuilder:
         self._url = url
         return self
 
+    def with_releases(self, *release_names: str) -> 'TaskBuilder':
+        self._releases = [Release(id=name, name=name) for name in release_names]
+        return self
+
     def build(self) -> Task:
         assignment = Assignment(
             assignee=self._assignee,
@@ -202,7 +207,8 @@ class TaskBuilder:
             stage=self._stage,
             story_points=self._story_points,
             child_tasks_count=self._child_tasks_count,
-            child_tasks=self._child_tasks if self._child_tasks else None
+            child_tasks=self._child_tasks if self._child_tasks else None,
+            releases=self._releases
         )
 
 

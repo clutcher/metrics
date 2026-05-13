@@ -29,6 +29,10 @@ class CurrentTasksView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        release_enabled = self.tasks_facade.is_release_column_enabled()
+        context["release_column_enabled"] = release_enabled
+        context["task_table_colspan"] = 10 if release_enabled else 9
+
         try:
             group_id = self.request.GET.get('member_group_id')
 
@@ -68,11 +72,16 @@ class CurrentTasksChildrenView(TemplateView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.tasks_facade = ui_web_container.tasks_facade
         self.child_tasks_facade = ui_web_container.child_tasks_facade
         self.sorting_config = tasks_container.get_sorting_config()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        release_enabled = self.tasks_facade.is_release_column_enabled()
+        context["release_column_enabled"] = release_enabled
+        context["task_table_colspan"] = 10 if release_enabled else 9
 
         task_id = kwargs.get("task_id")
 

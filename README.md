@@ -221,6 +221,18 @@ METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP=true
 ```
 This only applies when viewing a specific member group — the "All Groups" view is unaffected.
 
+#### Release Column on Current Tasks
+The Current Tasks table can show a "Release" column populated from a per-backend field. Set the field name for whichever tracker you use; set to empty to hide the column.
+```bash
+# JIRA: defaults to fixVersions; override to a custom field id if needed
+METRICS_JIRA_RELEASE_FIELD=fixVersions
+
+# Azure: defaults to System.IterationPath (renders the iteration leaf, e.g. "Sprint 12").
+# Point to a custom field like Custom.Release for plain version strings (e.g. "2026.015").
+METRICS_AZURE_RELEASE_FIELD=Custom.Release
+```
+Multi-value fields (e.g. JIRA `fixVersions` with two versions) and comma-separated string values (e.g. `"2026.015, 2026.016"` in a custom field) are split per release with whitespace trimmed, and stacked one per line in the column.
+
 #### Task Sorting Configuration
 Customize how tasks are sorted within each workflow stage:
 ```bash

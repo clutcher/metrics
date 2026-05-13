@@ -5,7 +5,7 @@ from sd_metrics_lib.sources.azure.tasks import AzureTaskProvider
 from sd_metrics_lib.utils.time import Duration
 
 from tasks.app.domain.model.config import TasksConfig
-from tasks.app.domain.model.task import Task, Assignee, Assignment, TimeTracking, SystemMetadata, MemberGroup
+from tasks.app.domain.model.task import Task, Assignee, Assignment, TimeTracking, SystemMetadata, MemberGroup, Release
 from tasks.out.convertors.task_conversion_utils import TaskConversionUtils
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ class AzureTaskConverter:
         self._populate_time_tracking(task, azure_task)
         self._populate_system_metadata(task, azure_task)
         self._populate_parent(task, azure_task)
+        self._populate_release(task, azure_task)
         self._populate_child_tasks(task, azure_task)
         return task
 
@@ -81,6 +82,30 @@ class AzureTaskConverter:
 
     def _build_work_item_url(self, work_item_id, project_name: str) -> str:
         return f"{self.config.azure.azure_organization_url.rstrip('/')}/{project_name}/_workitems/edit/{work_item_id}"
+
+    def _populate_release(self, task: Task, azure_task) -> None:
+        field = self.config.azure.release_field
+        if not field:
+            return
+        raw_value = azure_task.fields.get(field)
+        if not raw_value:
+            return
+        values = raw_value if isinstance(raw_value, list) else [raw_value]
+        releases = []
+        for raw in values:
+            if not raw:
+                continue
+            text = str(raw)
+            for segment in self._split_release_segments(text):
+                name = segment.split('\\')[-1] if '\\' in segment else segment
+                if name:
+                    releases.append(Release(id=segment, name=name))
+        if releases:
+            task.releases = releases
+
+    @staticmethod
+    def _split_release_segments(text: str) -> list:
+        return [segment.strip() for segment in text.split(',') if segment.strip()]
 
     def _populate_parent(self, task: Task, azure_task) -> None:
         parent_id_value = azure_task.fields.get("System.Parent")

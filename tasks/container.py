@@ -183,5 +183,13 @@ class TasksContainer:
     def get_sorting_config(self) -> SortingConfig:
         return self._config.sorting
 
+    def is_release_field_configured(self) -> bool:
+        tracker = self._config.project.task_tracker
+        if tracker == 'jira':
+            return bool(self._config.jira.release_field)
+        if tracker == 'azure':
+            return bool(self._config.azure.release_field)
+        return False
+
 
 tasks_container = TasksContainer()

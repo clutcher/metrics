@@ -41,6 +41,12 @@ class ForecastData:
 
 
 @dataclass(slots=True)
+class ReleaseData:
+    id: str
+    name: str
+
+
+@dataclass(slots=True)
 class TaskData:
     id: str
     title: str
@@ -54,5 +60,6 @@ class TaskData:
     parent: Optional['TaskData'] = None
     stage: Optional[str] = None
     forecast: Optional[ForecastData] = None
+    releases: Optional[List[ReleaseData]] = None
 
 

@@ -46,10 +46,14 @@ class JiraTaskRepository(TaskRepository):
         return [converter.convert_to_task(jira_task) for jira_task in jira_tasks]
 
     async def _fetch_jira_tasks(self, query: str):
+        additional_fields = ['changelog', 'subtasks']
+        if self.config.jira.release_field:
+            additional_fields.append(self.config.jira.release_field)
+
         base_provider = JiraTaskProvider(
             self.jira_client,
             query,
-            additional_fields=['changelog', 'subtasks']
+            additional_fields=additional_fields
         )
 
         cached_provider = CachingTaskProvider(base_provider, self._cache)

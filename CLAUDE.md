@@ -264,11 +264,13 @@ Configuration is loaded via environment variables using the `environs` library.
 - `METRICS_JIRA_EMAIL`: JIRA user email
 - `METRICS_JIRA_API_TOKEN`: JIRA API token
 - `METRICS_STORY_POINT_CUSTOM_FIELD_ID`: Custom field ID for story points
+- `METRICS_JIRA_RELEASE_FIELD`: Field on the JIRA issue to populate the Current Tasks "Release" column (default: `fixVersions`). Set to empty to hide the column when the active tracker is JIRA. Accepts built-in fields (`fixVersions`, `versions`) or a custom field id (e.g. `customfield_12345`). List-valued fields and comma-separated string values are split per release (whitespace trimmed) and stacked one per line in the column.
 
 #### Azure DevOps Configuration
 - `METRICS_AZURE_ORGANIZATION_URL`: Azure DevOps organization URL
 - `METRICS_AZURE_PAT`: Personal Access Token
 - `METRICS_AZURE_PROJECT`: Project name
+- `METRICS_AZURE_RELEASE_FIELD`: Reference name of the Azure work-item field to populate the Current Tasks "Release" column (default: `System.IterationPath`). Set to empty to hide the column when the active tracker is Azure. For iteration-path values, only the leaf segment is rendered (e.g. `Project\Sprint 12` → `Sprint 12`). For custom release fields (e.g. `Custom.Release` with values like `2026.015`), the value is rendered verbatim. Comma-separated string values (e.g. `2026.015, 2026.016`) are split per release (whitespace trimmed) and stacked one per line.
 
 #### Status Code Mappings
 - `METRICS_IN_PROGRESS_STATUS_CODES`: List of in-progress statuses (default: ['Analysis', 'Active', 'In Progress', 'In Development', 'QA', 'Validation', 'Testing', 'Review'])

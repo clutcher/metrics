@@ -1,10 +1,10 @@
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from sd_metrics_lib.utils.time import Duration
 
 from tasks.app.domain.model.config import TasksConfig
-from tasks.app.domain.model.task import Task, Assignee, Assignment, TimeTracking, SystemMetadata, MemberGroup
+from tasks.app.domain.model.task import Task, Assignee, Assignment, TimeTracking, SystemMetadata, MemberGroup, Release
 from tasks.out.convertors.task_conversion_utils import TaskConversionUtils
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ class JiraTaskConverter:
         self._populate_time_tracking(task, jira_task)
         self._populate_system_metadata(task, jira_task)
         self._populate_parent(task, jira_task)
+        self._populate_release(task, jira_task)
         self._populate_child_tasks(task, jira_task)
         return task
 
@@ -82,6 +83,42 @@ class JiraTaskConverter:
 
     def _build_browse_url(self, key: str) -> str:
         return f"{self.config.jira.jira_server_url.rstrip('/')}/browse/{key}"
+
+    def _populate_release(self, task: Task, jira_task: dict) -> None:
+        field = self.config.jira.release_field
+        if not field:
+            return
+        value = jira_task.get('fields', {}).get(field)
+        releases = self._coerce_release_value(value)
+        if releases:
+            task.releases = releases
+
+    @staticmethod
+    def _coerce_release_value(value) -> List[Release]:
+        if not value:
+            return []
+        if isinstance(value, list):
+            result = []
+            for item in value:
+                if isinstance(item, dict):
+                    name = item.get('name', '')
+                    if name:
+                        result.append(Release(id=str(item.get('id') or name), name=name))
+                elif isinstance(item, str):
+                    result.extend(JiraTaskConverter._split_comma_separated_names(item))
+            return result
+        if isinstance(value, dict):
+            name = value.get('name', '')
+            if not name:
+                return []
+            return [Release(id=str(value.get('id') or name), name=name)]
+        if isinstance(value, str):
+            return JiraTaskConverter._split_comma_separated_names(value)
+        return []
+
+    @staticmethod
+    def _split_comma_separated_names(raw: str) -> List[Release]:
+        return [Release(id=name, name=name) for name in (segment.strip() for segment in raw.split(',')) if name]
 
     def _populate_parent(self, task: Task, jira_task: dict) -> None:
         parent_data = jira_task.get('fields', {}).get('parent')

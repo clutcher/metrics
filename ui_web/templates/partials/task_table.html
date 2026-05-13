@@ -12,6 +12,7 @@
                 <th scope="col">Desired</th>
                 <th scope="col">Complexity</th>
                 <th scope="col">Child Tasks</th>
+                {% if release_column_enabled %}<th scope="col">Release</th>{% endif %}
             </tr>
         </thead>
         {% for task in tasks %}
@@ -116,13 +117,18 @@
                         {{ task.child_tasks_count|default:"-" }}
                     {% endif %}
                 </td>
+                {% if release_column_enabled %}
+                <td>
+                    {% if task.releases %}{% for release in task.releases %}<div>{{ release.name }}</div>{% endfor %}{% else %}-{% endif %}
+                </td>
+                {% endif %}
             </tr>
         </tbody>
         <tbody id="children-{{ task.id }}"></tbody>
         {% empty %}
         <tbody>
             <tr>
-                <td colspan="9">No tasks found.</td>
+                <td colspan="{{ task_table_colspan }}">No tasks found.</td>
             </tr>
         </tbody>
         {% endfor %}
