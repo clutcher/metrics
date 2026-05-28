@@ -19,7 +19,7 @@ COPY --chown=${APP_UID}:${APP_UID} . /metrics
 
 RUN mkdir -p /metrics/staticfiles && chown ${APP_UID}:${APP_UID} /metrics/staticfiles
 
-USER ${APP_USER}
+USER ${APP_UID}
 
 RUN python manage.py collectstatic --noinput
 
