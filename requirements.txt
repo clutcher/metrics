@@ -1,12 +1,12 @@
 sd-metrics-lib[azure,jira]==7.0.1
 
-Django==6.0.2
+Django==6.0.6
 django-compressor==4.6.0
-whitenoise==6.11.0
+whitenoise==6.12.0
 natsort==8.4.0
 
-gunicorn==25.1.0
-environs==14.6.0
+gunicorn==26.0.0
+environs==15.0.1
 
-pytest==9.0.2
+pytest==9.1.0
 pytest-django==4.12.0
