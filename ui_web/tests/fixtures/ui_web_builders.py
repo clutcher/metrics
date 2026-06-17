@@ -27,6 +27,7 @@ class TaskDataBuilder:
         self._child_tasks: List[TaskData] = []
         self._child_tasks_count = 0
         self._forecast_data: Optional[ForecastData] = None
+        self._custom_sort_fields: dict = {}
     
     @classmethod
     def sprint_dashboard_task(cls) -> 'TaskDataBuilder':
@@ -162,6 +163,10 @@ class TaskDataBuilder:
     def with_url(self, url: str) -> 'TaskDataBuilder':
         self._url = url
         return self
+
+    def with_custom_sort_field(self, field_name: str, value: str) -> 'TaskDataBuilder':
+        self._custom_sort_fields[field_name] = value
+        return self
     
     def build(self) -> TaskData:
         assignment = AssignmentData(
@@ -190,7 +195,8 @@ class TaskDataBuilder:
             child_tasks=self._child_tasks if self._child_tasks else None,
             child_tasks_count=self._child_tasks_count,
             stage=self._stage,
-            forecast=self._forecast_data
+            forecast=self._forecast_data,
+            custom_sort_fields=self._custom_sort_fields if self._custom_sort_fields else None
         )
 
 

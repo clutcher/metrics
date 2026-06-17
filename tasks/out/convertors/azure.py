@@ -25,6 +25,7 @@ class AzureTaskConverter:
         self._populate_system_metadata(task, azure_task)
         self._populate_parent(task, azure_task)
         self._populate_release(task, azure_task)
+        self._populate_custom_sort_fields(task, azure_task)
         self._populate_child_tasks(task, azure_task)
         return task
 
@@ -106,6 +107,15 @@ class AzureTaskConverter:
     @staticmethod
     def _split_release_segments(text: str) -> list:
         return [segment.strip() for segment in text.split(',') if segment.strip()]
+
+    def _populate_custom_sort_fields(self, task: Task, azure_task) -> None:
+        custom_sort_fields = {}
+        for field_name in self.config.sorting.custom_sort_field_names():
+            raw_value = azure_task.fields.get(field_name)
+            if raw_value is not None:
+                custom_sort_fields[field_name] = str(raw_value)
+        if custom_sort_fields:
+            task.custom_sort_fields = custom_sort_fields
 
     def _populate_parent(self, task: Task, azure_task) -> None:
         parent_id_value = azure_task.fields.get("System.Parent")

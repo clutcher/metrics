@@ -234,10 +234,11 @@ METRICS_AZURE_RELEASE_FIELD=Custom.Release
 Multi-value fields (e.g. JIRA `fixVersions` with two versions) and comma-separated string values (e.g. `"2026.015, 2026.016"` in a custom field) are split per release with whitespace trimmed, and stacked one per line in the column.
 
 #### Task Sorting Configuration
-Customize how tasks are sorted within each workflow stage:
+Customize how tasks are sorted within each workflow stage. The criteria is a comma-separated
+list applied left to right (first criterion is primary, the rest break ties):
 ```bash
 # Default sorting criteria (applied to all stages unless overridden)
-# Supported criteria: priority, assignee, health, spent_time
+# Built-in criteria: priority, assignee, health, spent_time
 # Use '-' prefix for descending order (e.g., "-health" for worst health first)
 METRICS_DEFAULT_SORT_CRITERIA=-health,-spent_time
 
@@ -246,15 +247,37 @@ METRICS_DEFAULT_SORT_CRITERIA=-health,-spent_time
 METRICS_STAGE_SORT_OVERRIDES='{"Ready for Dev": "priority,assignee,-health"}'
 ```
 
-**Available sort criteria:**
+**Built-in sort criteria:**
 - `priority` - Task priority (ascending: 1, 2, 3...)
-- `assignee` - Assignee name (alphabetical)
+- `assignee` - Assignee name (alphabetical, case-insensitive)
 - `health` - Health status (ascending: GREEN → YELLOW → RED)
 - `spent_time` - Time already spent on task
 
+**Sort by any tracker field (no code changes):**
+Any criterion that isn't built-in is treated as the **exact field reference name** on the
+work item, fetched and ranked automatically. Nothing is hardcoded — point it at whatever
+field your process uses:
+```bash
+# Azure: bugs on top, then by a custom "Priority Level" picklist, within each priority
+METRICS_DEFAULT_SORT_CRITERIA=priority,System.WorkItemType,Custom.PriorityLevel
+
+# Sort by title or id
+METRICS_DEFAULT_SORT_CRITERIA=System.Title      # or: System.Id
+```
+- **Azure** uses reference names like `System.Title`, `System.Id`, `System.WorkItemType`,
+  or a custom field `Custom.PriorityLevel`.
+- **JIRA** uses field ids like `customfield_10050` (custom fields have opaque ids).
+
+**Natural ordering:** field values are sorted naturally (alphanumeric), so numbers inside
+text order by value, not by character:
+- `1 - High` before `2 - Medium` before `11 - Low` (not `1, 11, 2`)
+- Release versions `2026.022` before `2026.022.01` before `2026.023`; padding-independent
+  (`2026.2` before `2026.10`)
+- Comparison is case-insensitive; tasks missing a custom field sort to the bottom
+
 **Sort direction:**
 - No prefix = ascending (e.g., `priority` for 1, 2, 3)
-- `-` prefix = descending (e.g., `-health` for RED, YELLOW, GREEN)
+- `-` prefix = descending (e.g., `-health` for RED, YELLOW, GREEN, or `-Custom.PriorityLevel`)
 
 #### Default Values
 Configure fallback values when data is missing:

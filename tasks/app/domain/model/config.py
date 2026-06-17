@@ -68,10 +68,21 @@ class EstimationConfig:
     default_seniority_level_when_missing: str
     default_health_status_when_missing: str
 
+BUILTIN_SORT_CRITERIA = frozenset({'priority', 'health', 'spent_time', 'assignee'})
+
 @dataclass(slots=True)
 class SortingConfig:
     stage_sort_overrides: Dict[str, str]
     default_sort_criteria: str
+
+    def custom_sort_field_names(self) -> List[str]:
+        field_names = []
+        for criteria_string in [self.default_sort_criteria, *self.stage_sort_overrides.values()]:
+            for token in criteria_string.split(','):
+                field_name = token.strip().lstrip('-').strip()
+                if field_name and field_name not in BUILTIN_SORT_CRITERIA and field_name not in field_names:
+                    field_names.append(field_name)
+        return field_names
 
 @dataclass(slots=True)
 class TasksConfig:

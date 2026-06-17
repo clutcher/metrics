@@ -81,6 +81,7 @@ class Task:
     child_tasks: Optional[List['Task']] = None
     parent: Optional['Task'] = None
     releases: Optional[List[Release]] = None
+    custom_sort_fields: Optional[Dict[str, str]] = None
 
     forecast: Optional['Forecast'] = None
 

@@ -229,6 +229,7 @@ The task forecast page (`/task-forecast/`) uses this to provide an "Include Comp
 - **sd-metrics-lib[azure,jira] 7.0.1**: Core metrics calculation library
 - **django-compressor 4.6.0**: Static file compression
 - **environs 14.6.0**: Environment variable parsing
+- **natsort 8.4.0**: Natural/alphanumeric ordering for custom sort fields
 
 ### sd-metrics-lib Integration
 
@@ -301,10 +302,13 @@ Configuration is loaded via environment variables using the `environs` library.
 
 #### Sorting Configuration
 - `METRICS_DEFAULT_SORT_CRITERIA`: Default sorting criteria for tasks (default: '-health,-spent_time')
-  - Supported criteria: priority, assignee, health, spent_time
-  - Use '-' prefix for descending order
+  - Comma-separated list of criteria; `-` prefix for descending order
+  - Built-in criteria: `priority`, `assignee`, `health`, `spent_time`
+  - **Custom field criteria**: any token that is not a built-in is treated as an *exact tracker field reference name*, auto-fetched and ranked — no field name is hardcoded. Use Azure reference names (e.g. `Custom.PriorityLevel`, `System.WorkItemType`, `System.Title`, `System.Id`) or JIRA field ids (e.g. `customfield_10050`). Mirrors how story points resolve a custom field.
+  - **Natural sort**: string/custom values are ranked with a natural, case-insensitive, alphanumeric sort (via the `natsort` library). Numeric-prefixed values order numerically (`1 - High` before `2 - Medium`; `2` before `11`), dotted versions compare segment-by-segment (`2026.022` before `2026.022.01`; `2026.2` before `2026.10`). Tasks missing a custom field sort last; built-in numeric criteria keep their own missing defaults (e.g. unassigned sorts first by `assignee`).
+  - **Example**: `priority,System.WorkItemType,Custom.PriorityLevel` — priority first, then bugs above user stories (`System.WorkItemType`, `Bug` < `User Story`), then by priority level. Bugs lacking a level keep stable order.
 - `METRICS_STAGE_SORT_OVERRIDES`: JSON dict mapping stage names to custom sort criteria (default: {})
-  - Overrides default sorting for specific workflow stages
+  - Overrides default sorting for specific workflow stages; same token syntax as above
   - **Example**: `{"Ready for Dev": "priority,assignee,-health"}`
 
 #### Default Values

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sd_metrics_lib.utils.enums import HealthStatus
 
@@ -61,5 +61,6 @@ class TaskData:
     stage: Optional[str] = None
     forecast: Optional[ForecastData] = None
     releases: Optional[List[ReleaseData]] = None
+    custom_sort_fields: Optional[Dict[str, str]] = None
 
 

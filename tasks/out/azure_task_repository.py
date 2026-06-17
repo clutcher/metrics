@@ -91,6 +91,7 @@ class AzureTaskRepository(TaskRepository):
         ])
         if self.config.azure.release_field:
             additional_fields.append(self.config.azure.release_field)
+        additional_fields.extend(self.config.sorting.custom_sort_field_names())
 
         base_provider = AzureTaskProvider(
             azure_client,

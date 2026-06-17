@@ -49,6 +49,7 @@ class JiraTaskRepository(TaskRepository):
         additional_fields = ['changelog', 'subtasks']
         if self.config.jira.release_field:
             additional_fields.append(self.config.jira.release_field)
+        additional_fields.extend(self.config.sorting.custom_sort_field_names())
 
         base_provider = JiraTaskProvider(
             self.jira_client,

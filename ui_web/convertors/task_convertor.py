@@ -40,7 +40,8 @@ class TaskConvertor:
             forecast=self._convert_forecast_to_data(task.forecast) if task.forecast else None,
             child_tasks=child_tasks_data,
             parent=parent_data,
-            releases=releases_data
+            releases=releases_data,
+            custom_sort_fields=task.custom_sort_fields
         )
 
     @staticmethod

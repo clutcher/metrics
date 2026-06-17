@@ -24,6 +24,7 @@ class JiraTaskConverter:
         self._populate_system_metadata(task, jira_task)
         self._populate_parent(task, jira_task)
         self._populate_release(task, jira_task)
+        self._populate_custom_sort_fields(task, jira_task)
         self._populate_child_tasks(task, jira_task)
         return task
 
@@ -119,6 +120,31 @@ class JiraTaskConverter:
     @staticmethod
     def _split_comma_separated_names(raw: str) -> List[Release]:
         return [Release(id=name, name=name) for name in (segment.strip() for segment in raw.split(',')) if name]
+
+    def _populate_custom_sort_fields(self, task: Task, jira_task: dict) -> None:
+        task_fields = jira_task.get('fields', {})
+        custom_sort_fields = {}
+        for field_name in self.config.sorting.custom_sort_field_names():
+            coerced_value = self._coerce_custom_sort_value(task_fields.get(field_name))
+            if coerced_value is not None:
+                custom_sort_fields[field_name] = coerced_value
+        if custom_sort_fields:
+            task.custom_sort_fields = custom_sort_fields
+
+    @staticmethod
+    def _coerce_custom_sort_value(raw_value) -> Optional[str]:
+        if raw_value is None:
+            return None
+        if isinstance(raw_value, dict):
+            name = raw_value.get('value') or raw_value.get('name')
+            return str(name) if name else None
+        if isinstance(raw_value, list):
+            for item in raw_value:
+                coerced_item = JiraTaskConverter._coerce_custom_sort_value(item)
+                if coerced_item is not None:
+                    return coerced_item
+            return None
+        return str(raw_value)
 
     def _populate_parent(self, task: Task, jira_task: dict) -> None:
         parent_data = jira_task.get('fields', {}).get('parent')

@@ -3,6 +3,7 @@ sd-metrics-lib[azure,jira]==7.0.1
 Django==6.0.2
 django-compressor==4.6.0
 whitenoise==6.11.0
+natsort==8.4.0
 
 gunicorn==25.1.0
 environs==14.6.0
