@@ -68,7 +68,42 @@
                         </li>
                         <li>
                             {% if global_available_member_groups %}
-                                <a class="menu-toggle {% if request.resolver_match.url_name == 'team_velocity' %}is-active{% endif %}" 
+                                <a class="menu-toggle {% if request.resolver_match.url_name == 'pull_requests' %}is-active{% endif %}"
+                                   data-target="pull-requests-submenu"
+                                   aria-expanded="false"
+                                   aria-controls="pull-requests-submenu">Pull Requests</a>
+                                <ul id="pull-requests-submenu" class="menu-submenu is-hidden" role="menu">
+                                    <li>
+                                        <a href="{% url 'ui_web:pull_requests' %}"
+                                           {% if request.resolver_match.url_name == 'pull_requests' and not request.GET.member_group_id %}class="is-active"{% endif %}
+                                           hx-get="{% url 'ui_web:partials_pull_requests' %}"
+                                           hx-target="#main-content"
+                                           hx-indicator="#loading-indicator"
+                                           hx-push-url="{% url 'ui_web:pull_requests' %}">All Groups</a>
+                                    </li>
+                                    {% for group in global_available_member_groups %}
+                                        <li>
+                                            <a href="{% url 'ui_web:pull_requests' %}?member_group_id={{ group.id }}"
+                                               {% if request.resolver_match.url_name == 'pull_requests' and request.GET.member_group_id == group.id %}class="is-active"{% endif %}
+                                               hx-get="{% url 'ui_web:partials_pull_requests' %}?member_group_id={{ group.id }}"
+                                               hx-target="#main-content"
+                                               hx-indicator="#loading-indicator"
+                                               hx-push-url="{% url 'ui_web:pull_requests' %}?member_group_id={{ group.id }}">{{ group.name }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <a href="{% url 'ui_web:pull_requests' %}"
+                                   {% if request.resolver_match.url_name == 'pull_requests' %}class="is-active"{% endif %}
+                                   hx-get="{% url 'ui_web:partials_pull_requests' %}"
+                                   hx-target="#main-content"
+                                   hx-indicator="#loading-indicator"
+                                   hx-push-url="{% url 'ui_web:pull_requests' %}">Pull Requests</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if global_available_member_groups %}
+                                <a class="menu-toggle {% if request.resolver_match.url_name == 'team_velocity' %}is-active{% endif %}"
                                    data-target="team-velocity-submenu"
                                    aria-expanded="false"
                                    aria-controls="team-velocity-submenu">Team Velocity</a>

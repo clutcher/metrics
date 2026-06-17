@@ -1,0 +1,79 @@
+{% load pull_request_filters %}
+<article class="panel">
+    <details open>
+        <summary class="panel-heading">
+            <span class="mr-2"><i class="iconoir-nav-arrow-down"></i></span>
+            Pull Requests ({{ pull_requests|length }})
+        </summary>
+        <div class="panel-block is-block">
+    <div class="table-container">
+    <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+            <tr>
+                <th scope="col">Pull Request</th>
+                <th scope="col">Ticket</th>
+                <th scope="col">Main</th>
+                <th scope="col">Additional</th>
+                <th scope="col">Internal gate</th>
+                <th scope="col">Required gate</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for pull_request in pull_requests %}
+            <tr>
+                <td>
+                    {% if pull_request.is_draft %}<span class="tag is-warning is-light is-small mr-1">Draft</span>{% endif %}
+                    {% if pull_request.url %}
+                        <a href="{{ pull_request.url }}" target="_blank">{{ pull_request.title }}</a>
+                    {% else %}
+                        {{ pull_request.title }}
+                    {% endif %}
+                    <div class="is-size-7 has-text-grey-light">
+                        {% if pull_request.repository %}{{ pull_request.repository }} · {% endif %}{{ pull_request.author_name }}
+                    </div>
+                </td>
+                <td>
+                    {% if pull_request.linked_task %}
+                        {% if pull_request.linked_task.url %}
+                            <a href="{{ pull_request.linked_task.url }}" target="_blank"><code>{{ pull_request.linked_task.id }}</code></a>
+                        {% else %}
+                            <code>{{ pull_request.linked_task.id }}</code>
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% include "partials/pull_request_approval_chips.html" with approvals=pull_request.approvals|main_approvals %}
+                </td>
+                <td>
+                    {% include "partials/pull_request_approval_chips.html" with approvals=pull_request.approvals|additional_approvals %}
+                </td>
+                <td>
+                    {% if pull_request.internal_gate %}
+                        <span class="tag is-success">✓ Yes</span>
+                    {% else %}
+                        <span class="tag is-light has-text-grey">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if pull_request.required_gate is None %}
+                        <span class="has-text-grey-light">—</span>
+                    {% elif pull_request.required_gate %}
+                        <span class="tag is-success">✓ Yes</span>
+                    {% else %}
+                        <span class="tag is-light has-text-grey">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">No open pull requests found.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+        </div>
+    </details>
+</article>

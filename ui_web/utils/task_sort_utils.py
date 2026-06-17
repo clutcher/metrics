@@ -45,6 +45,14 @@ class TaskSortUtils:
         return sorted(tasks, key=lambda task: TaskSortUtils._get_sort_key(task, sorting_config, custom_field_names))
 
     @staticmethod
+    def build_sort_key(
+            task: Union[TaskData, 'Task'],
+            sorting_config: SortingConfig
+    ) -> Tuple[Any, ...]:
+        custom_field_names = set(sorting_config.custom_sort_field_names())
+        return TaskSortUtils._get_sort_key(task, sorting_config, custom_field_names)
+
+    @staticmethod
     def _get_sort_key(
             task: Union[TaskData, 'Task'],
             sorting_config: SortingConfig,

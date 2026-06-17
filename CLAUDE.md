@@ -14,7 +14,7 @@ The Metrics Django Application is an admin-style dashboard for monitoring softwa
 - **sd-metrics-lib Integration**: Leverage the core metrics library rather than rebuilding functionality
 
 ### Architecture Overview
-- **4 Main Modules**: `tasks`, `forecast`, `velocity`, `ui_web`
+- **5 Main Modules**: `tasks`, `forecast`, `velocity`, `pull_requests`, `ui_web`
 - **Communication**: Modules communicate only through public APIs in `app/api/`
 - **Data Federation**: `ui_web` module acts as gateway, combining data from other modules
 - **External Integration**: JIRA/Azure DevOps via sd-metrics-lib
@@ -24,7 +24,7 @@ The Metrics Django Application is an admin-style dashboard for monitoring softwa
 **Commands**: `python manage.py runserver 8002`, `python manage.py check`, `python manage.py migrate`
 **Key Files**: `defaults_metrics.py`, `container.py`, `federated_data_fetcher.py`, `.env`
 **Patterns**: API Repository, Component Facades, Domain Nesting, FederatedDataFetcher
-**Modules**: `tasks/`, `forecast/`, `velocity/`, `ui_web/` - communicate via `app/api/`
+**Modules**: `tasks/`, `forecast/`, `velocity/`, `pull_requests/`, `ui_web/` - communicate via `app/api/`
 
 ---
 
@@ -85,7 +85,7 @@ class Task:
 
 This application uses a **Modular Monolith** pattern with **Hexagonal Architecture** principles:
 
-- **4 Self-Contained Modules**: `tasks`, `forecast`, `velocity`, `ui_web`
+- **5 Self-Contained Modules**: `tasks`, `forecast`, `velocity`, `pull_requests`, `ui_web`
 - **Strict Module Boundaries**: Communication only through public APIs in `app/api/`
 - **UI Federation Gateway**: `ui_web` module combines data from other modules
 - **External Integration**: JIRA/Azure DevOps via sd-metrics-lib
@@ -272,6 +272,27 @@ Configuration is loaded via environment variables using the `environs` library.
 - `METRICS_AZURE_PAT`: Personal Access Token
 - `METRICS_AZURE_PROJECT`: Project name
 - `METRICS_AZURE_RELEASE_FIELD`: Reference name of the Azure work-item field to populate the Current Tasks "Release" column (default: `System.IterationPath`). Set to empty to hide the column when the active tracker is Azure. For iteration-path values, only the leaf segment is rendered (e.g. `Project\Sprint 12` → `Sprint 12`). For custom release fields (e.g. `Custom.Release` with values like `2026.015`), the value is rendered verbatim. Comma-separated string values (e.g. `2026.015, 2026.016`) are split per release (whitespace trimmed) and stacked one per line.
+
+#### Pull Requests Configuration
+The Pull Requests page (`/pull-requests/`) lists **open** PRs with per-reviewer approvals, review gates, and a linked ticket. It is implemented as a self-contained `pull_requests` module (mirrors `tasks/`) surfaced through `ui_web`. PRs come from a git host, not the tracker itself:
+- **Azure tracker** → PRs from **Azure Repos**, fetched with the configured `METRICS_AZURE_*` credentials across `METRICS_PROJECT_KEYS`. Requires the PAT to have **Code (Read)** scope. No extra config.
+- **JIRA tracker** → PRs from **Bitbucket Cloud**:
+  - `METRICS_BITBUCKET_WORKSPACE`: Bitbucket workspace id
+  - `METRICS_BITBUCKET_USERNAME`: Bitbucket username
+  - `METRICS_BITBUCKET_APP_PASSWORD`: App password with `Pull requests: Read`
+  - `METRICS_BITBUCKET_REPOSITORIES`: List of repository slugs to scan
+  - `METRICS_BITBUCKET_URL`: API base (default: `https://api.bitbucket.org/`)
+
+**Member-group tabs** filter the list by the **PR author's** `member_groups` (same sidebar tabs as Current Tasks). Bot/CI accounts appear only if added to `METRICS_MEMBERS`.
+
+**Approvals** are shown in two columns — **Main** and **Additional** — split by the reviewer's `level` from `METRICS_MEMBERS`, each chip ordered by seniority and labelled by Azure vote state: `✓` approved, `✓~` approved-with-suggestions, `⏳` waiting-for-author, `✗` rejected (no-vote reviewers are hidden). Plus two boolean gate columns:
+- `METRICS_PR_MAIN_REVIEWER_LEVELS`: Level names rendered in the Main column; everyone else is Additional (default: `['lead', 'arch']`)
+- **Internal gate**: passes when at least `METRICS_PR_MIN_DEVELOPER_APPROVALS` distinct Additional reviewers approved (default: `2`)
+- **Required gate**: passes when every Azure required reviewer (`is_required`) approved; `—` (N/A) when the PR has no required reviewers. Uses Azure's branch-policy required-reviewer flag — no configuration.
+
+A page-top summary table (**PR Activity by Person**) rolls up per person: PRs **Created**, **Approved** (approved + approved-with-suggestions), and **Changes Requested** (rejected + waiting-for-author). Draft PRs are tagged. Tickets are linked by parsing the work-item id / issue key from the PR's source branch and title, then resolved via the `tasks` module's public `ApiForTaskSearch`; rows are sorted by linked-ticket order using `METRICS_DEFAULT_SORT_CRITERIA`.
+
+**Azure pagination caveat:** the Azure PR-list API trims results *after* paging (so `$top` is an upper bound and pages can be short), and `$skip` can overlap. `AzurePullRequestRepository` pages with a fixed stride and de-dupes by PR id — do not "simplify" it to `skip += len(page)` (causes missing/duplicate PRs).
 
 #### Status Code Mappings
 - `METRICS_IN_PROGRESS_STATUS_CODES`: List of in-progress statuses (default: ['Analysis', 'Active', 'In Progress', 'In Development', 'QA', 'Validation', 'Testing', 'Review'])
@@ -499,7 +520,7 @@ The `ui_web` module acts as a presentation layer and federation gateway, combini
 #### Important Files
 
 - **Entry Points**: `metrics/urls.py` → `ui_web/urls.py`
-- **Views**: `ui_web/views/` (package with `dev_velocity_view.py`, `team_velocity_view.py`, `current_tasks_view.py`, `task_forecast_view.py`, etc.)
+- **Views**: `ui_web/views/` (package with `dev_velocity_view.py`, `team_velocity_view.py`, `current_tasks_view.py`, `task_forecast_view.py`, `pull_requests_view.py`, etc.)
 - **Controllers**: `ui_web/controllers/` (business logic)
 - **Templates**: `ui_web/templates/` (Bulma + htmx)
 - **Configuration**: `metrics/settings/defaults_metrics.py`

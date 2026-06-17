@@ -18,6 +18,7 @@ Transform your JIRA or Azure DevOps data into actionable development insights:
 - **🚀 Team Velocity**: Track story points and delivery trends over time with rolling averages
 - **👨‍💻 Developer Velocity**: Individual velocity metrics with seniority-level thresholds, rolling averages, and unfinished task inclusion
 - **🔮 Task Forecasting**: Predict completion dates based on team velocity, with completed vs remaining work breakdown
+- **🔀 Pull Requests**: Open PRs with per-reviewer approvals (split into Main vs Additional reviewers and labelled by vote state), Internal & Required review gates, linked tickets sorted by priority, and a per-person activity rollup
 
 <details>
 <summary>📸 View Screenshots</summary>
@@ -278,6 +279,38 @@ text order by value, not by character:
 **Sort direction:**
 - No prefix = ascending (e.g., `priority` for 1, 2, 3)
 - `-` prefix = descending (e.g., `-health` for RED, YELLOW, GREEN, or `-Custom.PriorityLevel`)
+
+#### Pull Requests Page
+The Pull Requests page (`/pull-requests/`) lists open PRs with per-reviewer approvals, two
+review gates, and each PR's linked ticket (rows sorted by the same `METRICS_DEFAULT_SORT_CRITERIA`).
+PRs come from your git host, selected automatically by `METRICS_TASK_TRACKER`:
+
+```bash
+# Azure tracker -> PRs from Azure Repos (reuses METRICS_AZURE_* + METRICS_PROJECT_KEYS).
+# The PAT must include the "Code (Read)" scope.
+
+# JIRA tracker -> PRs from Bitbucket Cloud:
+METRICS_BITBUCKET_WORKSPACE=your-workspace
+METRICS_BITBUCKET_USERNAME=your-bitbucket-username
+METRICS_BITBUCKET_APP_PASSWORD=your-app-password     # scope: Pull requests: Read
+METRICS_BITBUCKET_REPOSITORIES='["repo-one", "repo-two"]'
+```
+
+Approvals are split into **Main** and **Additional** columns by reviewer `level` (from
+`METRICS_MEMBERS`), and each reviewer chip shows the Azure vote state (`✓` approved,
+`✓~` approved with suggestions, `⏳` waiting for author, `✗` rejected):
+
+```bash
+# Levels shown in the Main column; everyone else lands in Additional
+METRICS_PR_MAIN_REVIEWER_LEVELS='["lead", "arch"]'
+
+# "Internal gate" passes once this many distinct Additional reviewers approve
+METRICS_PR_MIN_DEVELOPER_APPROVALS=2
+```
+
+- The **Required gate** uses Azure's branch-policy required reviewers (`is_required`) — no config; shows `—` when a PR has no required reviewers.
+- The sidebar member-group tabs filter the list by the **PR author's** group. Bot/CI accounts only appear if you add them to `METRICS_MEMBERS`.
+- A page-top **PR Activity by Person** table rolls up PRs created, approved, and changes-requested per person.
 
 #### Default Values
 Configure fallback values when data is missing:

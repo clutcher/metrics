@@ -37,6 +37,7 @@ CUSTOM_APP = (
     'tasks',
     'forecast',
     'velocity',
+    'pull_requests',
     'ui_web',
 )
 

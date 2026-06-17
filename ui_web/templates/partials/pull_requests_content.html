@@ -1,0 +1,22 @@
+{% if error %}
+    <article class="message is-danger">
+        <div class="message-header">
+            <p>Error</p>
+        </div>
+        <div class="message-body">
+            {{ error }}
+        </div>
+    </article>
+{% elif not pull_requests_enabled %}
+    <article class="message is-warning">
+        <div class="message-header">
+            <p>Pull Requests not configured</p>
+        </div>
+        <div class="message-body">
+            Configure an Azure DevOps organization (Azure tracker) or Bitbucket credentials (JIRA tracker) to view pull requests.
+        </div>
+    </article>
+{% else %}
+    {% include "partials/pull_request_summary_table.html" %}
+    {% include "partials/pull_requests_table.html" with pull_requests=pull_requests %}
+{% endif %}

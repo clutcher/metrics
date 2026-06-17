@@ -1,9 +1,11 @@
 from sd_metrics_lib.utils.time import TimePolicy
 
 from forecast.container import forecast_container
+from pull_requests.container import pull_requests_container
 from tasks.container import tasks_container
 from velocity.container import velocity_container
 from .convertors.member_convertor import MemberConvertor
+from .convertors.pull_request_convertor import PullRequestConvertor
 from .convertors.task_convertor import TaskConvertor
 from .convertors.task_forecast_chart_convertor import TaskForecastChartConvertor
 from .convertors.task_forecast_convertor import TaskForecastConvertor
@@ -16,6 +18,7 @@ from .facades.dev_velocity_facade import DevVelocityFacade
 from .facades.tasks_velocity_facade import TasksVelocityFacade
 from .facades.members_facade import MembersFacade
 from .facades.task_forecast_facade import TaskForecastFacade
+from .facades.pull_requests_facade import PullRequestsFacade
 from .facades.tasks_facade import TasksFacade
 from .facades.team_velocity_facade import TeamVelocityFacade
 from .utils.federated_data_post_processors import MemberGroupTaskFilter
@@ -41,6 +44,8 @@ class UiWebContainer:
         self._developer_velocity_summary_convertor = None
         self._task_forecast_facade = None
         self._member_group_task_filter = None
+        self._pull_request_convertor = None
+        self._pull_requests_facade = None
 
     @property
     def task_convertor(self) -> TaskConvertor:
@@ -66,6 +71,26 @@ class UiWebContainer:
         if self._task_forecast_convertor is None:
             self._task_forecast_convertor = TaskForecastConvertor()
         return self._task_forecast_convertor
+
+    @property
+    def pull_request_convertor(self) -> PullRequestConvertor:
+        if self._pull_request_convertor is None:
+            self._pull_request_convertor = PullRequestConvertor()
+        return self._pull_request_convertor
+
+    @property
+    def pull_requests_facade(self) -> PullRequestsFacade:
+        if self._pull_requests_facade is None:
+            enabled = pull_requests_container.is_supported()
+            self._pull_requests_facade = PullRequestsFacade(
+                pull_request_search_api=pull_requests_container.pull_request_search_api if enabled else None,
+                task_search_api=tasks_container.task_search_api,
+                pull_request_convertor=self.pull_request_convertor,
+                sorting_config=tasks_container.get_sorting_config(),
+                members=tasks_container.get_member_group_config().members,
+                enabled=enabled
+            )
+        return self._pull_requests_facade
 
     @property
     def tasks_facade(self) -> TasksFacade:
