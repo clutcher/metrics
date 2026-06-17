@@ -62,6 +62,8 @@ CACHES['task_search_results'] = {
 }
 
 METRICS_SENIORITY_LEVELS = env.dict('METRICS_SENIORITY_LEVELS', default={
+    'arch': 1.0,
+    'lead': 1.0,
     'senior': 1.0,
     'middle': 2.0,
     'junior': 4.0,
