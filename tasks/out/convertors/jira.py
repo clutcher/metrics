@@ -12,15 +12,18 @@ logger = logging.getLogger(__name__)
 
 class JiraTaskConverter:
 
-    def __init__(self, config: TasksConfig, worklog_extractor, story_point_extractor):
+    def __init__(self, config: TasksConfig, worklog_extractor, story_point_extractor,
+                 include_time_tracking: bool = True):
         self.config = config
         self.worklog_extractor = worklog_extractor
         self.story_point_extractor = story_point_extractor
+        self.include_time_tracking = include_time_tracking
 
     def convert_to_task(self, jira_task: dict) -> Task:
         task = self._create_basic_task(jira_task)
         self._populate_assignment(task, jira_task)
-        self._populate_time_tracking(task, jira_task)
+        if self.include_time_tracking:
+            self._populate_time_tracking(task, jira_task)
         self._populate_system_metadata(task, jira_task)
         self._populate_parent(task, jira_task)
         self._populate_release(task, jira_task)

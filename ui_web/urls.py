@@ -2,7 +2,8 @@ from django.conf import settings
 from django.urls import path
 
 from .utils.url_utils import django_normalized_base_url
-from .views.current_tasks_view import CurrentTasksView, CurrentTasksChildrenView
+from .views.current_tasks_view import CurrentTasksView, CurrentTasksChildrenView, CurrentTasksStageView, \
+    AvailableMembersView
 from .views.dev_velocity_view import DevVelocityView, DevVelocityChartView, DevStoryPointsChartView, DevVelocityTasksView
 from .views.homepage_view import HomepageView
 from .views.pull_requests_view import PullRequestsView, PullRequestReviewStateView
@@ -29,6 +30,9 @@ urlpatterns = [
 
     # Partials for HTMX
     path(_base_prefix + 'partials/tasks/', CurrentTasksView.as_view(), name='partials_tasks'),
+    path(_base_prefix + 'partials/tasks/stage/', CurrentTasksStageView.as_view(), name='partials_tasks_stage'),
+    path(_base_prefix + 'partials/tasks/available-members/', AvailableMembersView.as_view(),
+         name='partials_available_members'),
     path(_base_prefix + 'partials/pull-requests/', PullRequestsView.as_view(), name='partials_pull_requests'),
     path(_base_prefix + 'partials/pull-requests/<str:pull_request_id>/review-state/',
          PullRequestReviewStateView.as_view(), name='partials_pr_review_state'),

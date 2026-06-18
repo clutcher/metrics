@@ -1,3 +1,4 @@
+from django.conf import settings
 from sd_metrics_lib.utils.time import TimePolicy
 
 from forecast.container import forecast_container
@@ -115,7 +116,8 @@ class UiWebContainer:
                 member_convertor=self.member_convertor,
                 member_group_custom_filters=tasks_container.get_member_group_config().custom_filters,
                 merge_unassigned_into_filtered_group=tasks_container.get_member_group_config().merge_unassigned_into_filtered_group,
-                release_column_enabled=tasks_container.is_release_field_configured()
+                release_column_enabled=tasks_container.is_release_field_configured(),
+                lazy_loading_enabled=settings.METRICS_CURRENT_TASKS_LAZY_LOADING
             )
         return self._tasks_facade
 

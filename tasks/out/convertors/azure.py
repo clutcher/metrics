@@ -13,15 +13,18 @@ logger = logging.getLogger(__name__)
 
 class AzureTaskConverter:
 
-    def __init__(self, config: TasksConfig, worklog_extractor, story_point_extractor):
+    def __init__(self, config: TasksConfig, worklog_extractor, story_point_extractor,
+                 include_time_tracking: bool = True):
         self.config = config
         self.worklog_extractor = worklog_extractor
         self.story_point_extractor = story_point_extractor
+        self.include_time_tracking = include_time_tracking
 
     def convert_to_task(self, azure_task) -> Task:
         task = self._create_basic_task(azure_task)
         self._populate_assignment(task, azure_task)
-        self._populate_time_tracking(task, azure_task)
+        if self.include_time_tracking:
+            self._populate_time_tracking(task, azure_task)
         self._populate_system_metadata(task, azure_task)
         self._populate_parent(task, azure_task)
         self._populate_release(task, azure_task)

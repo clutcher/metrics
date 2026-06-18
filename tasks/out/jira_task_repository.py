@@ -40,13 +40,16 @@ class JiraTaskRepository(TaskRepository):
 
     async def find_all(self, search_criteria: Optional[TaskSearchCriteria] = None,
                        enrichment: Optional[EnrichmentOptions] = None) -> List[Task]:
+        include_time_tracking = enrichment.include_time_tracking if enrichment else True
         query = self._build_search_query(search_criteria)
-        jira_tasks = await self._fetch_jira_tasks(query)
+        jira_tasks = await self._fetch_jira_tasks(query, include_time_tracking)
         converter = self._create_converter_for_criteria(search_criteria, enrichment)
         return [converter.convert_to_task(jira_task) for jira_task in jira_tasks]
 
-    async def _fetch_jira_tasks(self, query: str):
-        additional_fields = ['changelog', 'subtasks']
+    async def _fetch_jira_tasks(self, query: str, include_time_tracking: bool = True):
+        additional_fields = ['subtasks']
+        if include_time_tracking:
+            additional_fields.insert(0, 'changelog')
         if self.config.jira.release_field:
             additional_fields.append(self.config.jira.release_field)
         additional_fields.extend(self.config.sorting.custom_sort_field_names())
@@ -93,6 +96,7 @@ class JiraTaskRepository(TaskRepository):
 
     def _create_converter_for_criteria(self, criteria: Optional[TaskSearchCriteria],
                                        enrichment: Optional[EnrichmentOptions] = None) -> JiraTaskConverter:
+        include_time_tracking = enrichment.include_time_tracking if enrichment else True
         worktime_extractor = self._create_worktime_extractor_from_criteria(criteria)
 
         worklog_statuses = self._resolve_transition_statuses(self.config)
@@ -104,7 +108,7 @@ class JiraTaskRepository(TaskRepository):
             worktime_extractor=worktime_extractor
         )
 
-        return JiraTaskConverter(self.config, worklog_extractor, self._story_point_extractor)
+        return JiraTaskConverter(self.config, worklog_extractor, self._story_point_extractor, include_time_tracking)
 
     def _create_worktime_extractor_from_criteria(self, criteria: Optional[TaskSearchCriteria]) -> WorkTimeExtractor:
         if self.worktime_extractor_type == WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED:

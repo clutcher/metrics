@@ -40,8 +40,9 @@ class AzureTaskRepository(TaskRepository):
 
     async def find_all(self, search_criteria: Optional[TaskSearchCriteria] = None,
                        enrichment: Optional[EnrichmentOptions] = None) -> List[Task]:
+        include_time_tracking = enrichment.include_time_tracking if enrichment else True
         query = self._build_search_query(search_criteria)
-        azure_tasks = await self._fetch_azure_tasks(query)
+        azure_tasks = await self._fetch_azure_tasks(query, include_time_tracking)
         converter = self._create_converter_for_criteria(search_criteria, enrichment)
         tasks = [converter.convert_to_task(azure_task) for azure_task in azure_tasks]
         self._enrich_parent_titles(tasks)
@@ -78,7 +79,7 @@ class AzureTaskRepository(TaskRepository):
 
         return builder.build_query()
 
-    async def _fetch_azure_tasks(self, query: str):
+    async def _fetch_azure_tasks(self, query: str, include_time_tracking: bool = True):
         azure_client = self.connection.clients.get_work_item_tracking_client()
 
         additional_fields = list(AzureTaskProvider.DEFAULT_FIELDS)
@@ -97,15 +98,19 @@ class AzureTaskRepository(TaskRepository):
             azure_client,
             query,
             additional_fields=additional_fields,
-            custom_expand_fields=[
-                AzureTaskProvider.WORK_ITEM_UPDATES_CUSTOM_FIELD_NAME,
-                AzureTaskProvider.CHILD_TASKS_CUSTOM_FIELD_NAME
-            ],
+            custom_expand_fields=self._build_custom_expand_fields(include_time_tracking),
             thread_pool_executor=self._executor,
         )
 
         cached_provider = CachingTaskProvider(base_provider, self._cache)
         return cached_provider.get_tasks()
+
+    @staticmethod
+    def _build_custom_expand_fields(include_time_tracking: bool) -> List[str]:
+        expand_fields = [AzureTaskProvider.CHILD_TASKS_CUSTOM_FIELD_NAME]
+        if include_time_tracking:
+            expand_fields.insert(0, AzureTaskProvider.WORK_ITEM_UPDATES_CUSTOM_FIELD_NAME)
+        return expand_fields
 
     def _enrich_parent_titles(self, tasks: List[Task]) -> None:
         unresolved_parent_ids = self._collect_unresolved_parent_ids(tasks)
@@ -147,6 +152,7 @@ class AzureTaskRepository(TaskRepository):
 
     def _create_converter_for_criteria(self, criteria: Optional[TaskSearchCriteria],
                                        enrichment: Optional[EnrichmentOptions] = None) -> AzureTaskConverter:
+        include_time_tracking = enrichment.include_time_tracking if enrichment else True
         worktime_extractor = self._create_worktime_extractor_from_criteria(criteria)
 
         worklog_statuses = self._resolve_transition_statuses(self.config)
@@ -159,7 +165,7 @@ class AzureTaskRepository(TaskRepository):
             worktime_extractor=worktime_extractor
         )
 
-        return AzureTaskConverter(self.config, worklog_extractor, self._story_point_extractor)
+        return AzureTaskConverter(self.config, worklog_extractor, self._story_point_extractor, include_time_tracking)
 
     def _create_worktime_extractor_from_criteria(self, criteria: Optional[TaskSearchCriteria]) -> WorkTimeExtractor:
         if self.worktime_extractor_type == WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED:

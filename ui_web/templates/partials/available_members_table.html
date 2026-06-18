@@ -1,9 +1,10 @@
+{% if show_available_members %}
 <div class="box">
     <div class="content">
         <h3 class="title is-4">Available Team Members</h3>
         <p class="subtitle is-6">Team members without current assigned tasks ({{ available_members|length }} available)</p>
     </div>
-    
+
     <div class="table-container">
         <table class="table is-striped is-hoverable is-fullwidth">
             <thead>
@@ -35,4 +36,5 @@
         </table>
     </div>
 </div>
+{% endif %}
 

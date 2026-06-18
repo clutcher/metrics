@@ -320,6 +320,7 @@ A page-top summary table (**PR Activity by Person**) rolls up per person: PRs **
   - **Azure example**: `{"TeamB": "[System.Parent] IN (174641, 176747)"}`
   - Works with both JIRA (JQL) and Azure DevOps (WIQL) query syntax
 - `METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP`: When true, tasks with "Unassigned" member group are relabeled to the filtered group when viewing a specific member group (default: false)
+- `METRICS_CURRENT_TASKS_LAZY_LOADING`: When true (default), the Current Tasks page (`/current-tasks/`) paints a cheap structural skeleton first (member groups → stages → counts, no changelog/time-tracking fetch), renders stages **collapsed**, and hydrates each stage's rows (health + spent time, sorted) only when it is expanded; the Available Members table also loads lazily. When false, the page reverts to the previous eager behavior: a single full fetch (with time tracking + health), stages rendered **open**, and the Available Members table rendered synchronously. Set to false to disable lazy loading entirely (e.g. for debugging or to replicate legacy behavior).
 
 #### Sorting Configuration
 - `METRICS_DEFAULT_SORT_CRITERIA`: Default sorting criteria for tasks (default: '-health,-spent_time')

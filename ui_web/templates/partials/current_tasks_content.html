@@ -8,10 +8,16 @@
         </div>
     </article>
 {% else %}
-    {% if show_available_members %}
+    {% if lazy_loading %}
+        <div hx-get="{% url 'ui_web:partials_available_members' %}{% if selected_member_group_id %}?member_group_id={{ selected_member_group_id|urlencode }}{% endif %}"
+             hx-trigger="load"
+             hx-swap="outerHTML">
+            {% include "partials/loading_indicator.html" %}
+        </div>
+    {% else %}
         {% include "partials/available_members_table.html" %}
     {% endif %}
-    
+
     {% if has_groups %}
         {% include "partials/group_renderer.html" with items=tasks level=0 %}
     {% else %}

@@ -25,7 +25,8 @@ class TasksFacade:
                  member_convertor: MemberConvertor,
                  member_group_custom_filters: Optional[Dict[str, str]] = None,
                  merge_unassigned_into_filtered_group: bool = False,
-                 release_column_enabled: bool = False):
+                 release_column_enabled: bool = False,
+                 lazy_loading_enabled: bool = True):
         self.task_search_api = task_search_api
         self.forecast_api = forecast_api
         self.available_member_groups = available_member_groups
@@ -38,10 +39,23 @@ class TasksFacade:
         self.member_group_custom_filters = member_group_custom_filters
         self.merge_unassigned_into_filtered_group = merge_unassigned_into_filtered_group
         self._release_column_enabled = release_column_enabled
+        self._lazy_loading_enabled = lazy_loading_enabled
 
     async def get_tasks(self, member_group_id: Optional[str] = None) -> List[TaskData]:
-        tasks = await self._fetch_tasks(member_group_id)
-        return [self.task_convertor.convert_task_to_data(task) for task in tasks]
+        tasks = await self._fetch_tasks(member_group_id, self._build_full_enrichment())
+        await self._enrich_forecast(tasks)
+        return self._convert_to_task_data(tasks)
+
+    async def get_task_structure(self, member_group_id: Optional[str] = None) -> List[TaskData]:
+        tasks = await self._fetch_tasks(member_group_id, self._build_structural_enrichment())
+        return self._convert_to_task_data(tasks)
+
+    async def get_tasks_by_ids(self, task_ids: List[str]) -> List[TaskData]:
+        if not task_ids:
+            return []
+        tasks = await self.task_search_api.search(TaskSearchCriteria(id_filter=task_ids), self._build_full_enrichment())
+        await self._enrich_forecast(tasks)
+        return self._convert_to_task_data(tasks)
 
     def get_available_member_groups(self) -> List[MemberGroupData]:
         return [self.member_convertor.convert_member_group_to_data(group) for group in
@@ -50,12 +64,23 @@ class TasksFacade:
     def is_release_column_enabled(self) -> bool:
         return self._release_column_enabled
 
-    async def _fetch_tasks(self, member_group_id: Optional[str]) -> List[Task]:
+    def is_lazy_loading_enabled(self) -> bool:
+        return self._lazy_loading_enabled
+
+    def task_table_colspan(self) -> int:
+        return 10 if self._release_column_enabled else 9
+
+    def _convert_to_task_data(self, tasks: List[Task]) -> List[TaskData]:
+        return [self.task_convertor.convert_task_to_data(task) for task in tasks]
+
+    async def _fetch_tasks(self, member_group_id: Optional[str], enrichment: EnrichmentOptions) -> List[Task]:
         current_tasks_future = self._build_task_fetcher(
-            lambda: self._search_current_tasks(member_group_id), member_group_id
+            lambda: self.task_search_api.search(self._create_current_tasks_search_criteria(member_group_id), enrichment),
+            member_group_id
         )
         recently_finished_tasks_future = self._build_task_fetcher(
-            lambda: self._search_recently_finished_tasks(member_group_id), member_group_id
+            lambda: self.task_search_api.search(self._create_recently_finished_tasks_search_criteria(member_group_id), enrichment),
+            member_group_id
         )
 
         current_tasks, recently_finished_tasks = await asyncio.gather(
@@ -63,8 +88,6 @@ class TasksFacade:
         )
 
         all_tasks = current_tasks + recently_finished_tasks
-
-        await ForecastPopulationUtils.populate_ideal_forecasts_batch(all_tasks, self.forecast_api)
 
         self._relabel_unassigned_tasks(all_tasks, member_group_id)
 
@@ -80,15 +103,20 @@ class TasksFacade:
             .fetch()
         )
 
-    async def _search_current_tasks(self, member_group_id: Optional[str]) -> List[Task]:
-        search_criteria = self._create_current_tasks_search_criteria(member_group_id)
-        enrichment = EnrichmentOptions(include_time_tracking=True, worklog_transition_statuses=self.workflow_config.in_progress_status_codes)
-        return await self.task_search_api.search(search_criteria, enrichment)
+    async def _enrich_forecast(self, tasks: List[Task]) -> None:
+        await ForecastPopulationUtils.populate_ideal_forecasts_batch(tasks, self.forecast_api)
 
-    async def _search_recently_finished_tasks(self, member_group_id: Optional[str]) -> List[Task]:
-        search_criteria = self._create_recently_finished_tasks_search_criteria(member_group_id)
-        enrichment = EnrichmentOptions(include_time_tracking=True, worklog_transition_statuses=self.workflow_config.in_progress_status_codes)
-        return await self.task_search_api.search(search_criteria, enrichment)
+    def _build_full_enrichment(self) -> EnrichmentOptions:
+        return self._build_enrichment(include_time_tracking=True)
+
+    def _build_structural_enrichment(self) -> EnrichmentOptions:
+        return self._build_enrichment(include_time_tracking=False)
+
+    def _build_enrichment(self, include_time_tracking: bool) -> EnrichmentOptions:
+        return EnrichmentOptions(
+            include_time_tracking=include_time_tracking,
+            worklog_transition_statuses=self.workflow_config.in_progress_status_codes
+        )
 
     def _create_current_tasks_search_criteria(self, member_group_id: Optional[str]):
         criteria = deepcopy(self.__current_tasks_search_criteria_template)

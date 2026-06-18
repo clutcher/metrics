@@ -28,25 +28,31 @@ class CurrentTasksView(GracefulTemplateView):
         return [self.template_name]
 
     def populate_context(self, context, **kwargs):
-        release_enabled = self.tasks_facade.is_release_column_enabled()
-        context["release_column_enabled"] = release_enabled
-        context["task_table_colspan"] = 10 if release_enabled else 9
+        lazy_loading = self.tasks_facade.is_lazy_loading_enabled()
+        context["lazy_loading"] = lazy_loading
+        context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
         context["success"] = False
 
         group_id = self.request.GET.get('member_group_id')
 
-        tasks = asyncio.run(self.tasks_facade.get_tasks(group_id))
-        available_members = asyncio.run(
-            self.members_facade.get_available_members(tasks, group_id)
-        )
+        if lazy_loading:
+            tasks = asyncio.run(self.tasks_facade.get_task_structure(group_id))
+        else:
+            tasks = asyncio.run(self.tasks_facade.get_tasks(group_id))
+            self._populate_available_members(context, tasks, group_id)
+
         grouped_tasks = self._group_tasks(tasks)
 
         context["tasks"] = grouped_tasks
-        context["available_members"] = available_members
         context["selected_member_group_id"] = group_id
         context["has_groups"] = self._determine_has_groups(grouped_tasks)
-        context["show_available_members"] = len(available_members) > 0
         context["success"] = True
+
+    def _populate_available_members(self, context, tasks, group_id):
+        available_members = asyncio.run(self.members_facade.get_available_members(tasks, group_id))
+        context["available_members"] = available_members
+        context["show_available_members"] = len(available_members) > 0
 
     @staticmethod
     def _determine_has_groups(tasks: Union[List[HierarchicalItemData], List[TaskData]]) -> bool:
@@ -58,6 +64,46 @@ class CurrentTasksView(GracefulTemplateView):
             self.workflow_config,
             self.sorting_config
         )
+
+
+class CurrentTasksStageView(GracefulTemplateView):
+    template_name = "partials/task_table.html"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tasks_facade = ui_web_container.tasks_facade
+        self.sorting_config = tasks_container.get_sorting_config()
+
+    def populate_context(self, context, **kwargs):
+        context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
+        context["tasks"] = []
+
+        task_ids = [task_id for task_id in self.request.GET.get('task_ids', '').split(',') if task_id]
+
+        tasks = asyncio.run(self.tasks_facade.get_tasks_by_ids(task_ids))
+        context["tasks"] = TaskSortUtils.sort_tasks(tasks, self.sorting_config)
+        context["success"] = True
+
+
+class AvailableMembersView(GracefulTemplateView):
+    template_name = "partials/available_members_table.html"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tasks_facade = ui_web_container.tasks_facade
+        self.members_facade = ui_web_container.members_facade
+
+    def populate_context(self, context, **kwargs):
+        context["available_members"] = []
+
+        group_id = self.request.GET.get('member_group_id')
+        tasks = asyncio.run(self.tasks_facade.get_task_structure(group_id))
+        available_members = asyncio.run(self.members_facade.get_available_members(tasks, group_id))
+
+        context["available_members"] = available_members
+        context["show_available_members"] = len(available_members) > 0
+        context["success"] = True
 
 
 class CurrentTasksChildrenView(TemplateView):
@@ -72,9 +118,8 @@ class CurrentTasksChildrenView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        release_enabled = self.tasks_facade.is_release_column_enabled()
-        context["release_column_enabled"] = release_enabled
-        context["task_table_colspan"] = 10 if release_enabled else 9
+        context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
 
         task_id = kwargs.get("task_id")
 
