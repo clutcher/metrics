@@ -9,9 +9,10 @@ from ..data.hierarchical_item_data import HierarchicalItemData
 from ..data.task_data import TaskData
 from ..utils.task_grouping_utils import TaskGroupingUtils
 from ..utils.task_sort_utils import TaskSortUtils
+from .graceful_template_view import GracefulTemplateView
 
 
-class CurrentTasksView(TemplateView):
+class CurrentTasksView(GracefulTemplateView):
     template_name = "current_tasks.html"
 
     def __init__(self, **kwargs):
@@ -26,34 +27,26 @@ class CurrentTasksView(TemplateView):
             return ["partials/current_tasks_content.html"]
         return [self.template_name]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def populate_context(self, context, **kwargs):
         release_enabled = self.tasks_facade.is_release_column_enabled()
         context["release_column_enabled"] = release_enabled
         context["task_table_colspan"] = 10 if release_enabled else 9
+        context["success"] = False
 
-        try:
-            group_id = self.request.GET.get('member_group_id')
+        group_id = self.request.GET.get('member_group_id')
 
-            tasks = asyncio.run(self.tasks_facade.get_tasks(group_id))
-            available_members = asyncio.run(
-                self.members_facade.get_available_members(tasks, group_id)
-            )
-            grouped_tasks = self._group_tasks(tasks)
+        tasks = asyncio.run(self.tasks_facade.get_tasks(group_id))
+        available_members = asyncio.run(
+            self.members_facade.get_available_members(tasks, group_id)
+        )
+        grouped_tasks = self._group_tasks(tasks)
 
-            context["tasks"] = grouped_tasks
-            context["available_members"] = available_members
-            context["selected_member_group_id"] = group_id
-            context["has_groups"] = self._determine_has_groups(grouped_tasks)
-            context["show_available_members"] = len(available_members) > 0
-            context["success"] = True
-
-        except Exception as e:
-            context["error"] = str(e)
-            context["success"] = False
-
-        return context
+        context["tasks"] = grouped_tasks
+        context["available_members"] = available_members
+        context["selected_member_group_id"] = group_id
+        context["has_groups"] = self._determine_has_groups(grouped_tasks)
+        context["show_available_members"] = len(available_members) > 0
+        context["success"] = True
 
     @staticmethod
     def _determine_has_groups(tasks: Union[List[HierarchicalItemData], List[TaskData]]) -> bool:
