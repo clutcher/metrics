@@ -68,10 +68,8 @@ class PullRequestsFacade:
             else:
                 without_ticket.append(pull_request)
 
-        with_ticket.sort(key=self._linked_ticket_sort_key)
+        sorted_with_ticket = TaskSortUtils.sort_by_linked_task(
+            with_ticket, lambda pull_request_with_task: pull_request_with_task[1], self._sorting_config
+        )
 
-        return [pull_request for pull_request, _ in with_ticket] + without_ticket
-
-    def _linked_ticket_sort_key(self, pull_request_with_task: Tuple[PullRequest, Task]) -> Tuple[Any, ...]:
-        _, linked_task = pull_request_with_task
-        return TaskSortUtils.build_sort_key(linked_task, self._sorting_config)
+        return [pull_request for pull_request, _ in sorted_with_ticket] + without_ticket
