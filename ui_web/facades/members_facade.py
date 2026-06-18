@@ -9,20 +9,24 @@ from tasks.app.domain.model.task import Task, TaskSearchCriteria, EnrichmentOpti
 from ..convertors.member_convertor import MemberConvertor
 from ..data.member_data import MemberData
 from ..data.task_data import TaskData
+from ..utils.available_member_stage_filter import AvailableMemberStageFilter
 from ..utils.federated_data_fetcher import FederatedDataFetcher
 from ..utils.tasks_utils import TasksUtils
 
 
 class MembersFacade:
 
-    def __init__(self, task_search_api: ApiForTaskSearch, member_convertor: MemberConvertor) -> None:
+    def __init__(self, task_search_api: ApiForTaskSearch, member_convertor: MemberConvertor,
+                 available_member_stage_filter: AvailableMemberStageFilter) -> None:
         self.task_search_api = task_search_api
         self.member_convertor = member_convertor
+        self.available_member_stage_filter = available_member_stage_filter
 
     async def get_available_members(self, all_tasks: List[TaskData], member_group_id: Optional[str] = None) -> List[MemberData]:
         current_tasks = TasksUtils.filter_in_progress_tasks(all_tasks)
         available_member_ids = TasksUtils.get_members_not_assigned_to_tasks(current_tasks, member_group_id)
-        
+        available_member_ids = self.available_member_stage_filter.filter(available_member_ids)
+
         if not available_member_ids:
             return []
 

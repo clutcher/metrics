@@ -47,6 +47,12 @@ class MemberGroupConfig:
             if stage_name in member_data.get('stages', [])
         }
 
+    def get_members_in_stages(self, stage_names: List[str]) -> Set[str]:
+        members = set()
+        for stage_name in stage_names:
+            members |= self.get_members_by_stage(stage_name)
+        return members
+
     def get_available_member_groups(self) -> Dict[str, str]:
         member_groups = {}
         for member_data in self.members.values():

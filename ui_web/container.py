@@ -23,6 +23,7 @@ from .facades.task_forecast_facade import TaskForecastFacade
 from .facades.pull_requests_facade import PullRequestsFacade
 from .facades.tasks_facade import TasksFacade
 from .facades.team_velocity_facade import TeamVelocityFacade
+from .utils.available_member_stage_filter import AvailableMemberStageFilter
 from .utils.federated_data_post_processors import MemberGroupTaskFilter
 
 
@@ -136,9 +137,17 @@ class UiWebContainer:
         if self._members_facade is None:
             self._members_facade = MembersFacade(
                 tasks_container.task_search_api,
-                self.member_convertor
+                self.member_convertor,
+                self._get_available_member_stage_filter()
             )
         return self._members_facade
+
+    @staticmethod
+    def _get_available_member_stage_filter() -> AvailableMemberStageFilter:
+        return AvailableMemberStageFilter(
+            tasks_container.get_member_group_config(),
+            settings.METRICS_AVAILABLE_MEMBER_STAGES_FILTER
+        )
 
     @property
     def team_velocity_facade(self) -> TeamVelocityFacade:
