@@ -192,23 +192,25 @@ class TeamVelocityView(TemplateView):
         return context
 ```
 
-### 5. HTMX Partial Chart Views
+### 5. HTMX Partial Views (charts + lazy loading)
 
-Charts are implemented as independently loadable htmx partials, each with its own URL endpoint, view class, and template. This enables dynamic chart updates (e.g., toggling rolling averages or filters) without full page reloads.
+Independently loadable pieces are implemented as htmx partials, each with its own URL endpoint, view class, and template. This covers two uses: dynamic **chart** updates (toggling rolling averages/filters) and **lazy loading** of expensive table content without a full page reload.
 
-**URL Pattern**: `partials/{dashboard}/chart/`
-**View Pattern**: Dedicated `TemplateView` subclass per chart partial
-**Template Pattern**: `partials/{chart_name}.html` included in parent content templates
+**URL Pattern**: `partials/{dashboard}/{component}/`
+**View Pattern**: Dedicated `TemplateView` / `GracefulTemplateView` subclass per partial
+**Template Pattern**: `partials/{name}.html` swapped into a placeholder in the parent content template
 
-Example endpoints:
-- `partials/dev-velocity/chart/` — Developer velocity chart
-- `partials/dev-velocity/sp-chart/` — Developer story points chart
-- `partials/team-velocity/chart/` — Team velocity chart
+Chart endpoints:
+- `partials/dev-velocity/chart/`, `partials/dev-velocity/sp-chart/`, `partials/team-velocity/chart/`
+- Query params: `member_group_id`, `rolling_avg` (integer window), `all_tasks` (`true`/`false`, dev velocity only)
 
-Query parameters supported by chart partials:
-- `member_group_id` — Filter by team/member group
-- `rolling_avg` — Rolling average window size (integer, e.g., `3` for 3-month average)
-- `all_tasks` — Include unfinished tasks (`true`/`false`, dev velocity only)
+Lazy-loading endpoints (Current Tasks):
+- `partials/tasks/stage/?task_ids=…` — one stage's task rows (health + spent time, sorted), fetched **with** time tracking; triggered on `hx-trigger="toggle once from:closest details"` when a stage `<details>` is expanded
+- `partials/tasks/available-members/` — the Available Members table; `hx-trigger="load"`
+- `partials/tasks/<task_id>/children/` — child task rows; loaded on the expand button
+- `partials/pull-requests/<id>/review-state/` — per-PR review gates; `hx-trigger="revealed"`
+
+**Convention**: a lazy placeholder carries the `hx-get` + trigger and contains a spinner (`{% include "partials/loading_indicator.html" %}`, Bulma `.loader`) shown until the response swaps in; `htmx-indicator` is used for inline button spinners (e.g. child-task expand).
 
 ### 6. Task Scope Filtering
 
@@ -219,6 +221,19 @@ The `TaskScope` enum (`forecast/app/domain/model/enums.py`) controls which tasks
 This enum flows from the UI request through `ForecastGenerationParameters` to the repository layer, where it maps to `HierarchyTraversalCriteria(exclude_done_tasks=...)` at the module boundary. The facade applies additional filtering using `METRICS_DONE_STATUS_CODES` to ensure consistency between the domain-level status and the UI-level display.
 
 The task forecast page (`/task-forecast/`) uses this to provide an "Include Completed Tasks" toggle that shows completed vs remaining work breakdown in the summary, with done tasks visually differentiated (strikethrough, status tags, thinner chart bars).
+
+### 7. Current Tasks Page (Lazy Loading)
+
+The Current Tasks page (`/current-tasks/`) defers its most expensive work — per-task changelog/history fetches (used for spent time, which in turn drives health and the `-health,-spent_time` sort). Because order and health depend on spent time, rows can't be sorted until that data is in hand, so rows are loaded **per stage**:
+
+1. **First paint** — `TasksFacade.get_task_structure()` fetches tasks *without* time tracking (cheap: WIQL + batched field fetch, no per-task history) and groups them into member groups → stages with counts. Stages render as **collapsed** `<details>` with a spinner placeholder.
+2. **On expand** — the stage body `hx-get`s `partials/tasks/stage/?task_ids=…` (`CurrentTasksStageView`), which fetches just that stage's tasks *with* time tracking via `get_tasks_by_ids`, populates forecast/health, sorts, and swaps in the rows. Stages never opened cost nothing.
+3. **Available Members** — loads via its own `hx-trigger="load"` partial (`AvailableMembersView`), off the critical path.
+
+Key mechanics:
+- `EnrichmentOptions.include_time_tracking` is honored at the repository boundary (`azure_task_repository`, `jira_task_repository`): when false, the changelog expand is skipped entirely. `TasksFacade` selects `_build_structural_enrichment()` vs `_build_full_enrichment()` per use-case and composes forecast as an explicit step.
+- `METRICS_CURRENT_TASKS_LAZY_LOADING=false` reverts to eager behavior (one full fetch, stages open, synchronous members table); the flag is read in `ui_web/container.py` and exposed via `TasksFacade.is_lazy_loading_enabled()`.
+- The "Available Members" table is scoped by `METRICS_AVAILABLE_MEMBER_STAGES_FILTER` via `AvailableMemberStageFilter` (config answers membership through `MemberGroupConfig.get_members_in_stages`, the filter applies the empty=all policy, the facade orchestrates).
 
 ---
 
@@ -320,7 +335,7 @@ A page-top summary table (**PR Activity by Person**) rolls up per person: PRs **
   - **Azure example**: `{"TeamB": "[System.Parent] IN (174641, 176747)"}`
   - Works with both JIRA (JQL) and Azure DevOps (WIQL) query syntax
 - `METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP`: When true, tasks with "Unassigned" member group are relabeled to the filtered group when viewing a specific member group (default: false)
-- `METRICS_CURRENT_TASKS_LAZY_LOADING`: When true (default), the Current Tasks page (`/current-tasks/`) paints a cheap structural skeleton first (member groups → stages → counts, no changelog/time-tracking fetch), renders stages **collapsed**, and hydrates each stage's rows (health + spent time, sorted) only when it is expanded; the Available Members table also loads lazily. When false, the page reverts to the previous eager behavior: a single full fetch (with time tracking + health), stages rendered **open**, and the Available Members table rendered synchronously. Set to false to disable lazy loading entirely (e.g. for debugging or to replicate legacy behavior).
+- `METRICS_CURRENT_TASKS_LAZY_LOADING`: When true (default), the Current Tasks page (`/current-tasks/`) paints a cheap structural skeleton first (member groups → stages → counts, no changelog/time-tracking fetch), renders stages **collapsed**, and loads each stage's rows (health + spent time, sorted) only when it is expanded; the Available Members table also loads lazily. When false, the page reverts to the previous eager behavior: a single full fetch (with time tracking + health), stages rendered **open**, and the Available Members table rendered synchronously. Set to false to disable lazy loading entirely (e.g. for debugging or to replicate legacy behavior).
 - `METRICS_AVAILABLE_MEMBER_STAGES_FILTER`: Restricts the Current Tasks "Available Members" table to members who work in the listed workflow stages (default: `[]` = show all). Values are `METRICS_STAGES` keys (e.g. `Development,Validation`), matched against each member's `stages` in `METRICS_MEMBERS`. A member appears only if their `stages` intersect this list; members with no `stages` or only non-listed stages (e.g. managers in `Analysis`) are excluded — and are also skipped by the 30-day workload fetch. Empty preserves the previous "show every unassigned member" behavior. (This is the consumer of the member `stages` attribute.)
 
 #### Sorting Configuration

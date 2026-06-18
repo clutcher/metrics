@@ -170,7 +170,9 @@ METRICS_MEMBERS={
 }
 ```
 
-**Skill Levels**: `junior`, `middle`, `senior`
+**Skill Levels**: `junior`, `middle`, `senior` — drive the velocity multipliers (see [Seniority Level Multipliers](#seniority-level-multipliers)) and the PR Main/Additional reviewer split.
+
+**Stages** (optional): the workflow stages a member works in, using your `METRICS_STAGES` keys (e.g. `Development`, `Validation`). Used to scope the Current Tasks "Available Members" table — see [Current Tasks Page](#current-tasks-page).
 
 ### Status Code Customization
 
@@ -221,6 +223,20 @@ When filtering by a specific member group, unassigned tasks normally appear unde
 METRICS_MERGE_UNASSIGNED_INTO_FILTERED_GROUP=true
 ```
 This only applies when viewing a specific member group — the "All Groups" view is unaffected.
+
+#### Current Tasks Page
+The Current Tasks page (`/current-tasks/`) loads lazily by default: it paints the structure (member groups → stages → counts) immediately, then fetches each stage's rows (health + spent time) only when you expand that stage, and loads the "Available Members" table in the background. This keeps cold loads fast by deferring the expensive per-task history fetches to the stages you actually open.
+
+```bash
+# Restrict the "Available Members" table to people working in these stages
+# (matched against each member's "stages"). Empty (default) shows all unassigned members.
+# Useful to hide non-developers like managers (who sit in Analysis/UAT) from capacity tracking.
+METRICS_AVAILABLE_MEMBER_STAGES_FILTER=["Development", "Validation"]
+
+# Set to false to disable lazy loading and restore the previous eager behavior:
+# one full fetch up front, stages rendered expanded, members table rendered synchronously.
+METRICS_CURRENT_TASKS_LAZY_LOADING=true
+```
 
 #### Release Column on Current Tasks
 The Current Tasks table can show a "Release" column populated from a per-backend field. Set the field name for whichever tracker you use; set to empty to hide the column.
@@ -365,6 +381,8 @@ METRICS_MEMBER_GROUP_WHEN_MISSING="Unassigned"
 - Reduce `METRICS_RECENTLY_FINISHED_TASKS_DAYS` for faster queries
 - Consider using `METRICS_GLOBAL_TEAM_FILTER` to limit data scope
 - Check your task tracker API rate limits
+- Current Tasks loads per-stage on demand by default; if you previously set `METRICS_CURRENT_TASKS_LAZY_LOADING=false`, removing it (or setting `true`) restores the faster lazy loading
+- Trim the "Available Members" table (and its 30-day workload fetch) with `METRICS_AVAILABLE_MEMBER_STAGES_FILTER` to exclude non-developers
 
 **Memory issues**
 - Increase server memory allocation
