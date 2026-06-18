@@ -2,6 +2,7 @@ from sd_metrics_lib.utils.time import TimePolicy
 
 from forecast.container import forecast_container
 from pull_requests.container import pull_requests_container
+from tasks.app.domain.model.config import SortingConfig
 from tasks.container import tasks_container
 from velocity.container import velocity_container
 from .convertors.member_convertor import MemberConvertor
@@ -86,11 +87,18 @@ class UiWebContainer:
                 pull_request_search_api=pull_requests_container.pull_request_search_api if enabled else None,
                 task_search_api=tasks_container.task_search_api,
                 pull_request_convertor=self.pull_request_convertor,
-                sorting_config=tasks_container.get_sorting_config(),
+                sorting_config=self._pull_request_sorting_config(),
                 members=tasks_container.get_member_group_config().members,
                 enabled=enabled
             )
         return self._pull_requests_facade
+
+    @staticmethod
+    def _pull_request_sorting_config() -> SortingConfig:
+        return SortingConfig(
+            stage_sort_overrides={},
+            default_sort_criteria=tasks_container.get_sorting_config().default_sort_criteria
+        )
 
     @property
     def tasks_facade(self) -> TasksFacade:
