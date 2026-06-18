@@ -25,6 +25,17 @@ class ReviewTier(Enum):
     ADDITIONAL = "additional"
 
 
+class GatewayState(Enum):
+    READY = "ready"
+    BLOCKED = "blocked"
+    IN_REVIEW = "in_review"
+
+
+class GatewayBlocker(Enum):
+    CI = "CI"
+    CHANGES_REQUESTED = "Changes requested"
+
+
 @dataclass(slots=True)
 class Reviewer:
     id: str
@@ -47,22 +58,51 @@ class Author:
 
 
 @dataclass(slots=True)
+class GatewayResult:
+    state: GatewayState
+    blockers: List[GatewayBlocker] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ReviewState:
+    approvals: List[Approval] = field(default_factory=list)
+    reset_approvals: List[Approval] = field(default_factory=list)
+    gateway: Optional[GatewayResult] = None
+    internal_gate_met: bool = False
+
+
+@dataclass(slots=True)
 class PullRequest:
     id: str
-    title: str
-    author: Author
-    status: str
+    title: str = ""
+    author: Optional[Author] = None
+    status: str = ""
     url: Optional[str] = None
     repository: Optional[str] = None
+    repository_id: Optional[str] = None
+    project_id: Optional[str] = None
+    project_name: Optional[str] = None
     source_branch: Optional[str] = None
     is_draft: bool = False
     created_date: Optional[datetime] = None
-    approvals: List[Approval] = field(default_factory=list)
     linked_task_id: Optional[str] = None
-    internal_gate_met: bool = False
-    required_gate_met: Optional[bool] = None
+    review: ReviewState = field(default_factory=ReviewState)
+
+
+@dataclass(slots=True)
+class PullRequestRef:
+    pull_request_id: str
+    repository_id: str
+    project_id: str
+    project_name: str
+
+
+class PullRequestProjection(Enum):
+    SUMMARY = "summary"
+    REVIEW_DETAILS = "review_details"
 
 
 @dataclass(slots=True)
 class PullRequestSearchCriteria:
     status_filter: str = "active"
+    target: Optional[PullRequestRef] = None

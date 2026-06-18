@@ -5,7 +5,7 @@ from .utils.url_utils import django_normalized_base_url
 from .views.current_tasks_view import CurrentTasksView, CurrentTasksChildrenView
 from .views.dev_velocity_view import DevVelocityView, DevVelocityChartView, DevStoryPointsChartView, DevVelocityTasksView
 from .views.homepage_view import HomepageView
-from .views.pull_requests_view import PullRequestsView
+from .views.pull_requests_view import PullRequestsView, PullRequestReviewStateView
 from .views.task_forecast_view import TaskForecastView
 from .views.team_velocity_view import TeamVelocityView, TeamVelocityChartView, TeamStoryPointsChartView, TeamVelocityTasksView
 
@@ -30,6 +30,8 @@ urlpatterns = [
     # Partials for HTMX
     path(_base_prefix + 'partials/tasks/', CurrentTasksView.as_view(), name='partials_tasks'),
     path(_base_prefix + 'partials/pull-requests/', PullRequestsView.as_view(), name='partials_pull_requests'),
+    path(_base_prefix + 'partials/pull-requests/<str:pull_request_id>/review-state/',
+         PullRequestReviewStateView.as_view(), name='partials_pr_review_state'),
     path(_base_prefix + 'partials/tasks/<str:task_id>/children/', CurrentTasksChildrenView.as_view(),
          name='partials_task_children'),
     path(_base_prefix + 'partials/dev-velocity/chart/', DevVelocityChartView.as_view(), name='dev_velocity_chart'),

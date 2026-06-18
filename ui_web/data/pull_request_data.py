@@ -25,15 +25,26 @@ class LinkedTaskData:
 
 
 @dataclass(slots=True)
+class PolicyResultData:
+    name: str
+    status: str
+    css_class: str
+    icon: str
+
+
+@dataclass(slots=True)
 class PullRequestData:
     id: str
-    title: str
-    author_name: str
-    status: str
+    title: str = ""
+    author_name: str = ""
+    status: str = ""
     internal_gate: bool = False
-    required_gate: Optional[bool] = None
     url: Optional[str] = None
     repository: Optional[str] = None
+    repository_id: Optional[str] = None
+    project_id: Optional[str] = None
+    project_name: Optional[str] = None
     is_draft: bool = False
     approvals: List[ApprovalData] = field(default_factory=list)
+    policies: List[PolicyResultData] = field(default_factory=list)
     linked_task: Optional[LinkedTaskData] = None

@@ -1,11 +1,13 @@
 import asyncio
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from atlassian.bitbucket import Cloud
 
 from .convertors.bitbucket import BitbucketPullRequestConverter
+from .convertors.bitbucket_review import BitbucketReviewConverter
 from ..app.domain.model.config import PullRequestsConfig
-from ..app.domain.model.pull_request import PullRequest, PullRequestSearchCriteria
+from ..app.domain.model.pull_request import PullRequest, PullRequestRef, PullRequestSearchCriteria
+from ..app.domain.model.review import ReviewInputs
 from ..app.spi.pull_request_repository import PullRequestRepository
 
 _BITBUCKET_STATE_BY_CRITERIA = {
@@ -24,6 +26,7 @@ class BitbucketPullRequestRepository(PullRequestRepository):
         self._workspace = bitbucket_config.workspace
         self._repositories = bitbucket_config.repositories
         self._converter = BitbucketPullRequestConverter()
+        self._review_converter = BitbucketReviewConverter()
         self._cloud = Cloud(
             url=bitbucket_config.url or "https://api.bitbucket.org/",
             username=bitbucket_config.username,
@@ -39,6 +42,32 @@ class BitbucketPullRequestRepository(PullRequestRepository):
         return [pull_request for repository_pull_requests in pull_requests_by_repository
                 for pull_request in repository_pull_requests]
 
+    async def fetch_review_inputs(self, ref: PullRequestRef) -> ReviewInputs:
+        repository = ref.repository_id
+        detail, activity = await asyncio.gather(
+            asyncio.to_thread(self._get_pull_request_detail, repository, ref.pull_request_id),
+            asyncio.to_thread(self._list_activity, repository, ref.pull_request_id)
+        )
+        build_statuses = await asyncio.to_thread(self._list_build_statuses, repository, self._source_commit(detail))
+        return self._review_converter.to_review_inputs(detail.get('participants'), activity, build_statuses)
+
+    def _list_activity(self, repository: str, pull_request_id: str) -> List[Dict[str, Any]]:
+        path = f"repositories/{self._workspace}/{repository}/pullrequests/{pull_request_id}/activity"
+        return self._collect_paged_values(path)
+
+    def _list_build_statuses(self, repository: str, commit_hash: Optional[str]) -> List[Dict[str, Any]]:
+        if not commit_hash:
+            return []
+        path = f"repositories/{self._workspace}/{repository}/commit/{commit_hash}/statuses"
+        return [build_status for build_status in self._collect_paged_values(path)
+                if build_status.get('type') == 'build']
+
+    @staticmethod
+    def _source_commit(detail: Dict[str, Any]) -> Optional[str]:
+        source = detail.get('source') or {}
+        commit = source.get('commit') or {}
+        return commit.get('hash')
+
     async def _fetch_repository_pull_requests(self, repository: str, state: str) -> List[PullRequest]:
         raw_pull_requests = await asyncio.to_thread(self._query_repository_pull_requests, repository, state)
         return [self._converter.convert_to_pull_request(raw_pull_request, repository)
@@ -50,7 +79,10 @@ class BitbucketPullRequestRepository(PullRequestRepository):
 
     def _list_pull_requests(self, repository: str, state: str) -> List[Dict[str, Any]]:
         path = f"repositories/{self._workspace}/{repository}/pullrequests"
-        response = self._cloud.get(path, params={'state': state, 'pagelen': 50})
+        return self._collect_paged_values(path, params={'state': state, 'pagelen': 50})
+
+    def _collect_paged_values(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        response = self._cloud.get(path, params=params)
         values = []
         while response:
             values.extend(response.get('values', []))

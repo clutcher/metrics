@@ -15,12 +15,14 @@
                 <th scope="col">Main</th>
                 <th scope="col">Additional</th>
                 <th scope="col">Internal gate</th>
-                <th scope="col">Required gate</th>
+                <th scope="col">Policy gateway</th>
             </tr>
         </thead>
         <tbody>
         {% for pull_request in pull_requests %}
-            <tr>
+            <tr hx-get="{% url 'ui_web:partials_pr_review_state' pull_request.id %}?repository_id={{ pull_request.repository_id|urlencode }}&project_id={{ pull_request.project_id|urlencode }}&project={{ pull_request.project_name|urlencode }}"
+                hx-trigger="revealed"
+                hx-swap="none">
                 <td>
                     {% if pull_request.is_draft %}<span class="tag is-warning is-light is-small mr-1">Draft</span>{% endif %}
                     {% if pull_request.url %}
@@ -43,11 +45,13 @@
                         -
                     {% endif %}
                 </td>
-                <td>
-                    {% include "partials/pull_request_approval_chips.html" with approvals=pull_request.approvals|main_approvals %}
+                <td id="pr-main-{{ pull_request.id }}">
+                    {% include "partials/pull_request_approval_tags.html" with approvals=pull_request.approvals|main_approvals %}
+                    <span class="review-loader icon is-small has-text-grey-light"><span class="loader"></span></span>
                 </td>
-                <td>
-                    {% include "partials/pull_request_approval_chips.html" with approvals=pull_request.approvals|additional_approvals %}
+                <td id="pr-additional-{{ pull_request.id }}">
+                    {% include "partials/pull_request_approval_tags.html" with approvals=pull_request.approvals|additional_approvals %}
+                    <span class="review-loader icon is-small has-text-grey-light"><span class="loader"></span></span>
                 </td>
                 <td>
                     {% if pull_request.internal_gate %}
@@ -56,14 +60,8 @@
                         <span class="tag is-light has-text-grey">No</span>
                     {% endif %}
                 </td>
-                <td>
-                    {% if pull_request.required_gate is None %}
-                        <span class="has-text-grey-light">—</span>
-                    {% elif pull_request.required_gate %}
-                        <span class="tag is-success">✓ Yes</span>
-                    {% else %}
-                        <span class="tag is-light has-text-grey">No</span>
-                    {% endif %}
+                <td id="pr-policy-{{ pull_request.id }}">
+                    <span class="review-loader icon is-small has-text-grey-light"><span class="loader"></span></span>
                 </td>
             </tr>
         {% empty %}

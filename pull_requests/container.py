@@ -1,5 +1,8 @@
 from .app.api.api_for_pull_request_search import ApiForPullRequestSearch
 from .app.domain.pull_request_search_service import PullRequestSearchService
+from .app.domain.review.policy_gateway_evaluator import PolicyGatewayEvaluator
+from .app.domain.review.pull_request_review_enricher import PullRequestReviewEnricher
+from .app.domain.review.reset_approval_detector import ResetApprovalDetector
 from .app.domain.review.review_gate_evaluator import ReviewGateEvaluator
 from .app.domain.review.reviewer_seniority import ReviewerSeniority
 from .app.spi.pull_request_repository import PullRequestRepository
@@ -20,10 +23,17 @@ class PullRequestsContainer:
         if self._service is None:
             self._service = PullRequestSearchService(
                 repository=self._get_repository(),
-                reviewer_seniority=self._build_reviewer_seniority(),
-                review_gate_evaluator=self._build_review_gate_evaluator()
+                review_enricher=self._build_review_enricher()
             )
         return self._service
+
+    def _build_review_enricher(self) -> PullRequestReviewEnricher:
+        return PullRequestReviewEnricher(
+            reviewer_seniority=self._build_reviewer_seniority(),
+            review_gate_evaluator=self._build_review_gate_evaluator(),
+            reset_approval_detector=ResetApprovalDetector(),
+            policy_gateway_evaluator=PolicyGatewayEvaluator()
+        )
 
     def is_supported(self) -> bool:
         if self._config.is_azure_tracker():

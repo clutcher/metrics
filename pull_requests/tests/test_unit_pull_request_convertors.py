@@ -44,7 +44,7 @@ class TestAzurePullRequestConverter(unittest.TestCase):
         converted = AzurePullRequestConverter(azure_config()).convert_to_pull_request(pull_request)
 
         # then
-        self.assertEqual(ApprovalVote.APPROVED, converted.approvals[0].vote)
+        self.assertEqual(ApprovalVote.APPROVED, converted.review.approvals[0].vote)
 
     def test_shouldTranslateAzureRejectionVoteIntoChangesRequestedDecision(self):
         # given
@@ -54,7 +54,7 @@ class TestAzurePullRequestConverter(unittest.TestCase):
         converted = AzurePullRequestConverter(azure_config()).convert_to_pull_request(pull_request)
 
         # then
-        self.assertEqual(ApprovalVote.REJECTED, converted.approvals[0].vote)
+        self.assertEqual(ApprovalVote.REJECTED, converted.review.approvals[0].vote)
 
     def test_shouldLinkPullRequestToWorkItemParsedFromSourceBranch(self):
         # given
@@ -100,7 +100,7 @@ class TestBitbucketPullRequestConverter(unittest.TestCase):
         converted = BitbucketPullRequestConverter().convert_to_pull_request(raw_pull_request, "web")
 
         # then
-        self.assertEqual(ApprovalVote.APPROVED, converted.approvals[0].vote)
+        self.assertEqual(ApprovalVote.APPROVED, converted.review.approvals[0].vote)
 
     def test_shouldTranslateBitbucketChangesRequestedParticipantIntoRejection(self):
         # given
@@ -119,7 +119,7 @@ class TestBitbucketPullRequestConverter(unittest.TestCase):
         converted = BitbucketPullRequestConverter().convert_to_pull_request(raw_pull_request, "web")
 
         # then
-        self.assertEqual(ApprovalVote.REJECTED, converted.approvals[0].vote)
+        self.assertEqual(ApprovalVote.REJECTED, converted.review.approvals[0].vote)
 
     def test_shouldLinkPullRequestToJiraIssueParsedFromSourceBranch(self):
         # given

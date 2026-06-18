@@ -6,8 +6,10 @@ from azure.devops.v7_1.git.models import GitPullRequestSearchCriteria
 from msrest.authentication import BasicAuthentication
 
 from .convertors.azure import AzurePullRequestConverter
+from .convertors.azure_review import AzureReviewConverter
 from ..app.domain.model.config import PullRequestsConfig
-from ..app.domain.model.pull_request import PullRequest, PullRequestSearchCriteria
+from ..app.domain.model.pull_request import PullRequest, PullRequestRef, PullRequestSearchCriteria
+from ..app.domain.model.review import ReviewInputs
 from ..app.spi.pull_request_repository import PullRequestRepository
 
 
@@ -22,6 +24,7 @@ class AzurePullRequestRepository(PullRequestRepository):
         self._connection = Connection(base_url=azure_config.organization_url, creds=credentials)
         self._project_keys = azure_config.project_keys
         self._converter = AzurePullRequestConverter(azure_config)
+        self._review_converter = AzureReviewConverter()
 
     async def find_all(self, criteria: PullRequestSearchCriteria) -> List[PullRequest]:
         pull_requests_by_project = await asyncio.gather(
@@ -35,6 +38,31 @@ class AzurePullRequestRepository(PullRequestRepository):
         azure_pull_requests = await asyncio.to_thread(self._query_project_pull_requests, project_key, criteria)
         return [self._converter.convert_to_pull_request(azure_pull_request)
                 for azure_pull_request in azure_pull_requests]
+
+    async def fetch_review_inputs(self, ref: PullRequestRef) -> ReviewInputs:
+        reviewers, threads, policy_evaluations = await asyncio.gather(
+            asyncio.to_thread(self._query_reviewers, ref),
+            asyncio.to_thread(self._query_threads, ref),
+            asyncio.to_thread(self._query_policy_evaluations, ref)
+        )
+        return self._review_converter.to_review_inputs(reviewers, threads, policy_evaluations)
+
+    def _query_reviewers(self, ref: PullRequestRef):
+        git_client = self._connection.clients.get_git_client()
+        return git_client.get_pull_request_reviewers(
+            repository_id=ref.repository_id, pull_request_id=int(ref.pull_request_id), project=ref.project_name
+        )
+
+    def _query_threads(self, ref: PullRequestRef):
+        git_client = self._connection.clients.get_git_client()
+        return git_client.get_threads(
+            repository_id=ref.repository_id, pull_request_id=int(ref.pull_request_id), project=ref.project_name
+        )
+
+    def _query_policy_evaluations(self, ref: PullRequestRef):
+        policy_client = self._connection.clients.get_policy_client()
+        artifact_id = f"vstfs:///CodeReview/CodeReviewId/{ref.project_id}/{ref.pull_request_id}"
+        return policy_client.get_policy_evaluations(project=ref.project_name, artifact_id=artifact_id)
 
     _PAGE_SIZE = 1000
 

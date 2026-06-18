@@ -55,3 +55,11 @@ details summary::marker {
     font-weight: 700;
     border-radius: 4px;
 }
+
+.review-loader {
+    display: none;
+}
+
+tr.htmx-request .review-loader {
+    display: inline-flex;
+}

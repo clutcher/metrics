@@ -107,14 +107,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    let activeRequestCount = 0;
+
     function showLoadingIndicator() {
+        activeRequestCount += 1;
         const indicator = document.getElementById('loading-indicator');
         if (indicator) {
             indicator.classList.remove('is-hidden');
         }
     }
-    
+
     function hideLoadingIndicator() {
+        activeRequestCount = Math.max(0, activeRequestCount - 1);
+        if (activeRequestCount > 0) {
+            return;
+        }
         const indicator = document.getElementById('loading-indicator');
         if (indicator) {
             indicator.classList.add('is-hidden');

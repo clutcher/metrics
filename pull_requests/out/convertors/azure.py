@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from ...app.domain.model.config import AzureRepoConfig
 from ...app.domain.model.pull_request import (
-    Approval, ApprovalVote, Author, PullRequest, Reviewer
+    Approval, ApprovalVote, Author, PullRequest, Reviewer, ReviewState
 )
 from .work_item_id_parser import WorkItemIdParser
 
@@ -32,10 +32,13 @@ class AzurePullRequestConverter:
             status=azure_pull_request.status or '',
             url=self._build_pull_request_url(project_name, repository_name, azure_pull_request.pull_request_id),
             repository=repository_name,
+            repository_id=self._extract_repository_id(azure_pull_request),
+            project_id=self._extract_project_id(azure_pull_request),
+            project_name=project_name,
             source_branch=source_branch,
             is_draft=bool(azure_pull_request.is_draft),
             created_date=azure_pull_request.creation_date,
-            approvals=self._convert_reviewers(azure_pull_request.reviewers),
+            review=ReviewState(approvals=self._convert_reviewers(azure_pull_request.reviewers)),
             linked_task_id=WorkItemIdParser.parse_azure_work_item_id(source_branch, azure_pull_request.title)
         )
 
@@ -64,6 +67,18 @@ class AzurePullRequestConverter:
     def _extract_repository_name(azure_pull_request) -> Optional[str]:
         repository = azure_pull_request.repository
         return repository.name if repository else None
+
+    @staticmethod
+    def _extract_repository_id(azure_pull_request) -> Optional[str]:
+        repository = azure_pull_request.repository
+        return getattr(repository, 'id', None) if repository else None
+
+    @staticmethod
+    def _extract_project_id(azure_pull_request) -> Optional[str]:
+        repository = azure_pull_request.repository
+        if repository and repository.project:
+            return getattr(repository.project, 'id', None)
+        return None
 
     @staticmethod
     def _extract_project_name(azure_pull_request) -> Optional[str]:

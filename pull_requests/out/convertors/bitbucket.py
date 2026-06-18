@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ...app.domain.model.pull_request import (
-    Approval, ApprovalVote, Author, PullRequest, Reviewer
+    Approval, ApprovalVote, Author, PullRequest, Reviewer, ReviewState
 )
 from .work_item_id_parser import WorkItemIdParser
 
@@ -20,14 +20,15 @@ class BitbucketPullRequestConverter:
             status=raw_pull_request.get('state', ''),
             url=self._extract_url(raw_pull_request),
             repository=repository_name,
+            repository_id=repository_name,
             source_branch=source_branch,
             is_draft=bool(raw_pull_request.get('draft', False)),
             created_date=self._parse_date(raw_pull_request.get('created_on')),
-            approvals=self._convert_participants(raw_pull_request.get('participants')),
+            review=ReviewState(approvals=self.convert_participants(raw_pull_request.get('participants'))),
             linked_task_id=WorkItemIdParser.parse_jira_issue_key(source_branch, title)
         )
 
-    def _convert_participants(self, participants: Optional[List[Dict[str, Any]]]) -> List[Approval]:
+    def convert_participants(self, participants: Optional[List[Dict[str, Any]]]) -> List[Approval]:
         if not participants:
             return []
         approvals = []

@@ -61,53 +61,5 @@ class TestInternalGate(unittest.TestCase):
         self.assertFalse(internal_gate_met)
 
 
-class TestRequiredGate(unittest.TestCase):
-
-    def test_shouldBeNotApplicableWhenPullRequestHasNoRequiredReviewers(self):
-        # given
-        approvals = [approval(ReviewTier.ADDITIONAL, reviewer_id="dev-1")]
-
-        # when
-        required_gate_met = evaluator().evaluate_required_gate(approvals)
-
-        # then
-        self.assertIsNone(required_gate_met)
-
-    def test_shouldPassRequiredGateWhenTheSoleRequiredReviewerApprovedAlone(self):
-        # given
-        approvals = [approval(ReviewTier.MAIN, reviewer_id="arch-1", is_required=True)]
-
-        # when
-        required_gate_met = evaluator().evaluate_required_gate(approvals)
-
-        # then
-        self.assertTrue(required_gate_met)
-
-    def test_shouldFailRequiredGateWhenARequiredReviewerHasNotApprovedDespiteManyOtherApprovals(self):
-        # given
-        approvals = [
-            approval(ReviewTier.MAIN, vote=ApprovalVote.WAITING, reviewer_id="arch-1", is_required=True),
-            approval(ReviewTier.ADDITIONAL, reviewer_id="dev-1"),
-            approval(ReviewTier.ADDITIONAL, reviewer_id="dev-2"),
-            approval(ReviewTier.ADDITIONAL, reviewer_id="dev-3"),
-        ]
-
-        # when
-        required_gate_met = evaluator().evaluate_required_gate(approvals)
-
-        # then
-        self.assertFalse(required_gate_met)
-
-    def test_shouldFailRequiredGateWhenARequiredReviewerRejected(self):
-        # given
-        approvals = [approval(ReviewTier.MAIN, vote=ApprovalVote.REJECTED, reviewer_id="arch-1", is_required=True)]
-
-        # when
-        required_gate_met = evaluator().evaluate_required_gate(approvals)
-
-        # then
-        self.assertFalse(required_gate_met)
-
-
 if __name__ == '__main__':
     unittest.main()

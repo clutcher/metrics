@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from pull_requests.app.domain.model.pull_request import PullRequest
+from pull_requests.app.domain.model.pull_request import (
+    PullRequest, PullRequestProjection, PullRequestRef, PullRequestSearchCriteria
+)
 from tasks.app.domain.model.config import SortingConfig
 from tasks.app.domain.model.task import Task
 from ..convertors.pull_request_convertor import PullRequestConvertor
@@ -24,6 +26,11 @@ class PullRequestsFacade:
 
     def is_pull_requests_enabled(self) -> bool:
         return self._enabled
+
+    async def get_review_details(self, ref: PullRequestRef) -> PullRequestData:
+        criteria = PullRequestSearchCriteria(target=ref)
+        pull_requests = await self._pull_request_search_api.search(criteria, PullRequestProjection.REVIEW_DETAILS)
+        return self._pull_request_convertor.convert_review_details(pull_requests[0])
 
     async def get_pull_requests(self, member_group_id: Optional[str] = None) -> List[PullRequestData]:
         if not self._enabled:

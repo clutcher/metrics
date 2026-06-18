@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from ..model.pull_request import Approval, ReviewTier
 
@@ -14,9 +14,3 @@ class ReviewGateEvaluator:
             if approval.reviewer.tier is ReviewTier.ADDITIONAL and approval.vote.is_positive
         }
         return len(distinct_additional_approvers) >= self._min_developer_approvals
-
-    def evaluate_required_gate(self, approvals: List[Approval]) -> Optional[bool]:
-        required_approvals = [approval for approval in approvals if approval.reviewer.is_required]
-        if not required_approvals:
-            return None
-        return all(approval.vote.is_positive for approval in required_approvals)

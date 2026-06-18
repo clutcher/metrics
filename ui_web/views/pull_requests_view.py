@@ -1,5 +1,6 @@
 import asyncio
 
+from pull_requests.app.domain.model.pull_request import PullRequestRef
 from ..container import ui_web_container
 from ..utils.pull_request_summary_utils import PullRequestSummaryUtils
 from .graceful_template_view import GracefulTemplateView
@@ -28,3 +29,24 @@ class PullRequestsView(GracefulTemplateView):
         context["pull_requests"] = pull_requests
         context["activity_summary"] = PullRequestSummaryUtils.build_person_activity(pull_requests)
         context["success"] = True
+
+
+class PullRequestReviewStateView(GracefulTemplateView):
+    template_name = "partials/pull_request_review_state.html"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pull_requests_facade = ui_web_container.pull_requests_facade
+
+    def populate_context(self, context, **kwargs):
+        ref = self._build_ref(kwargs.get('pull_request_id'))
+        context["pull_request"] = asyncio.run(self.pull_requests_facade.get_review_details(ref))
+        context["success"] = True
+
+    def _build_ref(self, pull_request_id):
+        return PullRequestRef(
+            pull_request_id=pull_request_id,
+            repository_id=self.request.GET.get('repository_id', ''),
+            project_id=self.request.GET.get('project_id', ''),
+            project_name=self.request.GET.get('project', '')
+        )
