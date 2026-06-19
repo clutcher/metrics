@@ -4,7 +4,7 @@
     {% elif approval.state == 'approved_with_suggestions' %}
         <span class="tag is-small mr-1 mb-1 is-success" title="Approved with suggestions"><i class="iconoir-check-circle mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'waiting' %}
-        <span class="tag is-small mr-1 mb-1 is-warning is-light" title="Waiting for author"><i class="iconoir-clock mr-1"></i>{{ approval.display_name }}</span>
+        <span class="tag is-small mr-1 mb-1 is-warning" title="Changes requested — waiting for author"><i class="iconoir-warning-triangle mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'rejected' %}
         <span class="tag is-small mr-1 mb-1 is-danger"><i class="iconoir-xmark mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'stale_approved' %}
