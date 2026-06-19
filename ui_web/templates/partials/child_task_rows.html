@@ -7,7 +7,7 @@
 </tr>
 {% else %}
     {% for child_task in child_tasks %}
-    <tr>
+    <tr class="is-size-7 has-text-grey">
         <td>
             {% if child_task.assignment.assignee %}
                 {% if child_task.assignment.assignee.avatar_url %}
@@ -33,7 +33,7 @@
         <td>
             <code>{{ child_task.id }}</code>
         </td>
-        <td>
+        <td class="pl-5">
             ↳ {% if child_task.system_metadata.url %}
                 <a href="{{ child_task.system_metadata.url }}" target="_blank">
                     {{ child_task.title }}
