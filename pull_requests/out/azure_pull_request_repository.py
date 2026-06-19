@@ -40,17 +40,25 @@ class AzurePullRequestRepository(PullRequestRepository):
                 for azure_pull_request in azure_pull_requests]
 
     async def fetch_review_inputs(self, ref: PullRequestRef) -> ReviewInputs:
-        reviewers, threads, policy_evaluations = await asyncio.gather(
+        reviewers, threads, policy_evaluations, pull_request_detail = await asyncio.gather(
             asyncio.to_thread(self._query_reviewers, ref),
             asyncio.to_thread(self._query_threads, ref),
-            asyncio.to_thread(self._query_policy_evaluations, ref)
+            asyncio.to_thread(self._query_policy_evaluations, ref),
+            asyncio.to_thread(self._query_pull_request_detail, ref)
         )
-        return self._review_converter.to_review_inputs(reviewers, threads, policy_evaluations)
+        azure_merge_status = getattr(pull_request_detail, 'merge_status', None)
+        return self._review_converter.to_review_inputs(reviewers, threads, policy_evaluations, azure_merge_status)
 
     def _query_reviewers(self, ref: PullRequestRef):
         git_client = self._connection.clients.get_git_client()
         return git_client.get_pull_request_reviewers(
             repository_id=ref.repository_id, pull_request_id=int(ref.pull_request_id), project=ref.project_name
+        )
+
+    def _query_pull_request_detail(self, ref: PullRequestRef):
+        git_client = self._connection.clients.get_git_client()
+        return git_client.get_pull_request_by_id(
+            pull_request_id=int(ref.pull_request_id), project=ref.project_name
         )
 
     def _query_threads(self, ref: PullRequestRef):

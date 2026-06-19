@@ -30,7 +30,9 @@ class PullRequestReviewEnricher:
         review.reset_approvals = self._enrich_reviewers(
             self._reset_approval_detector.detect(review.approvals, review_inputs.vote_events)
         )
-        review.gateway = self._policy_gateway_evaluator.evaluate(review_inputs.policy_evaluations, review.approvals)
+        review.gateway = self._policy_gateway_evaluator.evaluate(
+            review_inputs.policy_evaluations, review.approvals, review_inputs.has_merge_conflict
+        )
 
     def _enrich_reviewers(self, approvals: List[Approval]) -> List[Approval]:
         for approval in approvals:

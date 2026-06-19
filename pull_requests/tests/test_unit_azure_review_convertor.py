@@ -78,5 +78,36 @@ class TestAzureReviewConverterPolicyFiltering(unittest.TestCase):
         self.assertTrue(review_inputs.policy_evaluations[0].is_expired)
 
 
+class TestAzureReviewConverterMergeConflict(unittest.TestCase):
+
+    def test_shouldFlagMergeConflictWhenBranchHasConflicts(self):
+        # given
+        merge_status = "conflicts"
+
+        # when
+        review_inputs = AzureReviewConverter().to_review_inputs(None, None, None, merge_status)
+
+        # then
+        self.assertTrue(review_inputs.has_merge_conflict)
+
+    def test_shouldNotFlagMergeConflictWhenBranchMergesCleanly(self):
+        # given
+        merge_status = "succeeded"
+
+        # when
+        review_inputs = AzureReviewConverter().to_review_inputs(None, None, None, merge_status)
+
+        # then
+        self.assertFalse(review_inputs.has_merge_conflict)
+
+    def test_shouldNotFlagMergeConflictWhenMergeStatusUnknown(self):
+        # given
+        # when
+        review_inputs = AzureReviewConverter().to_review_inputs(None, None, None)
+
+        # then
+        self.assertFalse(review_inputs.has_merge_conflict)
+
+
 if __name__ == '__main__':
     unittest.main()

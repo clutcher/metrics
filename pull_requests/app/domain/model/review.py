@@ -46,3 +46,4 @@ class ReviewInputs:
     current_approvals: List[Approval] = field(default_factory=list)
     vote_events: List[VoteEvent] = field(default_factory=list)
     policy_evaluations: List[RawPolicyEvaluation] = field(default_factory=list)
+    has_merge_conflict: bool = False

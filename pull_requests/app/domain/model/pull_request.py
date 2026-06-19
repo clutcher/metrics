@@ -34,6 +34,7 @@ class GatewayState(Enum):
 class GatewayBlocker(Enum):
     CI = "CI"
     CHANGES_REQUESTED = "Changes requested"
+    MERGE_CONFLICT = "Merge conflict"
 
 
 @dataclass(slots=True)

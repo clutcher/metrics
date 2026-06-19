@@ -12,15 +12,23 @@ _VOTE_RESULT_PROPERTY = "CodeReviewVoteResult"
 
 _POLICY_STATUS_BY_VALUE = {status.value: status for status in PolicyEvaluationStatus}
 
+_AZURE_CONFLICTS_MERGE_STATUS = "conflicts"
+
 
 class AzureReviewConverter:
 
-    def to_review_inputs(self, azure_reviewers, azure_threads, azure_policy_evaluations) -> ReviewInputs:
+    def to_review_inputs(self, azure_reviewers, azure_threads, azure_policy_evaluations,
+                         azure_merge_status=None) -> ReviewInputs:
         return ReviewInputs(
             current_approvals=self._convert_current_approvals(azure_reviewers),
             vote_events=self._convert_vote_events(azure_threads),
-            policy_evaluations=self._convert_policy_evaluations(azure_policy_evaluations)
+            policy_evaluations=self._convert_policy_evaluations(azure_policy_evaluations),
+            has_merge_conflict=self._is_merge_conflict(azure_merge_status)
         )
+
+    @staticmethod
+    def _is_merge_conflict(azure_merge_status) -> bool:
+        return str(azure_merge_status).lower() == _AZURE_CONFLICTS_MERGE_STATUS
 
     def _convert_current_approvals(self, azure_reviewers) -> List[Approval]:
         if not azure_reviewers:

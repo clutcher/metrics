@@ -36,5 +36,38 @@ class TestPolicyGatewayEvaluatorHonorsCategory(unittest.TestCase):
         self.assertEqual(GatewayState.READY, result.state)
 
 
+class TestPolicyGatewayEvaluatorMergeConflict(unittest.TestCase):
+
+    def test_shouldBlockWithMergeConflictWhenBranchHasConflicts(self):
+        # given
+        evaluations = [build_evaluation(PolicyEvaluationStatus.APPROVED)]
+
+        # when
+        result = PolicyGatewayEvaluator().evaluate(evaluations, [], has_merge_conflict=True)
+
+        # then
+        self.assertEqual((GatewayState.BLOCKED, [GatewayBlocker.MERGE_CONFLICT]), (result.state, result.blockers))
+
+    def test_shouldReportBothBlockersWhenMergeConflictAndBuildFailed(self):
+        # given
+        evaluations = [build_evaluation(PolicyEvaluationStatus.REJECTED)]
+
+        # when
+        result = PolicyGatewayEvaluator().evaluate(evaluations, [], has_merge_conflict=True)
+
+        # then
+        self.assertEqual([GatewayBlocker.MERGE_CONFLICT, GatewayBlocker.CI], result.blockers)
+
+    def test_shouldReportReadyWhenApprovedAndNoMergeConflict(self):
+        # given
+        evaluations = [build_evaluation(PolicyEvaluationStatus.APPROVED)]
+
+        # when
+        result = PolicyGatewayEvaluator().evaluate(evaluations, [], has_merge_conflict=False)
+
+        # then
+        self.assertEqual(GatewayState.READY, result.state)
+
+
 if __name__ == '__main__':
     unittest.main()

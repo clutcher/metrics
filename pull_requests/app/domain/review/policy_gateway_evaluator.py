@@ -20,8 +20,8 @@ _CHANGES_REQUESTED_VOTES = {ApprovalVote.REJECTED, ApprovalVote.WAITING}
 class PolicyGatewayEvaluator:
 
     def evaluate(self, policy_evaluations: List[RawPolicyEvaluation],
-                 approvals: List[Approval]) -> GatewayResult:
-        blockers = self._find_blockers(policy_evaluations, approvals)
+                 approvals: List[Approval], has_merge_conflict: bool = False) -> GatewayResult:
+        blockers = self._find_blockers(policy_evaluations, approvals, has_merge_conflict)
         if blockers:
             return GatewayResult(state=GatewayState.BLOCKED, blockers=blockers)
         if policy_evaluations and all(self._is_satisfied(evaluation) for evaluation in policy_evaluations):
@@ -29,8 +29,10 @@ class PolicyGatewayEvaluator:
         return GatewayResult(state=GatewayState.IN_REVIEW)
 
     def _find_blockers(self, policy_evaluations: List[RawPolicyEvaluation],
-                       approvals: List[Approval]) -> List[GatewayBlocker]:
+                       approvals: List[Approval], has_merge_conflict: bool) -> List[GatewayBlocker]:
         blockers = []
+        if has_merge_conflict:
+            blockers.append(GatewayBlocker.MERGE_CONFLICT)
         if any(self._is_ci_failure(evaluation) for evaluation in policy_evaluations):
             blockers.append(GatewayBlocker.CI)
         if any(approval.vote in _CHANGES_REQUESTED_VOTES for approval in approvals):
