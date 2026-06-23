@@ -1,8 +1,8 @@
 {% for approval in approvals %}
     {% if approval.state == 'approved' %}
-        <span class="tag is-small mr-1 mb-1 is-success"><i class="iconoir-check mr-1"></i>{{ approval.display_name }}</span>
+        <span class="tag is-small mr-1 mb-1 is-success" title="Approved"><i class="iconoir-check mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'approved_with_suggestions' %}
-        <span class="tag is-small mr-1 mb-1 is-success" title="Approved with suggestions"><i class="iconoir-check-circle mr-1"></i>{{ approval.display_name }}</span>
+        <span class="tag is-small mr-1 mb-1 is-success is-light" title="Approved with suggestions"><i class="iconoir-chat-bubble-check mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'waiting' %}
         <span class="tag is-small mr-1 mb-1 is-warning" title="Changes requested — waiting for author"><i class="iconoir-warning-triangle mr-1"></i>{{ approval.display_name }}</span>
     {% elif approval.state == 'rejected' %}
