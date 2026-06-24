@@ -8,7 +8,7 @@
         </div>
     </article>
 {% else %}
-    {% if lazy_loading %}
+    {% if lazy_loading_enabled %}
         <div hx-get="{% url 'ui_web:partials_available_members' %}{% if selected_member_group_id %}?member_group_id={{ selected_member_group_id|urlencode }}{% endif %}"
              hx-trigger="load"
              hx-swap="outerHTML">
@@ -18,9 +18,7 @@
         {% include "partials/available_members_table.html" %}
     {% endif %}
 
-    {% if has_groups %}
-        {% include "partials/group_renderer.html" with items=tasks level=0 %}
-    {% else %}
-        {% include "partials/task_table.html" with tasks=tasks show_header=true %}
-    {% endif %}
+    <div id="current-tasks-board">
+        {% include "partials/current_tasks_board.html" %}
+    </div>
 {% endif %}

@@ -20,11 +20,13 @@ from .facades.dev_velocity_facade import DevVelocityFacade
 from .facades.tasks_velocity_facade import TasksVelocityFacade
 from .facades.members_facade import MembersFacade
 from .facades.task_forecast_facade import TaskForecastFacade
+from .facades.task_filter_facade import TaskFilterFacade
 from .facades.pull_requests_facade import PullRequestsFacade
 from .facades.tasks_facade import TasksFacade
 from .facades.team_velocity_facade import TeamVelocityFacade
 from .utils.available_member_stage_filter import AvailableMemberStageFilter
 from .utils.federated_data_post_processors import MemberGroupTaskFilter
+from .utils.filter_fields import build_field_filters
 
 
 class UiWebContainer:
@@ -39,6 +41,7 @@ class UiWebContainer:
         self._task_forecast_chart_convertor = None
 
         self._tasks_facade = None
+        self._task_filter_facade = None
         self._child_tasks_facade = None
         self._members_facade = None
         self._team_velocity_facade = None
@@ -121,6 +124,14 @@ class UiWebContainer:
                 lazy_loading_enabled=settings.METRICS_CURRENT_TASKS_LAZY_LOADING
             )
         return self._tasks_facade
+
+    @property
+    def task_filter_facade(self) -> TaskFilterFacade:
+        if self._task_filter_facade is None:
+            self._task_filter_facade = TaskFilterFacade(
+                build_field_filters(settings.METRICS_TASK_FILTER_FIELDS)
+            )
+        return self._task_filter_facade
 
     @property
     def child_tasks_facade(self) -> ChildTasksFacade:

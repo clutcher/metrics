@@ -66,6 +66,9 @@ METRICS_CURRENT_TASKS_LAZY_LOADING = env.bool('METRICS_CURRENT_TASKS_LAZY_LOADIN
 
 METRICS_AVAILABLE_MEMBER_STAGES_FILTER = env.list('METRICS_AVAILABLE_MEMBER_STAGES_FILTER', default=[])
 
+METRICS_TASK_FILTER_FIELDS = env.list('METRICS_TASK_FILTER_FIELDS',
+                                      default=['health', 'priority', 'release', 'assignee', 'parent'])
+
 # Velocity time unit configuration
 METRICS_DEFAULT_VELOCITY_TIME_UNIT = env.str('METRICS_DEFAULT_VELOCITY_TIME_UNIT', default='DAY')
 

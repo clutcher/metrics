@@ -14,7 +14,7 @@ A Django-based team velocity and task tracking dashboard that connects to JIRA a
 
 Transform your JIRA or Azure DevOps data into actionable development insights:
 
-- **📋 Current Tasks**: Real-time view of active work with completion forecasts
+- **📋 Current Tasks**: Real-time view of active work with completion forecasts and configurable per-field filters (priority, release, assignee, health, …)
 - **🚀 Team Velocity**: Track story points and delivery trends over time with rolling averages
 - **👨‍💻 Developer Velocity**: Individual velocity metrics with seniority-level thresholds, rolling averages, and unfinished task inclusion
 - **🔮 Task Forecasting**: Predict completion dates based on team velocity, with completed vs remaining work breakdown
@@ -237,6 +237,16 @@ METRICS_AVAILABLE_MEMBER_STAGES_FILTER=["Development", "Validation"]
 # one full fetch up front, stages rendered expanded, members table rendered synchronously.
 METRICS_CURRENT_TASKS_LAZY_LOADING=true
 ```
+
+#### Filtering on Current Tasks
+The Current Tasks board shows a row of filter dropdowns — pick values across several and click **Apply** to narrow the board in a single request. Choose which fields are filterable (and the order they appear) with `METRICS_TASK_FILTER_FIELDS`:
+```bash
+# Ordered list of filter dropdowns on the Current Tasks page.
+# Supported: priority, release, assignee, member_group, parent, stage, status, story_points, health
+# Default (omit the variable to use this):
+METRICS_TASK_FILTER_FIELDS=["health", "priority", "release", "assignee", "parent"]
+```
+Each dropdown lists the distinct values present for the current member group; filtering runs server-side and combines with AND. Filtering by **health** loads full task data for that one request (health needs the per-task history that lazy loading otherwise defers), so it costs the same as expanding every stage.
 
 #### Release Column on Current Tasks
 The Current Tasks table can show a "Release" column populated from a per-backend field. Set the field name for whichever tracker you use; set to empty to hide the column.

@@ -18,30 +18,44 @@ class CurrentTasksView(GracefulTemplateView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.tasks_facade = ui_web_container.tasks_facade
+        self.task_filter_facade = ui_web_container.task_filter_facade
         self.members_facade = ui_web_container.members_facade
         self.workflow_config = tasks_container.get_workflow_config()
         self.sorting_config = tasks_container.get_sorting_config()
 
     def get_template_names(self):
+        if self.request.headers.get('HX-Target') == 'current-tasks-board':
+            return ["partials/current_tasks_board.html"]
         if self.request.headers.get('HX-Request'):
             return ["partials/current_tasks_content.html"]
         return [self.template_name]
 
     def populate_context(self, context, **kwargs):
-        lazy_loading = self.tasks_facade.is_lazy_loading_enabled()
+        group_id = self.request.GET.get('member_group_id')
+        selections = self.task_filter_facade.parse_selections(self.request.GET)
+
+        lazy_loading_enabled = self.tasks_facade.is_lazy_loading_enabled()
+        expand_all = self.request.GET.get('expand_all') == 'true'
+        needs_full_fetch = self.task_filter_facade.requires_full_fetch(selections)
+        lazy_loading = lazy_loading_enabled and not expand_all and not needs_full_fetch
+
+        context["lazy_loading_enabled"] = lazy_loading_enabled
         context["lazy_loading"] = lazy_loading
         context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
         context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
         context["success"] = False
 
-        group_id = self.request.GET.get('member_group_id')
-
         if lazy_loading:
             tasks = asyncio.run(self.tasks_facade.get_task_structure(group_id))
         else:
             tasks = asyncio.run(self.tasks_facade.get_tasks(group_id))
+
+        context["task_filter_panel"] = self.task_filter_facade.get_panel(tasks, selections)
+
+        if not lazy_loading_enabled:
             self._populate_available_members(context, tasks, group_id)
 
+        tasks = self.task_filter_facade.filter_tasks(tasks, selections)
         grouped_tasks = self._group_tasks(tasks)
 
         context["tasks"] = grouped_tasks
