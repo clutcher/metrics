@@ -74,7 +74,7 @@ class EstimationConfig:
     default_seniority_level_when_missing: str
     default_health_status_when_missing: str
 
-BUILTIN_SORT_CRITERIA = frozenset({'priority', 'health', 'spent_time', 'assignee'})
+BUILTIN_SORT_CRITERIA = frozenset({'priority', 'health', 'spent_time', 'assignee', 'story_points'})
 
 @dataclass(slots=True)
 class SortingConfig:

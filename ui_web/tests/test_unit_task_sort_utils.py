@@ -275,6 +275,33 @@ class TestTaskSortUtilsBusinessPriorityOrdering(unittest.TestCase):
         self.assertEqual(100, result[1].priority)
 
 
+class TestTaskSortUtilsStoryPointEstimation(unittest.TestCase):
+
+    def test_shouldEscalateLargerEstimatesWhenPlanningCapacityBySize(self):
+        # given
+        small = TaskDataBuilder.sprint_dashboard_task().with_story_points(2.0).build()
+        large = TaskDataBuilder.team_velocity_task().with_story_points(8.0).build()
+
+        # when
+        result = TaskSortUtils.sort_tasks([small, large], sorting_config('story_points'))
+
+        # then
+        self.assertEqual(2.0, result[0].story_points)
+        self.assertEqual(8.0, result[1].story_points)
+
+    def test_shouldDeprioritizeUnestimatedTasksWhenSortingByStoryPoints(self):
+        # given
+        estimated = TaskDataBuilder.sprint_dashboard_task().with_story_points(5.0).build()
+        unestimated = TaskDataBuilder.team_velocity_task().build()
+
+        # when
+        result = TaskSortUtils.sort_tasks([unestimated, estimated], sorting_config('story_points'))
+
+        # then
+        self.assertEqual(5.0, result[0].story_points)
+        self.assertIsNone(result[1].story_points)
+
+
 class TestTaskSortUtilsMultiFactorDecisionMaking(unittest.TestCase):
 
     def test_shouldEscalateCriticalTasksOverTeamPreferencesWhenSprintGoalAtRisk(self):

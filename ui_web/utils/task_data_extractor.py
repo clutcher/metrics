@@ -15,6 +15,12 @@ class TaskDataExtractor:
         return task.priority
 
     @staticmethod
+    def extract_story_points(task: Union[TaskData, 'Task']) -> float:
+        if not task.story_points:
+            return 9999.0
+        return task.story_points
+
+    @staticmethod
     def extract_health_status_value(task: Union[TaskData, 'Task']) -> int:
         if not task.forecast or not task.forecast.health_status:
             return 0

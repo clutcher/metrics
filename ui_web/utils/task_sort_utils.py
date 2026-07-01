@@ -12,6 +12,7 @@ SORT_EXTRACTORS = {
     'health': ('numeric', TaskDataExtractor.extract_health_status_value),
     'spent_time': ('numeric', TaskDataExtractor.extract_spent_time_seconds),
     'assignee': ('natural', TaskDataExtractor.extract_assignee_name),
+    'story_points': ('numeric', TaskDataExtractor.extract_story_points),
 }
 
 _NATURAL_KEY = natsort_keygen(alg=ns.IGNORECASE)

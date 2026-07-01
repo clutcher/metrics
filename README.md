@@ -265,7 +265,7 @@ Customize how tasks are sorted within each workflow stage. The criteria is a com
 list applied left to right (first criterion is primary, the rest break ties):
 ```bash
 # Default sorting criteria (applied to all stages unless overridden)
-# Built-in criteria: priority, assignee, health, spent_time
+# Built-in criteria: priority, assignee, health, spent_time, story_points
 # Use '-' prefix for descending order (e.g., "-health" for worst health first)
 METRICS_DEFAULT_SORT_CRITERIA=-health,-spent_time
 
@@ -279,6 +279,7 @@ METRICS_STAGE_SORT_OVERRIDES='{"Ready for Dev": "priority,assignee,-health"}'
 - `assignee` - Assignee name (alphabetical, case-insensitive)
 - `health` - Health status (ascending: GREEN → YELLOW → RED)
 - `spent_time` - Time already spent on task
+- `story_points` - Story point estimate (ascending: smallest first, unestimated last)
 
 **Sort by any tracker field (no code changes):**
 Any criterion that isn't built-in is treated as the **exact field reference name** on the
