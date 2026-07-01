@@ -41,6 +41,9 @@
                         {% else %}
                             <code>{{ pull_request.linked_task.id }}</code>
                         {% endif %}
+                        {% if pull_request.linked_task.status %}
+                            <div class="mt-1"><span class="tag is-small">{{ pull_request.linked_task.status }}</span></div>
+                        {% endif %}
                     {% else %}
                         -
                     {% endif %}

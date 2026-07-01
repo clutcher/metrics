@@ -90,6 +90,7 @@ class PullRequestConvertor:
         if linked_task:
             return LinkedTaskData(
                 id=linked_task.id,
-                url=linked_task.system_metadata.url if linked_task.system_metadata else None
+                url=linked_task.system_metadata.url if linked_task.system_metadata else None,
+                status=linked_task.system_metadata.original_status if linked_task.system_metadata else None
             )
         return LinkedTaskData(id=linked_task_id)

@@ -3,6 +3,7 @@ import unittest
 from pull_requests.app.domain.model.pull_request import (
     Author, GatewayBlocker, GatewayResult, GatewayState, PullRequest, ReviewState
 )
+from tasks.app.domain.model.task import Assignment, SystemMetadata, Task, TimeTracking
 from ui_web.convertors.pull_request_convertor import PullRequestConvertor
 
 
@@ -10,6 +11,22 @@ def pull_request_with_gateway(gateway: GatewayResult) -> PullRequest:
     return PullRequest(
         id="1", title="Improve checkout", author=Author(id="a", display_name="Author"),
         status="active", review=ReviewState(gateway=gateway)
+    )
+
+
+def pull_request_linked_to(task_id: str) -> PullRequest:
+    return PullRequest(
+        id="1", title="Improve checkout", author=Author(id="a", display_name="Author"),
+        status="active", linked_task_id=task_id
+    )
+
+
+def task_with_status(task_id: str, original_status: str) -> Task:
+    return Task(
+        id=task_id, title="Speed up checkout",
+        system_metadata=SystemMetadata(original_status=original_status, project_key="PROJ",
+                                        url=f"https://tracker.example.com/{task_id}"),
+        assignment=Assignment(), time_tracking=TimeTracking()
     )
 
 
@@ -67,6 +84,30 @@ class TestGatewayDisplay(unittest.TestCase):
 
         # then
         self.assertEqual([], policies)
+
+
+class TestLinkedTaskDisplay(unittest.TestCase):
+
+    def test_shouldShowTicketTrackerStatusWhenTaskIsLinked(self):
+        # given
+        pull_request = pull_request_linked_to("PROJ-42")
+        linked_task = task_with_status("PROJ-42", "Code Review")
+
+        # when
+        linked_task_data = PullRequestConvertor().convert_to_data(pull_request, linked_task).linked_task
+
+        # then
+        self.assertEqual("Code Review", linked_task_data.status)
+
+    def test_shouldShowNoTrackerStatusWhenLinkedTicketCannotBeResolved(self):
+        # given
+        pull_request = pull_request_linked_to("PROJ-42")
+
+        # when
+        linked_task_data = PullRequestConvertor().convert_to_data(pull_request, None).linked_task
+
+        # then
+        self.assertIsNone(linked_task_data.status)
 
 
 if __name__ == '__main__':

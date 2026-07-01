@@ -22,6 +22,7 @@ class PersonActivitySummaryData:
 class LinkedTaskData:
     id: str
     url: Optional[str] = None
+    status: Optional[str] = None
 
 
 @dataclass(slots=True)
