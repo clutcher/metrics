@@ -337,6 +337,7 @@ METRICS_PR_MIN_DEVELOPER_APPROVALS=2
 
 - The **Required gate** uses Azure's branch-policy required reviewers (`is_required`) — no config; shows `—` when a PR has no required reviewers.
 - The sidebar member-group tabs filter the list by the **PR author's** group. Bot/CI accounts only appear if you add them to `METRICS_MEMBERS`.
+- An **Author** dropdown above the table further narrows the list to one person's PRs (author only, not reviewers).
 - A page-top **PR Activity by Person** table rolls up PRs created, approved, and changes-requested per person.
 
 #### Default Values

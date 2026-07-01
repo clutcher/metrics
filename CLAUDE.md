@@ -299,7 +299,7 @@ The Pull Requests page (`/pull-requests/`) lists **open** PRs with per-reviewer 
   - `METRICS_BITBUCKET_REPOSITORIES`: List of repository slugs to scan
   - `METRICS_BITBUCKET_URL`: API base (default: `https://api.bitbucket.org/`)
 
-**Member-group tabs** filter the list by the **PR author's** `member_groups` (same sidebar tabs as Current Tasks). Bot/CI accounts appear only if added to `METRICS_MEMBERS`.
+**Member-group tabs** filter the list by the **PR author's** `member_groups` (same sidebar tabs as Current Tasks). Bot/CI accounts appear only if added to `METRICS_MEMBERS`. An **Author filter** dropdown (above the PR table, `PullRequestFilterUtils`) further narrows the list to PRs created by one person, scoped to the options available within the active member-group tab; it matches on PR author only, not reviewers.
 
 **Approvals** are shown in two columns — **Main** and **Additional** — split by the reviewer's `level` from `METRICS_MEMBERS`, each chip ordered by seniority and labelled by Azure vote state: `✓` approved, `✓~` approved-with-suggestions, `⏳` waiting-for-author, `✗` rejected (no-vote reviewers are hidden). Plus two boolean gate columns:
 - `METRICS_PR_MAIN_REVIEWER_LEVELS`: Level names rendered in the Main column; everyone else is Additional (default: `['lead', 'arch']`)

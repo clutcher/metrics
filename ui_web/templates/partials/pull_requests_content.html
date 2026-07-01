@@ -18,5 +18,6 @@
     </article>
 {% else %}
     {% include "partials/pull_request_summary_table.html" %}
+    {% include "partials/pull_request_filters.html" %}
     {% include "partials/pull_requests_table.html" with pull_requests=pull_requests %}
 {% endif %}
