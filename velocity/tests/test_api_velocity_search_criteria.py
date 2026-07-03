@@ -155,3 +155,31 @@ class TestApiVelocitySearchCriteria(unittest.IsolatedAsyncioTestCase):
         # Then
         captured_enrichment = self.task_repository.mock.search.call_args[0][1]
         self.assertIsNone(captured_enrichment)
+
+    async def test_shouldZeroFillEveryGroupMemberWhenNoTasksFoundForScopedPeriod(self):
+        # Given
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 1, 31)
+        self.task_repository.mock.search.return_value = []
+
+        # When
+        reports = await self.calculator.calculate_scoped_velocity_reports_for_period(
+            start_date, end_date, scope_id="development-team"
+        )
+
+        # Then
+        reported_members = {report.metric_scope for report in reports}
+        self.assertCountEqual(["alice", "bob", "carol", "dave"], reported_members)
+        self.assertTrue(all(report.velocity == 0 and report.story_points == 0 for report in reports))
+
+    async def test_shouldReturnNoReportsWhenNoTasksFoundAndNoScopeToZeroFill(self):
+        # Given
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 1, 31)
+        self.task_repository.mock.search.return_value = []
+
+        # When
+        reports = await self.calculator.calculate_scoped_velocity_reports_for_period(start_date, end_date)
+
+        # Then
+        self.assertEqual([], reports)

@@ -3,7 +3,8 @@ from datetime import datetime
 
 from sd_metrics_lib.utils.time import Duration, TimeUnit, TimePolicy
 
-from tasks.app.domain.model.task import Task, Assignment, TimeTracking, SystemMetadata, TaskSearchCriteria
+from tasks.app.domain.model.task import Task, Assignment, TimeTracking, SystemMetadata, TaskSearchCriteria, \
+    WorkTimeExtractorType
 from ui_web.convertors.velocity_task_detail_convertor import VelocityTaskDetailConvertor
 from ui_web.facades.tasks_velocity_facade import TasksVelocityFacade
 from ui_web.tests.mocks.mock_task_search_api import MockTaskSearchApi
@@ -123,6 +124,30 @@ class TestTasksVelocityFacadeTaskRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(search_criteria.status_filter)
         self.assertIsNone(search_criteria.resolution_date_range)
         self.assertEqual((_START_DATE, _END_DATE), search_criteria.last_modified_date_range)
+
+    async def test_shouldBoundWorktimeToSelectedMonthWhenIncludeAllStatusesEnabled(self):
+        # Given
+        self.task_search_api.mock.search.return_value = []
+        facade = _create_facade(self.task_search_api, self.velocity_calculation_api)
+
+        # When
+        await facade.get_tasks(["alice"], _START_DATE, _END_DATE, include_all_statuses=True)
+
+        # Then
+        enrichment = self.task_search_api.mock.search.call_args[0][1]
+        self.assertEqual(WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED, enrichment.worktime_extractor_type)
+
+    async def test_shouldNotBoundWorktimeWhenIncludeAllStatusesDisabled(self):
+        # Given
+        self.task_search_api.mock.search.return_value = []
+        facade = _create_facade(self.task_search_api, self.velocity_calculation_api)
+
+        # When
+        await facade.get_tasks(["alice"], _START_DATE, _END_DATE)
+
+        # Then
+        enrichment = self.task_search_api.mock.search.call_args[0][1]
+        self.assertIsNone(enrichment.worktime_extractor_type)
 
 
 class TestTasksVelocityFacadeTeamTasks(unittest.IsolatedAsyncioTestCase):

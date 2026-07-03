@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Callable
 
 from sd_metrics_lib.utils.time import TimeUnit
 
-from tasks.app.domain.model.task import EnrichmentOptions
+from tasks.app.domain.model.task import EnrichmentOptions, WorkTimeExtractorType
 from velocity.app.api.api_for_velocity_calculation import ApiForVelocityCalculation
 from ..convertors.velocity_task_detail_convertor import VelocityTaskDetailConvertor
 from ..data.velocity_task_detail_data import TaskVelocityData
@@ -77,6 +77,7 @@ class TasksVelocityFacade:
         criteria = self._create_search_criteria(start_date, end_date, member_group_id, include_all_statuses, custom_query)
         enrichment = EnrichmentOptions(
             include_time_tracking=True,
+            worktime_extractor_type=WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED if include_all_statuses else None,
             worklog_transition_statuses=worklog_transition_statuses or self._in_progress_status_codes
         )
         return await self._task_search_api.search(criteria, enrichment)

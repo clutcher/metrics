@@ -63,9 +63,10 @@ class VelocityReportCalculator:
                                                            scope_id: Optional[str] = None,
                                                            task_filter: TaskFilter = None) -> List[VelocityReport]:
         tasks = await self._fetch_tasks_for_period(start_date, end_date, scope_id, task_filter)
+        allowed_scope_ids = await self._get_allowed_scope_ids(scope_id)
 
         if not tasks:
-            return []
+            return self._build_zero_velocity_reports(start_date, end_date, allowed_scope_ids)
 
         velocity_calculator = UserVelocityCalculator(
             task_provider=ProxyTaskProvider(tasks),
@@ -78,23 +79,31 @@ class VelocityReportCalculator:
 
         velocity_reports = []
 
-        allowed_scope_ids = await self._get_allowed_scope_ids(scope_id)
-
-        for scope_id, velocity in scope_velocities.items():
-            if allowed_scope_ids and scope_id not in allowed_scope_ids:
+        for member_id, velocity in scope_velocities.items():
+            if allowed_scope_ids and member_id not in allowed_scope_ids:
                 continue
 
-            story_points = scope_story_points.get(scope_id, 0.0)
+            story_points = scope_story_points.get(member_id, 0.0)
 
             velocity_reports.append(VelocityReport(
                 start_date=start_date,
                 end_date=end_date,
                 velocity=velocity,
                 story_points=story_points,
-                metric_scope=scope_id
+                metric_scope=member_id
             ))
 
         return velocity_reports
+
+    @staticmethod
+    def _build_zero_velocity_reports(start_date: datetime, end_date: datetime,
+                                     allowed_scope_ids: Optional[set]) -> List[VelocityReport]:
+        if not allowed_scope_ids:
+            return []
+        return [
+            VelocityReport(start_date=start_date, end_date=end_date, velocity=0, story_points=0, metric_scope=member_id)
+            for member_id in allowed_scope_ids
+        ]
 
     async def _get_allowed_scope_ids(self, member_group_id):
         allowed_scope_ids = None

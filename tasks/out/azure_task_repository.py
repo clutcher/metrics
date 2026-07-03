@@ -60,9 +60,11 @@ class AzureTaskRepository(TaskRepository):
         if search_criteria.assignee_filter:
             sorted_assignees = sorted(search_criteria.assignee_filter)
 
-        raw_queries = None
+        raw_queries = []
         if search_criteria.raw_jql_filter:
-            raw_queries = [search_criteria.raw_jql_filter]
+            raw_queries.append(search_criteria.raw_jql_filter)
+        if search_criteria.last_modified_date_range:
+            raw_queries.append(self._build_state_change_date_filter(search_criteria.last_modified_date_range))
 
         builder = AzureSearchQueryBuilder(
             projects=self.project_keys,
@@ -72,12 +74,21 @@ class AzureTaskRepository(TaskRepository):
             assignees=sorted_assignees,
             assignees_history=sorted_assignees_history,
             task_ids=search_criteria.id_filter,
-            last_modified_dates=search_criteria.last_modified_date_range,
             resolution_dates=search_criteria.resolution_date_range,
-            raw_queries=raw_queries
+            raw_queries=raw_queries or None
         )
 
         return builder.build_query()
+
+    @staticmethod
+    def _build_state_change_date_filter(date_range) -> str:
+        start_date, end_date = date_range
+        parts = []
+        if start_date:
+            parts.append(f"[Microsoft.VSTS.Common.StateChangeDate] >= '{start_date.strftime('%Y-%m-%d')}'")
+        if end_date:
+            parts.append(f"[Microsoft.VSTS.Common.StateChangeDate] <= '{end_date.strftime('%Y-%m-%d')}'")
+        return ' AND '.join(parts)
 
     async def _fetch_azure_tasks(self, query: str, include_time_tracking: bool = True):
         azure_client = self.connection.clients.get_work_item_tracking_client()

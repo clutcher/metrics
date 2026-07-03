@@ -2,7 +2,7 @@ import asyncio
 import calendar
 import json
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, time, timezone
 
 from ..container import ui_web_container
 from ..data.hierarchical_item_data import HierarchicalItemData
@@ -176,7 +176,9 @@ class BaseVelocityTasksView(GracefulTemplateView):
     def _parse_month_period(period: str):
         year, month = int(period[:4]), int(period[5:7])
         last_day = calendar.monthrange(year, month)[1]
-        return datetime(year, month, 1), datetime(year, month, last_day)
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        end_date = datetime.combine(datetime(year, month, last_day), time.max, tzinfo=timezone.utc)
+        return start_date, end_date
 
 
 class DevVelocityTasksView(BaseVelocityTasksView):
