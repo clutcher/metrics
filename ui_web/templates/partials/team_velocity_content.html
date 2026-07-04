@@ -22,5 +22,14 @@
     {% include 'partials/team_story_points_chart.html' %}
 </div>
 
-<div id="task-details-container"></div>
+<div id="task-details-container"
+     {% if selected_period %}
+     hx-get="{% url 'ui_web:team_velocity_tasks' %}?period={{ selected_period|urlencode }}&member_group_id={{ member_group_id|urlencode }}{% if use_custom_filter %}&use_custom_filter=true{% endif %}"
+     hx-trigger="load"
+     hx-swap="innerHTML"
+     {% endif %}>
+    {% if selected_period %}
+        {% include "partials/loading_indicator.html" %}
+    {% endif %}
+</div>
 {% endif %}

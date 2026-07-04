@@ -22,5 +22,14 @@
     {% include 'partials/dev_story_points_chart.html' %}
 </div>
 
-<div id="task-details-container"></div>
+<div id="task-details-container"
+     {% if selected_period %}
+     hx-get="{% url 'ui_web:dev_velocity_tasks' %}?period={{ selected_period|urlencode }}{% if selected_developers %}&developers={{ selected_developers|urlencode }}{% endif %}&member_group_id={{ member_group_id|urlencode }}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}"
+     hx-trigger="load"
+     hx-swap="innerHTML"
+     {% endif %}>
+    {% if selected_period %}
+        {% include "partials/loading_indicator.html" %}
+    {% endif %}
+</div>
 {% endif %}

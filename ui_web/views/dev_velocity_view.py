@@ -41,6 +41,8 @@ class DevVelocityView(GracefulTemplateView):
         context["include_all_statuses"] = include_all_statuses
         context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
+        context["selected_developers"] = self.request.GET.get('developers', '')
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
@@ -90,6 +92,8 @@ class DevVelocityChartView(GracefulTemplateView):
         context["include_all_statuses"] = include_all_statuses
         context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
+        context["selected_developers"] = self.request.GET.get('developers', '')
 
         velocity_thresholds = self.dev_velocity_facade.get_velocity_thresholds()
         context["velocity_thresholds"] = json.dumps(asdict(velocity_thresholds))
@@ -129,6 +133,8 @@ class DevStoryPointsChartView(GracefulTemplateView):
         context["include_all_statuses"] = include_all_statuses
         context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.dev_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
+        context["selected_developers"] = self.request.GET.get('developers', '')
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 6
@@ -187,6 +193,7 @@ class DevVelocityTasksView(BaseVelocityTasksView):
         context["task_groups"] = []
 
         developer_names, period, member_group_id, include_all_statuses, use_custom_filter = self._parse_request_params()
+        developer_names = self.tasks_velocity_facade.resolve_developer_names(developer_names, member_group_id)
 
         start_date, end_date = self._parse_month_period(period)
         velocity_tasks = asyncio.run(

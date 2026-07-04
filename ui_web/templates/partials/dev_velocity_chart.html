@@ -4,14 +4,16 @@
         <button class="button" id="showAll-dev-velocity">Show All</button>
         <button class="button" id="hideAll-dev-velocity">Hide All</button>
         <button class="button {% if velocity_rolling_avg %}is-info{% endif %}"
-                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
+                hx-push-url="{% url 'ui_web:dev_velocity' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
                 hx-target="#velocity-chart-container"
                 hx-swap="innerHTML"
                 hx-indicator="#loading-indicator">
             Rolling Average
         </button>
         <button class="button {% if include_all_statuses %}is-info{% endif %}"
-                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
+                hx-push-url="{% url 'ui_web:dev_velocity' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not include_all_statuses %}&all_tasks=true{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
                 hx-target="#velocity-chart-container"
                 hx-swap="innerHTML"
                 hx-indicator="#loading-indicator">
@@ -19,7 +21,8 @@
         </button>
         {% if has_custom_filter %}
         <button class="button {% if use_custom_filter %}is-info{% endif %}"
-                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-get="{% url 'ui_web:dev_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
+                hx-push-url="{% url 'ui_web:dev_velocity' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if include_all_statuses %}&all_tasks=true{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}&developers={{ selected_developers|urlencode }}{% endif %}"
                 hx-target="#velocity-chart-container"
                 hx-swap="innerHTML"
                 hx-indicator="#loading-indicator">
@@ -112,7 +115,9 @@
         const thresholdAnnotations = buildThresholdAnnotations(thresholdsData.thresholds);
 
         const taskDetailsBaseUrl = '{% url "ui_web:dev_velocity_tasks" %}';
+        const dashboardBaseUrl = '{% url "ui_web:dev_velocity" %}';
         const memberGroupId = '{{ member_group_id }}';
+        const rollingAvg = '{{ velocity_rolling_avg }}';
         const allTasks = '{{ include_all_statuses|yesno:"true,false" }}';
         const useCustomFilter = '{{ use_custom_filter|yesno:"true,false" }}';
 
@@ -148,12 +153,15 @@
                         const period = chartData.labels[elements[0].index];
                         const developers = getVisibleDevelopers(chart);
                         if (developers.length === 0) return;
-                        const url = taskDetailsBaseUrl + '?developers=' + encodeURIComponent(developers.join(','))
-                            + '&period=' + encodeURIComponent(period)
+                        const someHidden = developers.length < chartData.data.length;
+                        const sharedParams = '?period=' + encodeURIComponent(period)
+                            + (someHidden ? '&developers=' + encodeURIComponent(developers.join(',')) : '')
                             + '&member_group_id=' + encodeURIComponent(memberGroupId)
+                            + (rollingAvg && rollingAvg !== '0' ? '&rolling_avg=' + encodeURIComponent(rollingAvg) : '')
                             + (allTasks === 'true' ? '&all_tasks=true' : '')
                             + (useCustomFilter === 'true' ? '&use_custom_filter=true' : '');
-                        htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
+                        history.pushState(null, '', dashboardBaseUrl + sharedParams);
+                        htmx.ajax('GET', taskDetailsBaseUrl + sharedParams, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
                             document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
                         });
                     },

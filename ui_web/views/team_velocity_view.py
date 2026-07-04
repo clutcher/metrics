@@ -23,6 +23,7 @@ class TeamVelocityView(GracefulTemplateView):
         team_id = kwargs.get('team_id')
         member_group_id = team_id or self.request.GET.get('member_group_id')
         rolling_avg = int(self.request.GET.get('rolling_avg', 0))
+        use_custom_filter = self.request.GET.get('use_custom_filter') == 'true'
 
         context["month_velocity"] = "{}"
         context["month_sp"] = "{}"
@@ -30,13 +31,15 @@ class TeamVelocityView(GracefulTemplateView):
         context["build_page_title"] = 'Team Velocity Dashboard'
         context["velocity_rolling_avg"] = rolling_avg
         context["member_group_id"] = member_group_id or ''
+        context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.team_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 12
 
         velocity_reports_data = asyncio.run(
-            self.team_velocity_facade.get_velocity_reports_data(member_group_id, 12 + extra_periods)
+            self.team_velocity_facade.get_velocity_reports_data(member_group_id, 12 + extra_periods, use_custom_filter)
         )
 
         velocity_chart = self.team_velocity_facade.get_velocity_chart_data(
@@ -95,6 +98,7 @@ class TeamVelocityChartView(GracefulTemplateView):
         context["member_group_id"] = member_group_id or ''
         context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.team_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
 
         extra_periods = rolling_avg - 1 if rolling_avg > 0 else 0
         display_periods = 12
@@ -129,6 +133,7 @@ class TeamStoryPointsChartView(GracefulTemplateView):
         context["member_group_id"] = member_group_id or ''
         context["use_custom_filter"] = use_custom_filter
         context["has_custom_filter"] = self.team_velocity_facade.has_custom_filter(member_group_id)
+        context["selected_period"] = self.request.GET.get('period', '')
 
         velocity_reports_data = asyncio.run(
             self.team_velocity_facade.get_velocity_reports_data(

@@ -2,7 +2,8 @@
     <h3 class="title is-4">📈 Velocity{% if velocity_rolling_avg %} ({{ velocity_rolling_avg }}M Avg){% endif %}{% if use_custom_filter %} — Member Group Custom Filter{% endif %}</h3>
     <div class="buttons are-small">
         <button class="button {% if velocity_rolling_avg %}is-info{% endif %}"
-                hx-get="{% url 'ui_web:team_velocity_chart' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-get="{% url 'ui_web:team_velocity_chart' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}{% endif %}"
+                hx-push-url="{% url 'ui_web:team_velocity' %}?member_group_id={{ member_group_id }}{% if not velocity_rolling_avg %}&rolling_avg=3{% endif %}{% if use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}{% endif %}"
                 hx-target="#team-velocity-chart-container"
                 hx-swap="innerHTML"
                 hx-indicator="#loading-indicator">
@@ -10,7 +11,8 @@
         </button>
         {% if has_custom_filter %}
         <button class="button {% if use_custom_filter %}is-info{% endif %}"
-                hx-get="{% url 'ui_web:team_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}"
+                hx-get="{% url 'ui_web:team_velocity_chart' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}{% endif %}"
+                hx-push-url="{% url 'ui_web:team_velocity' %}?member_group_id={{ member_group_id }}{% if velocity_rolling_avg %}&rolling_avg={{ velocity_rolling_avg }}{% endif %}{% if not use_custom_filter %}&use_custom_filter=true{% endif %}{% if selected_period %}&period={{ selected_period|urlencode }}{% endif %}"
                 hx-target="#team-velocity-chart-container"
                 hx-swap="innerHTML"
                 hx-indicator="#loading-indicator">
@@ -43,7 +45,9 @@
 
         const chartData = {{ month_velocity|safe }};
         const taskDetailsBaseUrl = '{% url "ui_web:team_velocity_tasks" %}';
+        const dashboardBaseUrl = '{% url "ui_web:team_velocity" %}';
         const memberGroupId = '{{ member_group_id }}';
+        const rollingAvg = '{{ velocity_rolling_avg }}';
         const useCustomFilter = '{{ use_custom_filter|yesno:"true,false" }}';
 
         if (chartData && chartData.labels && chartData.data) {
@@ -65,10 +69,12 @@
                     onClick: function(event, elements) {
                         if (!elements || elements.length === 0) return;
                         const period = chartData.labels[elements[0].index];
-                        const url = taskDetailsBaseUrl + '?period=' + encodeURIComponent(period)
+                        const sharedParams = '?period=' + encodeURIComponent(period)
                             + '&member_group_id=' + encodeURIComponent(memberGroupId)
+                            + (rollingAvg && rollingAvg !== '0' ? '&rolling_avg=' + encodeURIComponent(rollingAvg) : '')
                             + (useCustomFilter === 'true' ? '&use_custom_filter=true' : '');
-                        htmx.ajax('GET', url, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
+                        history.pushState(null, '', dashboardBaseUrl + sharedParams);
+                        htmx.ajax('GET', taskDetailsBaseUrl + sharedParams, {target: '#task-details-container', swap: 'innerHTML'}).then(function() {
                             document.getElementById('task-details-container').scrollIntoView({behavior: 'smooth'});
                         });
                     },

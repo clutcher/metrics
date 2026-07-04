@@ -28,6 +28,12 @@ class TasksVelocityFacade:
         self._development_stage_status_codes = development_stage_status_codes
         self._member_group_custom_filters = member_group_custom_filters
 
+    def resolve_developer_names(self, developer_names: List[str],
+                                member_group_id: Optional[str] = None) -> List[str]:
+        if developer_names:
+            return developer_names
+        return self._resolve_member_group_members(member_group_id) or []
+
     async def get_tasks(self, developer_names: List[str],
                         start_date: datetime, end_date: datetime,
                         member_group_id: Optional[str] = None,

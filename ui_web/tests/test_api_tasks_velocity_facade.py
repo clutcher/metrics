@@ -77,6 +77,32 @@ class TestTasksVelocityFacadeTaskRetrieval(unittest.IsolatedAsyncioTestCase):
         developer_ids = {entry.assignment.assignee.id for entry in result}
         self.assertEqual({"alice", "bob"}, developer_ids)
 
+    def test_shouldResolveAllMemberGroupMembersWhenDeveloperNamesEmpty(self):
+        # Given
+        facade = _create_facade(
+            self.task_search_api, self.velocity_calculation_api,
+            member_group_members={"backend-team": ["alice", "bob"]}
+        )
+
+        # When
+        resolved = facade.resolve_developer_names([], member_group_id="backend-team")
+
+        # Then
+        self.assertCountEqual(["alice", "bob"], resolved)
+
+    def test_shouldKeepExplicitDeveloperNamesWhenProvided(self):
+        # Given
+        facade = _create_facade(
+            self.task_search_api, self.velocity_calculation_api,
+            member_group_members={"backend-team": ["alice", "bob"]}
+        )
+
+        # When
+        resolved = facade.resolve_developer_names(["alice"], member_group_id="backend-team")
+
+        # Then
+        self.assertEqual(["alice"], resolved)
+
     async def test_shouldApplyCustomJqlFilterWhenCustomFilterEnabledForMemberGroup(self):
         # Given
         self.task_search_api.mock.search.return_value = []
