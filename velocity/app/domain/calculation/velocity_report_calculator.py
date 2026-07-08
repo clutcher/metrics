@@ -119,7 +119,7 @@ class VelocityReportCalculator:
         if self._should_search_all_statuses(task_filter):
             search_criteria.status_filter = None
             search_criteria.resolution_date_range = None
-            search_criteria.last_modified_date_range = (start_date, end_date)
+            search_criteria.state_change_date_range = (start_date, end_date)
         else:
             search_criteria.resolution_date_range = (start_date, end_date)
 

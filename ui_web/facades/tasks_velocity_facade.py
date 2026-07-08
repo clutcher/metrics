@@ -96,7 +96,7 @@ class TasksVelocityFacade:
         if include_all_statuses:
             criteria.status_filter = None
             criteria.resolution_date_range = None
-            criteria.last_modified_date_range = (start_date, end_date)
+            criteria.state_change_date_range = (start_date, end_date)
         self._apply_member_group_filter(criteria, member_group_id, custom_query)
         return criteria
 

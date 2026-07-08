@@ -40,9 +40,9 @@ class TestApiVelocitySearchCriteria(unittest.IsolatedAsyncioTestCase):
         captured_criteria = self.task_repository.mock.search.call_args[0][0]
         self.assertEqual(captured_criteria.resolution_date_range, (start_date, end_date))
         self.assertEqual(captured_criteria.status_filter, self.status_filter)
-        self.assertIsNone(captured_criteria.last_modified_date_range)
+        self.assertIsNone(captured_criteria.state_change_date_range)
 
-    async def test_shouldUseLastModifiedDateRangeWhenIncludeAllStatusesIsTrue(self):
+    async def test_shouldUseStateChangeDateRangeWhenIncludeAllStatusesIsTrue(self):
         # Given
         start_date = datetime(2024, 1, 1)
         end_date = datetime(2024, 1, 31)
@@ -55,7 +55,7 @@ class TestApiVelocitySearchCriteria(unittest.IsolatedAsyncioTestCase):
 
         # Then
         captured_criteria = self.task_repository.mock.search.call_args[0][0]
-        self.assertEqual(captured_criteria.last_modified_date_range, (start_date, end_date))
+        self.assertEqual(captured_criteria.state_change_date_range, (start_date, end_date))
         self.assertIsNone(captured_criteria.status_filter)
         self.assertIsNone(captured_criteria.resolution_date_range)
 
@@ -87,7 +87,7 @@ class TestApiVelocitySearchCriteria(unittest.IsolatedAsyncioTestCase):
 
         # Then
         captured_criteria = self.task_repository.mock.search.call_args[0][0]
-        self.assertEqual(captured_criteria.last_modified_date_range, (start_date, end_date))
+        self.assertEqual(captured_criteria.state_change_date_range, (start_date, end_date))
         self.assertIsNone(captured_criteria.status_filter)
         self.assertIsNone(captured_criteria.resolution_date_range)
 

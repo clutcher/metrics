@@ -1,4 +1,13 @@
-{% if show_available_members %}
+{% if error %}
+<article class="message is-danger">
+    <div class="message-header">
+        <p>Error</p>
+    </div>
+    <div class="message-body">
+        {{ error }}
+    </div>
+</article>
+{% elif show_available_members %}
 <div class="box">
     <div class="content">
         <h3 class="title is-4">Available Team Members</h3>

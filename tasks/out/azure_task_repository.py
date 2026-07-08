@@ -63,8 +63,8 @@ class AzureTaskRepository(TaskRepository):
         raw_queries = []
         if search_criteria.raw_jql_filter:
             raw_queries.append(search_criteria.raw_jql_filter)
-        if search_criteria.last_modified_date_range:
-            raw_queries.append(self._build_state_change_date_filter(search_criteria.last_modified_date_range))
+        if search_criteria.state_change_date_range:
+            raw_queries.append(self._build_state_change_date_filter(search_criteria.state_change_date_range))
 
         builder = AzureSearchQueryBuilder(
             projects=self.project_keys,
@@ -74,6 +74,7 @@ class AzureTaskRepository(TaskRepository):
             assignees=sorted_assignees,
             assignees_history=sorted_assignees_history,
             task_ids=search_criteria.id_filter,
+            last_modified_dates=search_criteria.last_modified_date_range,
             resolution_dates=search_criteria.resolution_date_range,
             raw_queries=raw_queries or None
         )
@@ -180,8 +181,8 @@ class AzureTaskRepository(TaskRepository):
 
     def _create_worktime_extractor_from_criteria(self, criteria: Optional[TaskSearchCriteria]) -> WorkTimeExtractor:
         if self.worktime_extractor_type == WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED:
-            if criteria and criteria.last_modified_date_range:
-                start_date, end_date = criteria.last_modified_date_range
+            if criteria:
+                start_date, end_date = criteria.resolved_state_change_date_range() or (None, None)
                 if start_date and end_date:
                     return BoundarySimpleWorkTimeExtractor(start_date, end_date)
         elif self.worktime_extractor_type == WorkTimeExtractorType.BOUNDARY_FROM_RESOLUTION:

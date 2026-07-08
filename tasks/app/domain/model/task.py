@@ -95,8 +95,12 @@ class TaskSearchCriteria:
     assignees_history_filter: Optional[List[str]] = None
     id_filter: Optional[List[str]] = None
     last_modified_date_range: Optional[Tuple[Optional[datetime], Optional[datetime]]] = None
+    state_change_date_range: Optional[Tuple[Optional[datetime], Optional[datetime]]] = None
     resolution_date_range: Optional[Tuple[Optional[datetime], Optional[datetime]]] = None
     raw_jql_filter: Optional[str] = None
+
+    def resolved_state_change_date_range(self) -> Optional[Tuple[Optional[datetime], Optional[datetime]]]:
+        return self.state_change_date_range or self.last_modified_date_range
 
 
 @dataclass(slots=True)

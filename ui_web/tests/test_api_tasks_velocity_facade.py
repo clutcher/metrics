@@ -149,7 +149,7 @@ class TestTasksVelocityFacadeTaskRetrieval(unittest.IsolatedAsyncioTestCase):
         search_criteria = self.task_search_api.mock.search.call_args[0][0]
         self.assertIsNone(search_criteria.status_filter)
         self.assertIsNone(search_criteria.resolution_date_range)
-        self.assertEqual((_START_DATE, _END_DATE), search_criteria.last_modified_date_range)
+        self.assertEqual((_START_DATE, _END_DATE), search_criteria.state_change_date_range)
 
     async def test_shouldBoundWorktimeToSelectedMonthWhenIncludeAllStatusesEnabled(self):
         # Given

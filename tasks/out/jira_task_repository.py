@@ -87,7 +87,7 @@ class JiraTaskRepository(TaskRepository):
             assignees=sorted_assignees,
             assignees_history=sorted_assignees_history,
             task_ids=search_criteria.id_filter,
-            last_modified_dates=search_criteria.last_modified_date_range,
+            last_modified_dates=search_criteria.resolved_state_change_date_range(),
             resolution_dates=search_criteria.resolution_date_range,
             raw_queries=raw_queries
         )
@@ -112,8 +112,8 @@ class JiraTaskRepository(TaskRepository):
 
     def _create_worktime_extractor_from_criteria(self, criteria: Optional[TaskSearchCriteria]) -> WorkTimeExtractor:
         if self.worktime_extractor_type == WorkTimeExtractorType.BOUNDARY_FROM_LAST_MODIFIED:
-            if criteria and criteria.last_modified_date_range:
-                start_date, end_date = criteria.last_modified_date_range
+            if criteria:
+                start_date, end_date = criteria.resolved_state_change_date_range() or (None, None)
                 if start_date and end_date:
                     return BoundarySimpleWorkTimeExtractor(start_date, end_date)
 
