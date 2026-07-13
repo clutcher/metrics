@@ -57,6 +57,39 @@ class TestReleaseFilter(unittest.TestCase):
         self.assertTrue(result)
 
 
+class TestIterationFilter(unittest.TestCase):
+
+    def test_shouldOfferDistinctIterationsSortedByNaturalNameWhenTasksHaveIterations(self):
+        # given
+        tasks = [task_data("TASK-1", iteration="Sprint 10"), task_data("TASK-2", iteration="Sprint 2")]
+
+        # when
+        field = _field_filter("iteration").to_field(tasks, None)
+
+        # then
+        self.assertEqual(["Sprint 2", "Sprint 10"], [option.label for option in field.options])
+
+    def test_shouldMatchTaskWhenIterationEqualsSelectedValue(self):
+        # given
+        task = task_data("TASK-1", iteration="Sprint 12")
+
+        # when
+        result = _field_filter("iteration").matches(task, "Sprint 12")
+
+        # then
+        self.assertTrue(result)
+
+    def test_shouldReturnNoFieldWhenNoTaskHasIteration(self):
+        # given
+        tasks = [task_data("TASK-1", iteration=None)]
+
+        # when
+        field = _field_filter("iteration").to_field(tasks, None)
+
+        # then
+        self.assertIsNone(field)
+
+
 class TestAssigneeFilter(unittest.TestCase):
 
     def test_shouldPrependUnassignedOptionWhenSomeTasksHaveNoAssignee(self):

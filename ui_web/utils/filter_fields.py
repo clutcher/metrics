@@ -167,6 +167,12 @@ def _release_values(task: TaskData) -> LabelledValues:
     return [(release.id, release.name) for release in task.releases or []]
 
 
+def _iteration_value(task: TaskData) -> LabelledValue:
+    if not task.iteration:
+        return None
+    return task.iteration, task.iteration
+
+
 def _health_value(task: TaskData) -> Optional[str]:
     if not task.forecast or not task.forecast.health_status:
         return None
@@ -186,6 +192,7 @@ _FIELD_FILTERS = {
     'stage': SingleValueFilter('stage', 'Stages', _stage_value),
     'status': SingleValueFilter('status', 'Statuses', _status_value),
     'release': MultiValueFilter('release', 'Releases', _release_values),
+    'iteration': SingleValueFilter('iteration', 'Iterations', _iteration_value),
     'health': FixedOptionsFilter('health', 'Health', _health_options(), _health_value, requires_enrichment=True),
 }
 

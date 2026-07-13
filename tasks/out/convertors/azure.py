@@ -28,6 +28,7 @@ class AzureTaskConverter:
         self._populate_system_metadata(task, azure_task)
         self._populate_parent(task, azure_task)
         self._populate_release(task, azure_task)
+        self._populate_iteration(task, azure_task)
         self._populate_custom_sort_fields(task, azure_task)
         self._populate_child_tasks(task, azure_task)
         return task
@@ -110,6 +111,16 @@ class AzureTaskConverter:
     @staticmethod
     def _split_release_segments(text: str) -> list:
         return [segment.strip() for segment in text.split(',') if segment.strip()]
+
+    def _populate_iteration(self, task: Task, azure_task) -> None:
+        field = self.config.azure.iteration_field
+        if not field:
+            return
+        raw_value = azure_task.fields.get(field)
+        if not raw_value:
+            return
+        text = str(raw_value)
+        task.iteration = text.split('\\')[-1] if '\\' in text else text
 
     def _populate_custom_sort_fields(self, task: Task, azure_task) -> None:
         custom_sort_fields = {}

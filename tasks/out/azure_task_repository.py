@@ -102,8 +102,10 @@ class AzureTaskRepository(TaskRepository):
             "System.Parent",
             "Microsoft.VSTS.Common.Priority"
         ])
-        if self.config.azure.release_field:
+        if self.config.azure.release_field and self.config.azure.release_field not in additional_fields:
             additional_fields.append(self.config.azure.release_field)
+        if self.config.azure.iteration_field and self.config.azure.iteration_field not in additional_fields:
+            additional_fields.append(self.config.azure.iteration_field)
         additional_fields.extend(self.config.sorting.custom_sort_field_names())
 
         base_provider = AzureTaskProvider(

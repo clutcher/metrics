@@ -12,13 +12,15 @@ def load_tasks_config() -> TasksConfig:
         jira_email=settings.METRICS_JIRA_EMAIL,
         jira_api_token=settings.METRICS_JIRA_API_TOKEN,
         story_point_custom_field_id=settings.METRICS_STORY_POINT_CUSTOM_FIELD_ID,
-        release_field=settings.METRICS_JIRA_RELEASE_FIELD or None
+        release_field=settings.METRICS_JIRA_RELEASE_FIELD or None,
+        iteration_field=settings.METRICS_JIRA_ITERATION_FIELD or None
     )
 
     azure = AzureConfig(
         azure_organization_url=settings.METRICS_AZURE_ORGANIZATION_URL,
         azure_pat=settings.METRICS_AZURE_PAT,
-        release_field=settings.METRICS_AZURE_RELEASE_FIELD or None
+        release_field=settings.METRICS_AZURE_RELEASE_FIELD or None,
+        iteration_field=settings.METRICS_AZURE_ITERATION_FIELD or None
     )
     
     project = ProjectConfig(

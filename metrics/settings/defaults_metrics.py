@@ -49,6 +49,9 @@ METRICS_STORY_POINT_CUSTOM_FIELD_ID = env.str('METRICS_STORY_POINT_CUSTOM_FIELD_
 METRICS_JIRA_RELEASE_FIELD = env.str('METRICS_JIRA_RELEASE_FIELD', default='fixVersions')
 METRICS_AZURE_RELEASE_FIELD = env.str('METRICS_AZURE_RELEASE_FIELD', default='System.IterationPath')
 
+METRICS_JIRA_ITERATION_FIELD = env.str('METRICS_JIRA_ITERATION_FIELD', default='')
+METRICS_AZURE_ITERATION_FIELD = env.str('METRICS_AZURE_ITERATION_FIELD', default='System.IterationPath')
+
 METRICS_WORKING_DAYS_PER_MONTH = env.int('METRICS_WORKING_DAYS_PER_MONTH', default=22)
 METRICS_IDEAL_HOURS_PER_DAY = env.float('METRICS_IDEAL_HOURS_PER_DAY', default=4.0)
 METRICS_STORY_POINTS_TO_IDEAL_HOURS_CONVERTION_RATIO = env.float('METRICS_STORY_POINTS_TO_IDEAL_HOURS_CONVERTION_RATIO',
@@ -67,7 +70,7 @@ METRICS_CURRENT_TASKS_LAZY_LOADING = env.bool('METRICS_CURRENT_TASKS_LAZY_LOADIN
 METRICS_AVAILABLE_MEMBER_STAGES_FILTER = env.list('METRICS_AVAILABLE_MEMBER_STAGES_FILTER', default=[])
 
 METRICS_TASK_FILTER_FIELDS = env.list('METRICS_TASK_FILTER_FIELDS',
-                                      default=['health', 'priority', 'release', 'assignee', 'parent'])
+                                      default=['health', 'priority', 'release', 'iteration', 'assignee', 'parent'])
 
 # Velocity time unit configuration
 METRICS_DEFAULT_VELOCITY_TIME_UNIT = env.str('METRICS_DEFAULT_VELOCITY_TIME_UNIT', default='DAY')

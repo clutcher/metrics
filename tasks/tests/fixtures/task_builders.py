@@ -24,6 +24,7 @@ class TaskBuilder:
         self._url: Optional[str] = None
         self._child_tasks_count: Optional[int] = None
         self._releases: Optional[List[Release]] = None
+        self._iteration: Optional[str] = None
     
     @classmethod
     def sprint_story(cls) -> 'TaskBuilder':
@@ -179,6 +180,10 @@ class TaskBuilder:
         self._releases = [Release(id=name, name=name) for name in release_names]
         return self
 
+    def with_iteration(self, iteration_name: str) -> 'TaskBuilder':
+        self._iteration = iteration_name
+        return self
+
     def build(self) -> Task:
         assignment = Assignment(
             assignee=self._assignee,
@@ -208,7 +213,8 @@ class TaskBuilder:
             story_points=self._story_points,
             child_tasks_count=self._child_tasks_count,
             child_tasks=self._child_tasks if self._child_tasks else None,
-            releases=self._releases
+            releases=self._releases,
+            iteration=self._iteration
         )
 
 

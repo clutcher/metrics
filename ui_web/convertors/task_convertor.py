@@ -37,6 +37,7 @@ class TaskConvertor:
             priority=task.priority,
             child_tasks_count=task.child_tasks_count or 0,
             stage=task.stage,
+            iteration=task.iteration,
             forecast=self._convert_forecast_to_data(task.forecast) if task.forecast else None,
             child_tasks=child_tasks_data,
             parent=parent_data,

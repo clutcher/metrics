@@ -52,6 +52,8 @@ class JiraTaskRepository(TaskRepository):
             additional_fields.insert(0, 'changelog')
         if self.config.jira.release_field:
             additional_fields.append(self.config.jira.release_field)
+        if self.config.jira.iteration_field and self.config.jira.iteration_field not in additional_fields:
+            additional_fields.append(self.config.jira.iteration_field)
         additional_fields.extend(self.config.sorting.custom_sort_field_names())
 
         base_provider = JiraTaskProvider(

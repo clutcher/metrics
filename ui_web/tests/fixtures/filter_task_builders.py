@@ -6,7 +6,7 @@ from ui_web.data.task_data import (
 
 def task_data(task_id="TASK-1", priority=None, assignee_id=None, member_group=None, releases=None,
               parent_id=None, parent_title="", stage=None, status="In Progress", story_points=None,
-              health=None):
+              health=None, iteration=None):
     assignee = AssigneeData(id=assignee_id, display_name=assignee_id) if assignee_id else None
     group = MemberGroupData(id=member_group, name=member_group) if member_group else None
     release_data = [ReleaseData(id=release_id, name=name) for release_id, name in releases] if releases else None
@@ -28,6 +28,7 @@ def task_data(task_id="TASK-1", priority=None, assignee_id=None, member_group=No
         releases=release_data,
         parent=parent,
         stage=stage,
+        iteration=iteration,
         story_points=story_points,
         forecast=forecast
     )

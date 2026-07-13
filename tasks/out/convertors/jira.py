@@ -27,6 +27,7 @@ class JiraTaskConverter:
         self._populate_system_metadata(task, jira_task)
         self._populate_parent(task, jira_task)
         self._populate_release(task, jira_task)
+        self._populate_iteration(task, jira_task)
         self._populate_custom_sort_fields(task, jira_task)
         self._populate_child_tasks(task, jira_task)
         return task
@@ -123,6 +124,25 @@ class JiraTaskConverter:
     @staticmethod
     def _split_comma_separated_names(raw: str) -> List[Release]:
         return [Release(id=name, name=name) for name in (segment.strip() for segment in raw.split(',')) if name]
+
+    def _populate_iteration(self, task: Task, jira_task: dict) -> None:
+        field = self.config.jira.iteration_field
+        if not field:
+            return
+        value = jira_task.get('fields', {}).get(field)
+        task.iteration = self._extract_iteration_name(value)
+
+    @staticmethod
+    def _extract_iteration_name(value) -> Optional[str]:
+        if not value:
+            return None
+        if isinstance(value, list):
+            return JiraTaskConverter._extract_iteration_name(value[-1]) if value else None
+        if isinstance(value, dict):
+            return value.get('name') or None
+        if isinstance(value, str):
+            return value.strip() or None
+        return None
 
     def _populate_custom_sort_fields(self, task: Task, jira_task: dict) -> None:
         task_fields = jira_task.get('fields', {})

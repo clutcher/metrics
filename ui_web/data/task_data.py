@@ -59,6 +59,7 @@ class TaskData:
     child_tasks_count: int = 0
     parent: Optional['TaskData'] = None
     stage: Optional[str] = None
+    iteration: Optional[str] = None
     forecast: Optional[ForecastData] = None
     releases: Optional[List[ReleaseData]] = None
     custom_sort_fields: Optional[Dict[str, str]] = None
