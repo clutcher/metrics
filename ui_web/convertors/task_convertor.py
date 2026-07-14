@@ -1,14 +1,20 @@
-from typing import Optional
+from typing import List, Optional
 
 from sd_metrics_lib.utils.time import Duration, TimeUnit, TimePolicy
 
 from forecast.app.domain.model.forecast import Forecast
-from tasks.app.domain.model.task import Task, Assignment, TimeTracking, SystemMetadata
+from tasks.app.domain.model.task import Task, Assignment, Release, TimeTracking, SystemMetadata
 from ..data.member_data import MemberGroupData
 from ..data.task_data import (
     TaskData, AssigneeData, AssignmentData, TimeTrackingData, SystemMetadataData,
     ForecastData, ReleaseData
 )
+
+
+def to_release_data_list(releases: Optional[List[Release]]) -> Optional[List[ReleaseData]]:
+    if not releases:
+        return None
+    return [ReleaseData(id=release.id, name=release.name) for release in releases]
 
 
 class TaskConvertor:
@@ -23,9 +29,7 @@ class TaskConvertor:
 
         parent_data = self.convert_task_to_data(task.parent) if task.parent else None
 
-        releases_data = None
-        if task.releases:
-            releases_data = [ReleaseData(id=release.id, name=release.name) for release in task.releases]
+        releases_data = to_release_data_list(task.releases)
 
         return TaskData(
             id=task.id,

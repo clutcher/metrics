@@ -28,10 +28,18 @@ class PullRequestsView(GracefulTemplateView):
         context["selected_member_group_id"] = member_group_id
         author_name = self.request.GET.get('author') or None
         context["selected_author"] = author_name
+        iteration = self.request.GET.get('iteration') or None
+        context["selected_iteration"] = iteration
+        release = self.request.GET.get('release') or None
+        context["selected_release"] = release
 
         pull_requests = asyncio.run(self.pull_requests_facade.get_pull_requests(member_group_id))
         context["author_options"] = PullRequestFilterUtils.build_author_options(pull_requests)
+        context["iteration_options"] = PullRequestFilterUtils.build_iteration_options(pull_requests)
+        context["release_options"] = PullRequestFilterUtils.build_release_options(pull_requests)
         pull_requests = PullRequestFilterUtils.filter_by_author(pull_requests, author_name)
+        pull_requests = PullRequestFilterUtils.filter_by_iteration(pull_requests, iteration)
+        pull_requests = PullRequestFilterUtils.filter_by_release(pull_requests, release)
         context["pull_requests"] = pull_requests
         context["activity_summary"] = PullRequestSummaryUtils.build_person_activity(pull_requests)
         context["success"] = True

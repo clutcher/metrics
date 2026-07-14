@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from .task_data import ReleaseData
+
 
 @dataclass(slots=True)
 class ApprovalData:
@@ -23,6 +25,8 @@ class LinkedTaskData:
     id: str
     url: Optional[str] = None
     status: Optional[str] = None
+    iteration: Optional[str] = None
+    releases: Optional[List[ReleaseData]] = None
 
 
 @dataclass(slots=True)

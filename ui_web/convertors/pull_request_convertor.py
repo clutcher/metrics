@@ -5,6 +5,7 @@ from pull_requests.app.domain.model.pull_request import (
 )
 from tasks.app.domain.model.task import Task
 from ..data.pull_request_data import ApprovalData, LinkedTaskData, PolicyResultData, PullRequestData
+from .task_convertor import to_release_data_list
 
 _STALE_APPROVAL_STATE = "stale_approved"
 
@@ -91,6 +92,8 @@ class PullRequestConvertor:
             return LinkedTaskData(
                 id=linked_task.id,
                 url=linked_task.system_metadata.url if linked_task.system_metadata else None,
-                status=linked_task.system_metadata.original_status if linked_task.system_metadata else None
+                status=linked_task.system_metadata.original_status if linked_task.system_metadata else None,
+                iteration=linked_task.iteration,
+                releases=to_release_data_list(linked_task.releases)
             )
         return LinkedTaskData(id=linked_task_id)

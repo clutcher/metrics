@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple
 
-from natsort import natsort_keygen, ns
 from sd_metrics_lib.utils.enums import HealthStatus
 
+from .natural_sort import NATURAL_KEY
 from ..data.task_data import TaskData
 from ..data.task_filter_data import (
     FilterField, FilterOption, NO_PARENT_OPTION_ID, UNASSIGNED_OPTION_ID
@@ -12,12 +12,10 @@ from ..data.task_filter_data import (
 LabelledValue = Optional[Tuple[str, str]]
 LabelledValues = List[Tuple[str, str]]
 
-_NATURAL_KEY = natsort_keygen(alg=ns.IGNORECASE)
-
 
 def _sorted_options(labels_by_id: dict) -> List[FilterOption]:
     return [FilterOption(id=value_id, label=label)
-            for value_id, label in sorted(labels_by_id.items(), key=lambda pair: _NATURAL_KEY(pair[1]))]
+            for value_id, label in sorted(labels_by_id.items(), key=lambda pair: NATURAL_KEY(pair[1]))]
 
 
 class FieldFilter(ABC):
