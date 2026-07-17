@@ -1,0 +1,14 @@
+<div class="columns is-mobile board-columns">
+    {% for column in columns %}
+    <div class="column board-column">
+        <h2 class="title is-6">{{ column.name }} ({{ column.count }})</h2>
+        <div class="board-column-body">
+            {% for task in column.items %}
+                {% include "partials/task_card.html" %}
+            {% empty %}
+                <p class="has-text-grey-light is-size-7">No tasks</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>

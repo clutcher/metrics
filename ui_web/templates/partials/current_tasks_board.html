@@ -1,6 +1,8 @@
 {% include "partials/current_tasks_filters.html" %}
 
-{% if has_groups %}
+{% if view_mode == "board" %}
+    {% include "partials/task_board.html" with columns=tasks %}
+{% elif has_groups %}
     {% include "partials/group_renderer.html" with items=tasks level=0 %}
 {% elif not tasks and task_filter_panel.has_active_selection %}
     <p class="has-text-grey">No tasks match the selected filters.</p>

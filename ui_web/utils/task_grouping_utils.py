@@ -36,6 +36,26 @@ class TaskGroupingUtils:
         return TaskSortUtils.sort_tasks(ui_tasks, sorting_config)
 
     @staticmethod
+    def group_tasks_by_all_stage_columns(
+            ui_tasks: List[TaskData],
+            workflow_config: WorkflowConfig,
+            sorting_config: Optional[SortingConfig] = None
+    ) -> List[HierarchicalItemData]:
+        stages_dict = TaskGroupingUtils._group_ui_tasks_by_stage(ui_tasks)
+
+        columns = []
+        for stage_name in workflow_config.stages.keys():
+            stage_tasks = TaskSortUtils.sort_tasks(stages_dict.get(stage_name, []), sorting_config)
+            columns.append(HierarchicalItemData(
+                name=stage_name,
+                type="stage",
+                count=len(stage_tasks),
+                items=stage_tasks
+            ))
+
+        return columns
+
+    @staticmethod
     def group_tasks_by_key(tasks: List[TaskData],
                             key_extractor: Callable[[TaskData], Optional[str]],
                             group_type: str) -> List[HierarchicalItemData]:

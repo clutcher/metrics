@@ -34,12 +34,14 @@ class CurrentTasksView(GracefulTemplateView):
     def populate_context(self, context, **kwargs):
         group_id = self.request.GET.get('member_group_id')
         selections = self.task_filter_facade.parse_selections(self.request.GET)
+        view_mode = self.request.GET.get('view', 'list')
 
         lazy_loading_enabled = self.tasks_facade.is_lazy_loading_enabled()
         expand_all = self.request.GET.get('expand_all') == 'true'
         needs_full_fetch = self.task_filter_facade.requires_full_fetch(selections)
-        lazy_loading = lazy_loading_enabled and not expand_all and not needs_full_fetch
+        lazy_loading = lazy_loading_enabled and not expand_all and not needs_full_fetch and view_mode != 'board'
 
+        context["view_mode"] = view_mode
         context["lazy_loading_enabled"] = lazy_loading_enabled
         context["lazy_loading"] = lazy_loading
         context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
@@ -58,7 +60,7 @@ class CurrentTasksView(GracefulTemplateView):
             self._populate_available_members(context, tasks, group_id)
 
         tasks = self.task_filter_facade.filter_tasks(tasks, selections)
-        grouped_tasks = self._group_tasks(tasks)
+        grouped_tasks = self._group_tasks(tasks, view_mode)
 
         context["tasks"] = grouped_tasks
         context["selected_member_group_id"] = group_id
@@ -74,7 +76,13 @@ class CurrentTasksView(GracefulTemplateView):
     def _determine_has_groups(tasks: Union[List[HierarchicalItemData], List[TaskData]]) -> bool:
         return isinstance(tasks, list) and len(tasks) > 0 and isinstance(tasks[0], HierarchicalItemData)
 
-    def _group_tasks(self, ui_tasks: List[TaskData]) -> Union[List[HierarchicalItemData], List[TaskData]]:
+    def _group_tasks(self, ui_tasks: List[TaskData], view_mode: str) -> Union[List[HierarchicalItemData], List[TaskData]]:
+        if view_mode == 'board':
+            return TaskGroupingUtils.group_tasks_by_all_stage_columns(
+                ui_tasks,
+                self.workflow_config,
+                self.sorting_config
+            )
         return TaskGroupingUtils.group_ui_tasks_by_member_group_and_stage(
             ui_tasks,
             self.workflow_config,

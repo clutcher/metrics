@@ -6,6 +6,10 @@ html, body {
     height: 100%;
 }
 
+main.column {
+    min-width: 0;
+}
+
 .loading-indicator-sticky {
     position: sticky;
     top: 1rem;
@@ -62,4 +66,28 @@ details summary::marker {
 
 tr.htmx-request .review-loader {
     display: inline-flex;
+}
+
+.container:has(.board-columns) {
+    max-width: none !important;
+}
+
+.board-columns {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+}
+
+.board-column {
+    min-width: 280px;
+    flex: 1 1 280px;
+}
+
+.board-column-body {
+    max-height: 75vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.board-column-body::-webkit-scrollbar {
+    display: none;
 }

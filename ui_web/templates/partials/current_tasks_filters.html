@@ -5,6 +5,7 @@
       hx-target="#current-tasks-board"
       hx-push-url="true">
     <input type="hidden" name="member_group_id" value="{{ selected_member_group_id|default:'' }}">
+    <input type="hidden" name="view" value="{{ view_mode|default:'list' }}">
     <div class="columns is-multiline is-vcentered is-variable is-2">
         {% for field in task_filter_panel.fields %}
         <div class="column is-narrow">
@@ -29,7 +30,7 @@
         {% if task_filter_panel.has_active_selection %}
         <div class="column is-narrow">
             <a class="button is-small is-light"
-               hx-get="{% url 'ui_web:partials_tasks' %}?member_group_id={{ selected_member_group_id|urlencode }}"
+               hx-get="{% url 'ui_web:partials_tasks' %}?member_group_id={{ selected_member_group_id|urlencode }}&view={{ view_mode|default:'list' }}"
                hx-target="#current-tasks-board"
                hx-push-url="true">
                 <span class="icon is-small"><i class="iconoir-xmark"></i></span>
@@ -37,8 +38,30 @@
             </a>
         </div>
         {% endif %}
-        {% if lazy_loading_enabled and has_groups %}
         <div class="column is-narrow ml-auto">
+            <div class="buttons has-addons are-small">
+                <a class="button {% if view_mode == 'list' %}is-primary{% endif %}"
+                   hx-get="{% url 'ui_web:partials_tasks' %}"
+                   hx-include="closest .task-filters"
+                   hx-vals='{"view": "list"}'
+                   hx-target="#current-tasks-board"
+                   hx-push-url="true">
+                    <span class="icon is-small"><i class="iconoir-list"></i></span>
+                    <span>List</span>
+                </a>
+                <a class="button {% if view_mode == 'board' %}is-primary{% endif %}"
+                   hx-get="{% url 'ui_web:partials_tasks' %}"
+                   hx-include="closest .task-filters"
+                   hx-vals='{"view": "board"}'
+                   hx-target="#current-tasks-board"
+                   hx-push-url="true">
+                    <span class="icon is-small"><i class="iconoir-view-columns-3"></i></span>
+                    <span>Board</span>
+                </a>
+            </div>
+        </div>
+        {% if lazy_loading_enabled and has_groups and view_mode == 'list' %}
+        <div class="column is-narrow">
             <div class="buttons has-addons are-small">
                 <button type="button" class="button"
                         hx-get="{% url 'ui_web:partials_tasks' %}?expand_all=true"

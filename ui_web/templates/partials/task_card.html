@@ -1,0 +1,60 @@
+{% load avatar_filters %}
+<div class="card mb-3"
+     {% if task.forecast.health_status.name == "GREEN" %}style="background-color: rgba(72, 199, 116, 0.12);"
+     {% elif task.forecast.health_status.name == "YELLOW" %}style="background-color: rgba(255, 221, 87, 0.2);"
+     {% elif task.forecast.health_status.name == "ORANGE" %}style="background-color: rgba(255, 159, 67, 0.18);"
+     {% elif task.forecast.health_status.name == "RED" %}style="background-color: rgba(241, 70, 104, 0.12);"
+     {% elif task.forecast.health_status.name == "GRAY" %}style="background-color: rgba(150, 150, 150, 0.12);"
+     {% endif %}>
+    <div class="card-content p-3">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
+            <code class="is-size-7">{{ task.id }}</code>
+            {% if task.assignment.assignee %}
+                <span class="tag avatar-initials has-text-white"
+                      style="background-color: {{ task.assignment.assignee.display_name|avatar_color }};"
+                      title="{{ task.assignment.assignee.display_name }}">
+                    {{ task.assignment.assignee.display_name|initials }}
+                </span>
+            {% else %}
+                <span class="is-size-7 has-text-grey-light">Unassigned</span>
+            {% endif %}
+        </div>
+        <p class="is-size-7 mb-1">
+            {% if task.system_metadata.url %}
+                <a href="{{ task.system_metadata.url }}" target="_blank">{{ task.title }}</a>
+            {% else %}
+                {{ task.title }}
+            {% endif %}
+        </p>
+        {% if task.parent %}
+        <p class="is-size-7 has-text-grey-light mb-2">
+            {% if task.parent.system_metadata.url %}
+                <a href="{{ task.parent.system_metadata.url }}" target="_blank" class="has-text-grey-light">{{ task.parent.title|default:task.parent.id }}</a>
+            {% else %}
+                {{ task.parent.title|default:task.parent.id }}
+            {% endif %}
+        </p>
+        {% endif %}
+        <div class="is-size-7 has-text-grey">
+            {% if task.time_tracking.total_spent_time_days %}{{ task.time_tracking.total_spent_time_days|floatformat:1 }}d{% else %}-{% endif %}
+            {% if task.story_points %}&middot; SP {{ task.story_points }}{% endif %}
+        </div>
+        {% if release_column_enabled and task.releases %}
+        <div class="is-size-7 has-text-grey-light mt-2">
+            {% for release in task.releases %}{{ release.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </div>
+        {% endif %}
+        {% if pr_gateway_column_enabled and task.linked_pull_request %}
+        <hr class="my-2">
+        <div class="is-size-7">
+            <span class="has-text-grey-light mr-1">Policy gateway:</span>
+            <span hx-get="{% url 'ui_web:partials_task_pr_gateway' task.id %}?pull_request_id={{ task.linked_pull_request.id|urlencode }}&repository_id={{ task.linked_pull_request.repository_id|urlencode }}&project_id={{ task.linked_pull_request.project_id|urlencode }}&project={{ task.linked_pull_request.project_name|urlencode }}"
+                  hx-trigger="revealed"
+                  hx-target="this"
+                  hx-swap="innerHTML">
+                <span class="icon is-small has-text-grey-light"><span class="loader"></span></span>
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</div>
