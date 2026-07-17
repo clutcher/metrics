@@ -84,6 +84,20 @@
         </td>
         <td>{{ child_task.story_points|default:"-" }}</td>
         <td>{{ child_task.child_tasks_count|default:"-" }}</td>
+        {% if pr_gateway_column_enabled %}
+        <td>
+            {% if child_task.linked_pull_request %}
+                <span hx-get="{% url 'ui_web:partials_task_pr_gateway' child_task.id %}?pull_request_id={{ child_task.linked_pull_request.id|urlencode }}&repository_id={{ child_task.linked_pull_request.repository_id|urlencode }}&project_id={{ child_task.linked_pull_request.project_id|urlencode }}&project={{ child_task.linked_pull_request.project_name|urlencode }}"
+                      hx-trigger="revealed"
+                      hx-target="this"
+                      hx-swap="innerHTML">
+                    <span class="icon is-small has-text-grey-light"><span class="loader"></span></span>
+                </span>
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        {% endif %}
         {% if release_column_enabled %}
         <td>
             {% if child_task.releases %}{% for release in child_task.releases %}<div>{{ release.name }}</div>{% endfor %}{% else %}-{% endif %}

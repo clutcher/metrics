@@ -12,6 +12,7 @@ from ..data.task_data import TaskData
 from ..utils.federated_data_fetcher import FederatedDataFetcher
 from ..utils.federated_data_post_processors import MemberGroupTaskFilter
 from ..utils.forecast_population_utils import ForecastPopulationUtils
+from ..utils.pull_request_gateway_lookup_utils import PullRequestGatewayLookupUtils
 
 
 class TasksFacade:
@@ -26,7 +27,8 @@ class TasksFacade:
                  member_group_custom_filters: Optional[Dict[str, str]] = None,
                  merge_unassigned_into_filtered_group: bool = False,
                  release_column_enabled: bool = False,
-                 lazy_loading_enabled: bool = True):
+                 lazy_loading_enabled: bool = True,
+                 pull_request_search_api=None):
         self.task_search_api = task_search_api
         self.forecast_api = forecast_api
         self.available_member_groups = available_member_groups
@@ -40,11 +42,14 @@ class TasksFacade:
         self.merge_unassigned_into_filtered_group = merge_unassigned_into_filtered_group
         self._release_column_enabled = release_column_enabled
         self._lazy_loading_enabled = lazy_loading_enabled
+        self.pull_request_search_api = pull_request_search_api
 
     async def get_tasks(self, member_group_id: Optional[str] = None) -> List[TaskData]:
         tasks = await self._fetch_tasks(member_group_id, self._build_full_enrichment())
         await self._enrich_forecast(tasks)
-        return self._convert_to_task_data(tasks)
+        tasks_data = self._convert_to_task_data(tasks)
+        await self._enrich_linked_pull_requests(tasks_data)
+        return tasks_data
 
     async def get_task_structure(self, member_group_id: Optional[str] = None) -> List[TaskData]:
         tasks = await self._fetch_tasks(member_group_id, self._build_structural_enrichment())
@@ -55,7 +60,9 @@ class TasksFacade:
             return []
         tasks = await self.task_search_api.search(TaskSearchCriteria(id_filter=task_ids), self._build_full_enrichment())
         await self._enrich_forecast(tasks)
-        return self._convert_to_task_data(tasks)
+        tasks_data = self._convert_to_task_data(tasks)
+        await self._enrich_linked_pull_requests(tasks_data)
+        return tasks_data
 
     def get_available_member_groups(self) -> List[MemberGroupData]:
         return [self.member_convertor.convert_member_group_to_data(group) for group in
@@ -67,8 +74,16 @@ class TasksFacade:
     def is_lazy_loading_enabled(self) -> bool:
         return self._lazy_loading_enabled
 
+    def is_pull_request_gateway_column_enabled(self) -> bool:
+        return self.pull_request_search_api is not None
+
     def task_table_colspan(self) -> int:
-        return 10 if self._release_column_enabled else 9
+        colspan = 9
+        if self._release_column_enabled:
+            colspan += 1
+        if self.is_pull_request_gateway_column_enabled():
+            colspan += 1
+        return colspan
 
     def _convert_to_task_data(self, tasks: List[Task]) -> List[TaskData]:
         return [self.task_convertor.convert_task_to_data(task) for task in tasks]
@@ -105,6 +120,9 @@ class TasksFacade:
 
     async def _enrich_forecast(self, tasks: List[Task]) -> None:
         await ForecastPopulationUtils.populate_ideal_forecasts_batch(tasks, self.forecast_api)
+
+    async def _enrich_linked_pull_requests(self, tasks_data: List[TaskData]) -> None:
+        await PullRequestGatewayLookupUtils.populate_linked_pull_requests(tasks_data, self.pull_request_search_api)
 
     def _build_full_enrichment(self) -> EnrichmentOptions:
         return self._build_enrichment(include_time_tracking=True)

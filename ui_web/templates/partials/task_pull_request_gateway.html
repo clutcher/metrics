@@ -1,0 +1,7 @@
+{% if pull_request %}
+    {% for policy in pull_request.policies %}
+        <span class="tag is-small mr-1 mb-1 {{ policy.css_class }}" title="{{ policy.name }} — {{ policy.status }}"><i class="{{ policy.icon }} mr-1"></i>{{ policy.name }}</span>
+    {% empty %}
+        <span class="has-text-grey-light">—</span>
+    {% endfor %}
+{% endif %}

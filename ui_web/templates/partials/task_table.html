@@ -12,6 +12,7 @@
                 <th scope="col">Desired</th>
                 <th scope="col">Complexity</th>
                 <th scope="col">Child Tasks</th>
+                {% if pr_gateway_column_enabled %}<th scope="col">Policy gateway</th>{% endif %}
                 {% if release_column_enabled %}<th scope="col">Release</th>{% endif %}
             </tr>
         </thead>
@@ -120,6 +121,20 @@
                         {{ task.child_tasks_count|default:"-" }}
                     {% endif %}
                 </td>
+                {% if pr_gateway_column_enabled %}
+                <td>
+                    {% if task.linked_pull_request %}
+                        <span hx-get="{% url 'ui_web:partials_task_pr_gateway' task.id %}?pull_request_id={{ task.linked_pull_request.id|urlencode }}&repository_id={{ task.linked_pull_request.repository_id|urlencode }}&project_id={{ task.linked_pull_request.project_id|urlencode }}&project={{ task.linked_pull_request.project_name|urlencode }}"
+                              hx-trigger="revealed"
+                              hx-target="this"
+                              hx-swap="innerHTML">
+                            <span class="icon is-small has-text-grey-light"><span class="loader"></span></span>
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                {% endif %}
                 {% if release_column_enabled %}
                 <td>
                     {% if task.releases %}{% for release in task.releases %}<div>{{ release.name }}</div>{% endfor %}{% else %}-{% endif %}

@@ -5,18 +5,22 @@ from ..convertors.task_convertor import TaskConvertor
 from ..data.task_data import TaskData
 from ..utils.federated_data_fetcher import FederatedDataFetcher
 from ..utils.forecast_population_utils import ForecastPopulationUtils
+from ..utils.pull_request_gateway_lookup_utils import PullRequestGatewayLookupUtils
 
 
 class ChildTasksFacade:
 
-    def __init__(self, task_search_api, forecast_api, task_convertor: TaskConvertor):
+    def __init__(self, task_search_api, forecast_api, task_convertor: TaskConvertor, pull_request_search_api=None):
         self.task_search_api = task_search_api
         self.forecast_api = forecast_api
         self.task_convertor = task_convertor
+        self.pull_request_search_api = pull_request_search_api
 
     async def get_child_tasks(self, parent_task_id: str) -> List[TaskData]:
         enriched_child_tasks = await self._fetch_child_tasks(parent_task_id)
-        return [self.task_convertor.convert_task_to_data(task) for task in enriched_child_tasks]
+        child_tasks_data = [self.task_convertor.convert_task_to_data(task) for task in enriched_child_tasks]
+        await PullRequestGatewayLookupUtils.populate_linked_pull_requests(child_tasks_data, self.pull_request_search_api)
+        return child_tasks_data
 
     async def _fetch_child_tasks(self, parent_task_id: str) -> List[Task]:
         return await (

@@ -3,6 +3,7 @@ from typing import Union, List
 
 from django.views.generic import TemplateView
 
+from pull_requests.app.domain.model.pull_request import PullRequestRef
 from tasks.container import tasks_container
 from ..container import ui_web_container
 from ..data.hierarchical_item_data import HierarchicalItemData
@@ -42,6 +43,7 @@ class CurrentTasksView(GracefulTemplateView):
         context["lazy_loading_enabled"] = lazy_loading_enabled
         context["lazy_loading"] = lazy_loading
         context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["pr_gateway_column_enabled"] = self.tasks_facade.is_pull_request_gateway_column_enabled()
         context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
         context["success"] = False
 
@@ -90,6 +92,7 @@ class CurrentTasksStageView(GracefulTemplateView):
 
     def populate_context(self, context, **kwargs):
         context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["pr_gateway_column_enabled"] = self.tasks_facade.is_pull_request_gateway_column_enabled()
         context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
         context["tasks"] = []
 
@@ -133,6 +136,7 @@ class CurrentTasksChildrenView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         context["release_column_enabled"] = self.tasks_facade.is_release_column_enabled()
+        context["pr_gateway_column_enabled"] = self.tasks_facade.is_pull_request_gateway_column_enabled()
         context["task_table_colspan"] = self.tasks_facade.task_table_colspan()
 
         task_id = kwargs.get("task_id")
@@ -141,3 +145,21 @@ class CurrentTasksChildrenView(TemplateView):
         sorted_child_tasks = TaskSortUtils.sort_tasks(child_tasks, self.sorting_config)
         context['child_tasks'] = sorted_child_tasks
         return context
+
+
+class TaskPullRequestGatewayView(GracefulTemplateView):
+    template_name = "partials/task_pull_request_gateway.html"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pull_requests_facade = ui_web_container.pull_requests_facade
+
+    def populate_context(self, context, **kwargs):
+        ref = PullRequestRef(
+            pull_request_id=self.request.GET.get('pull_request_id', ''),
+            repository_id=self.request.GET.get('repository_id', ''),
+            project_id=self.request.GET.get('project_id', ''),
+            project_name=self.request.GET.get('project', '')
+        )
+        context["pull_request"] = asyncio.run(self.pull_requests_facade.get_review_details(ref))
+        context["success"] = True

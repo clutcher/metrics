@@ -121,9 +121,14 @@ class UiWebContainer:
                 member_group_custom_filters=tasks_container.get_member_group_config().custom_filters,
                 merge_unassigned_into_filtered_group=tasks_container.get_member_group_config().merge_unassigned_into_filtered_group,
                 release_column_enabled=tasks_container.is_release_field_configured(),
-                lazy_loading_enabled=settings.METRICS_CURRENT_TASKS_LAZY_LOADING
+                lazy_loading_enabled=settings.METRICS_CURRENT_TASKS_LAZY_LOADING,
+                pull_request_search_api=self._pull_request_search_api_if_supported()
             )
         return self._tasks_facade
+
+    @staticmethod
+    def _pull_request_search_api_if_supported():
+        return pull_requests_container.pull_request_search_api if pull_requests_container.is_supported() else None
 
     @property
     def task_filter_facade(self) -> TaskFilterFacade:
@@ -139,7 +144,8 @@ class UiWebContainer:
             self._child_tasks_facade = ChildTasksFacade(
                 tasks_container.task_search_api,
                 forecast_container.forecast_api,
-                self.task_convertor
+                self.task_convertor,
+                pull_request_search_api=self._pull_request_search_api_if_supported()
             )
         return self._child_tasks_facade
 

@@ -47,6 +47,15 @@ class ReleaseData:
 
 
 @dataclass(slots=True)
+class LinkedPullRequestData:
+    id: str
+    repository_id: str
+    project_id: str
+    project_name: str
+    url: Optional[str] = None
+
+
+@dataclass(slots=True)
 class TaskData:
     id: str
     title: str
@@ -63,5 +72,6 @@ class TaskData:
     forecast: Optional[ForecastData] = None
     releases: Optional[List[ReleaseData]] = None
     custom_sort_fields: Optional[Dict[str, str]] = None
+    linked_pull_request: Optional[LinkedPullRequestData] = None
 
 
